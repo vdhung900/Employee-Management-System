@@ -17,8 +17,8 @@
     "nodemon": "^3.0.1"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.2",
     "backend": "file:",
+    "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
