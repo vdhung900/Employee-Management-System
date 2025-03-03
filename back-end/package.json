@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "RESTFul API back-end application",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodejs",
+    "restful",
+    "api"
+  ],
+  "author": "FPTU",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "morgan": "^1.10.0",
+    "mongoose": "^7.6.2",
+    "http-errors": "^2.0.0"
+  }
+}
