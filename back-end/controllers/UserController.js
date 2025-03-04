@@ -2,16 +2,6 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-
-exports.findAll = async (req, res) => {
-    try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
-
 exports.login = async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -34,14 +24,44 @@ exports.login = async (req, res) => {
             }
 
             // Create a JWT token
-            const token = jwt.sign({ userId: user.id, username: user.username, role: user.role  }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-            res.json({ message: 'Login successful', token });
+            const token = jwt.sign({ userId: user._id, username: user.username, role: user.role  }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            res.cookie("token", token, {
+                httpOnly: true,   // Prevent access from JavaScript
+                secure: true,     // Use only in HTTPS, set to false when in development to test in thunder client 
+                sameSite: "Strict", // Prevent CSRF attacks
+              });
+            res.json({ message: 'Login successful' });
         });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
+
+exports.logout = async (req, res) => {
+    try{
+        res.cookie("token", "", { 
+            httpOnly: true, 
+            secure: true, // Use in production with HTTPS
+            sameSite: "Strict", 
+            expires: new Date(0) // Expire the cookie immediately
+          });
+          res.status(200).json({ message: "Logged out" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+    
+  };
+
+  exports.getUserProfile = async (req, res) => {
+    try {
+        const id = req.user.userId;
+        const user = await User.findById(id);
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+  };
+  
 
 exports.register = async (req, res) => {
     try {
