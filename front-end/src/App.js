@@ -1,14 +1,19 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import CourseList from './components/CourseList';
+import { UserProvider } from './contexts/UserContext';
+import LoginScreeen from './components/LoginScreen';
+
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<CourseList />} />
-      </Routes>
-    </Router>
+    <UserProvider>
+<Router>
+        <Routes>
+          <Route path="/login" element={<LoginScreeen />} />
+        </Routes>
+      </Router>
+    </UserProvider>
+    
   );
 }
 
