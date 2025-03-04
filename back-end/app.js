@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protectedRoute');
 const employeeRoutes = require('./routes/employeeRoutes');
+const departmentRoutes = require('./routes/departmentRoutes');
 
 const authMiddleware = require('./middlewares/authMiddleware');
 
@@ -36,5 +37,6 @@ app.get("/", (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/protected', protectedRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/departments', departmentRoutes);
 
 module.exports = app; // Xuất app để sử dụng trong server.js
