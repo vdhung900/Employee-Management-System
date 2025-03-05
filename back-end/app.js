@@ -5,6 +5,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protectedRoute');
+const salaryRoutes = require('./routes/salaryRoutes');
 
 // Cấu hình middleware
 app.use(express.json());
@@ -20,5 +21,7 @@ app.get("/", (req, res) => {
 });
 app.use('/api/auth', authRoutes);
 app.use('/protected', protectedRoutes);
+app.use('/api/salaries', salaryRoutes);
+
 
 module.exports = app; // Xuất app để sử dụng trong server.js
