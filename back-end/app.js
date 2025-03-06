@@ -5,9 +5,9 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protectedRoute');
+const salaryRoutes = require('./routes/salaryRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
-
 const authMiddleware = require('./middlewares/authMiddleware');
 
 // Cấu hình middleware
@@ -36,6 +36,7 @@ app.get("/", (req, res) => {
 });
 app.use('/api/auth', authRoutes);
 app.use('/protected', protectedRoutes);
+app.use('/api/salaries', salaryRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/departments', departmentRoutes);
 
