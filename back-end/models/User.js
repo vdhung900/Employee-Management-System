@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    },
     email: { 
       type: String, 
       required: true, 
@@ -12,6 +18,7 @@ const userSchema = new mongoose.Schema(
     },
     password: { type: String, required: true },
     role: { type: String, enum: ["admin", "employee"], required: true },
+    refreshToken: { type: String },
     //comment for testing register and login and protected route, remove later
     // employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
   },
