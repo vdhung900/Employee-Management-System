@@ -8,6 +8,7 @@ const protectedRoutes = require('./routes/protectedRoute');
 const salaryRoutes = require('./routes/salaryRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
 const authMiddleware = require('./middlewares/authMiddleware');
 
 // Cấu hình middleware
@@ -39,5 +40,6 @@ app.use('/protected', protectedRoutes);
 app.use('/api/salaries', salaryRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/departments', departmentRoutes);
+app.use('/api/attendances', attendanceRoutes);
 
 module.exports = app; // Xuất app để sử dụng trong server.js
