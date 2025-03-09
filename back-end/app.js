@@ -1,28 +1,31 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const app = express();
-const cors = require('cors');
-const connectDB = require('./config/db');
-const authRoutes = require('./routes/auth');
-const protectedRoutes = require('./routes/protectedRoute');
-const employeeRoutes = require('./routes/employeeRoutes');
-const departmentRoutes = require('./routes/departmentRoutes');
+const cors = require("cors");
+const connectDB = require("./config/db");
+const authRoutes = require("./routes/auth");
+const protectedRoutes = require("./routes/protectedRoute");
+const employeeRoutes = require("./routes/employeeRoutes");
+const departmentRoutes = require("./routes/departmentRoutes");
 
-const authMiddleware = require('./middlewares/authMiddleware');
+const authMiddleware = require("./middlewares/authMiddleware");
 
 // Cấu hình middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 
 app.use((req, res, next) => {
   console.log(`Request URL: ${req.url}`);
 
-  if (req.url.startsWith('/api/auth')) {
+  //Auth và upload (tạm thời) không cần jwt
+  if (req.url.startsWith("/api/auth") || req.url.startsWith("/uploads")) {
     next();
   } else {
     authMiddleware(req, res, next);
@@ -34,9 +37,10 @@ app.use((req, res, next) => {
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
-app.use('/api/auth', authRoutes);
-app.use('/protected', protectedRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/departments', departmentRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/protected", protectedRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/departments", departmentRoutes);
+app.use("/uploads", express.static("uploads"));
 
 module.exports = app; // Xuất app để sử dụng trong server.js

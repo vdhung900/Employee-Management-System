@@ -15,7 +15,10 @@ const employeeSchema = new mongoose.Schema(
     currentPenalty: { type: Number, default: 0 },
     currentTotalIncome: { type: Number },
     startDate: { type: Date, required: true },
-    avatar: { type: String },
+    avatar: {
+      type: String,
+      required: false,
+    },
   },
   { timestamps: true }
 );
