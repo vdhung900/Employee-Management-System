@@ -1,19 +1,19 @@
 import React from "react";
 import { ListGroup } from "react-bootstrap";
-import { BrowserRouter as Router, Route, Switch, useLocation } from 'react-router-dom';
+import { useLocation, Link } from "react-router-dom";
 
 const logoStyle = {
   color: "inherit",
   textDecoration: "none",
   display: "block",
-  height: "72px"
-}
+  height: "72px",
+};
 
 const sideBarStyle = {
-  width: "300px"
-}
+  width: "300px",
+};
 
-const currentTabStyle = {textDecoration: "underline", fontWeight: "600"}
+const currentTabStyle = { textDecoration: "underline", fontWeight: "600" };
 
 const Sidebar = () => {
   const location = useLocation();
@@ -59,21 +59,29 @@ const Sidebar = () => {
 
   return (
     <div style={sideBarStyle}>
-      <a href="/home" style={logoStyle}>
-      <div id="logo-and-name" className="pt-3" >
-        <img alt="" src="ems_logo.webp" width="40" height="40" />
-        <span className="fw-medium fs-5">Quản Lý Nhân Sự</span>
-      </div>
-      </a>
-      
+      <Link to="/home" style={logoStyle}>
+        <div id="logo-and-name" className="pt-3">
+          <img alt="" src="ems_logo.webp" width="40" height="40" />
+          <span className="fw-medium fs-5">Quản Lý Nhân Sự</span>
+        </div>
+      </Link>
+
       <ListGroup>
         {tabs.map((tab, index) => (
           <ListGroup.Item
             key={index}
             action
-            href={`/${tab.href.toLowerCase()}`}
+            as={Link}
+            to={`/${tab.href.toLowerCase()}`}
+            active={location.pathname.endsWith(tab.href)}
           >
-            <span style={ (location.pathname.endsWith(tab.href) ? currentTabStyle : {})}>{tab.label}</span>
+            <span
+              style={
+                location.pathname.endsWith(tab.href) ? currentTabStyle : {}
+              }
+            >
+              {tab.label}
+            </span>
           </ListGroup.Item>
         ))}
       </ListGroup>

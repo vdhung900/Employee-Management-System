@@ -1,15 +1,17 @@
 import React from "react";
-import {
-  Navbar,
-  Nav,
-  NavDropdown,
-  NavLink,
-} from "react-bootstrap";
+import { Navbar, Nav, NavDropdown, NavLink } from "react-bootstrap";
 import { BellFill } from "react-bootstrap-icons";
 
 const TopBar = ({ user }) => {
+  if (user == null) {
+    user = {
+      name: "Guest",
+      avatar: "/avatar.jpg",
+    };
+  }
+
   return (
-    <Navbar bg="light ms-3 me-3" expand="lg">
+    <Navbar bg="light" expand="lg">
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
         <Nav className="align-items-center">
@@ -20,9 +22,9 @@ const TopBar = ({ user }) => {
           <NavDropdown
             title={
               <>
-                <span className="me-2">Vu Hong Quang</span>
+                <span className="me-2">{user.name}</span>
                 <img
-                  src={user.avatar}
+                  src={user?.avatar}
                   alt="Avatar"
                   style={{ width: "40px", height: "40px", borderRadius: "50%" }}
                 />
@@ -30,7 +32,7 @@ const TopBar = ({ user }) => {
             }
             id="user-dropdown"
           >
-            <NavDropdown.Item href="#action/3.1">{user.name}</NavDropdown.Item>
+            <NavDropdown.Item href="#action/3.1">{user?.name}</NavDropdown.Item>
             <NavDropdown.Item href="#action/3.2">Đăng xuất</NavDropdown.Item>
           </NavDropdown>
         </Nav>
