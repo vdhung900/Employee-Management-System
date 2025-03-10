@@ -17,6 +17,9 @@ import EmployeeDetail from "./components/employees/EmployeeDetail";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import RegisterScreen from "./components/auth/RegisterScreen";
 import LoginScreen from "./components/auth/LoginScreen";
+import SalaryList from "./components/salary/SalaryList";
+import SalaryForm from "./components/salary/SalaryForm";
+import SalaryDetail from "./components/salary/SalaryDetail";
 
 const PrivateRoute = ({ children }) => {
   const { auth } = useAuth();
@@ -62,6 +65,22 @@ function App() {
                             <Route
                               path="/employees/:id/edit"
                               element={<EmployeeForm />}
+                            />
+                            <Route
+                              path="/salaries"
+                              element={<SalaryList />}
+                            />
+                            <Route
+                              path="/salaries/new"
+                              element={<SalaryForm />}
+                            />
+                            <Route
+                              path="/salaries/:id"
+                              element={<SalaryDetail />}
+                            />
+                            <Route
+                              path="/salaries/:id/edit"
+                              element={<SalaryForm />}
                             />
                           </Routes>
                         </div>
