@@ -146,21 +146,46 @@ exports.addEmployeeToDepartment = async (req, res) => {
     const { employeeId } = req.body;
     const departmentId = req.params.id;
 
-    // Check if department exists
-    const department = await Department.findById(departmentId);
-    if (!department) {
-      return res.status(404).json({
-        success: false,
-        message: 'Department not found'
-      });
-    }
-
     // Check if employee exists
     const employee = await Employee.findById(employeeId);
     if (!employee) {
       return res.status(404).json({
         success: false,
         message: 'Employee not found'
+      });
+    }
+
+    // If departmentId is null, we're removing the employee from their current department
+    if (!departmentId) {
+      if (employee.departmentId) {
+        // Remove employee from current department
+        await Department.findByIdAndUpdate(
+          employee.departmentId,
+          { $pull: { employeeIds: employeeId } }
+        );
+        
+        // Update employee's department to null
+        employee.departmentId = null;
+        await employee.save();
+
+        return res.status(200).json({
+          success: true,
+          message: 'Employee removed from department successfully',
+          data: { employee }
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: 'Employee is not assigned to any department'
+      });
+    }
+
+    // Check if department exists
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return res.status(404).json({
+        success: false,
+        message: 'Department not found'
       });
     }
 
@@ -201,7 +226,60 @@ exports.addEmployeeToDepartment = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error adding employee to department',
+      message: 'Error managing employee department assignment',
+      error: error.message
+    });
+  }
+};
+
+// Remove employee from department
+exports.removeEmployeeFromDepartment = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+
+    // Check if employee exists
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+
+    // Check if employee is in a department
+    if (!employee.departmentId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Employee is not assigned to any department'
+      });
+    }
+
+    // Get current department
+    const department = await Department.findById(employee.departmentId);
+    if (!department) {
+      return res.status(404).json({
+        success: false,
+        message: 'Department not found'
+      });
+    }
+
+    // Remove employee from department's employeeIds array
+    department.employeeIds = department.employeeIds.filter(id => id.toString() !== employeeId);
+    await department.save();
+
+    // Remove department reference from employee
+    employee.departmentId = null;
+    await employee.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Employee removed from department successfully',
+      data: { employee }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error removing employee from department',
       error: error.message
     });
   }

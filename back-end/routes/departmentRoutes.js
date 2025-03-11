@@ -22,5 +22,6 @@ router.get('/:id', departmentController.getDepartmentById);
 router.put('/:id', departmentValidation, departmentController.updateDepartment);
 router.delete('/:id', departmentController.deleteDepartment);
 router.post('/:id/add-employee', addEmployeeValidation, departmentController.addEmployeeToDepartment);
+router.post('/remove-employee', addEmployeeValidation, departmentController.removeEmployeeFromDepartment);
 
 module.exports = router; 
