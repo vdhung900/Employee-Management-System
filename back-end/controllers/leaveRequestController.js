@@ -1,6 +1,6 @@
-const LeaveRequest = require('../models/LeaveRequest');
-const Employee = require('../models/Employee');
-const { validationResult } = require('express-validator');
+const LeaveRequest = require("../models/LeaveRequest");
+const Employee = require("../models/Employee");
+const { validationResult } = require("express-validator");
 
 // Tạo yêu cầu nghỉ phép mới
 exports.createLeaveRequest = async (req, res) => {
@@ -15,26 +15,26 @@ exports.createLeaveRequest = async (req, res) => {
     if (!employee) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy nhân viên'
+        message: "Không tìm thấy nhân viên",
       });
     }
 
     const leaveRequest = new LeaveRequest({
       ...req.body,
-      status: 'pending' // Mặc định là pending khi tạo mới
+      status: "pending", // Mặc định là pending khi tạo mới
     });
     await leaveRequest.save();
-    
+
     res.status(201).json({
       success: true,
       data: leaveRequest,
-      message: 'Yêu cầu nghỉ phép được tạo thành công'
+      message: "Yêu cầu nghỉ phép được tạo thành công",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Lỗi khi tạo yêu cầu nghỉ phép',
-      error: error.message
+      message: "Lỗi khi tạo yêu cầu nghỉ phép",
+      error: error.message,
     });
   }
 };
@@ -47,24 +47,26 @@ exports.getEmployeeLeaveRequests = async (req, res) => {
     if (!employee) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy nhân viên'
+        message: "Không tìm thấy nhân viên",
       });
     }
 
-    const leaveRequests = await LeaveRequest.find({ employeeId: req.params.employeeId })
-      .populate('employeeId', 'fullName departmentId position')
+    const leaveRequests = await LeaveRequest.find({
+      employeeId: req.params.employeeId,
+    })
+      .populate("employeeId", "fullName departmentId position")
       .sort({ createdAt: -1 });
-    
+
     res.status(200).json({
       success: true,
       data: leaveRequests,
-      message: 'Lấy danh sách yêu cầu nghỉ phép thành công'
+      message: "Lấy danh sách yêu cầu nghỉ phép thành công",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Lỗi khi lấy danh sách yêu cầu nghỉ phép',
-      error: error.message
+      message: "Lỗi khi lấy danh sách yêu cầu nghỉ phép",
+      error: error.message,
     });
   }
 };
@@ -72,26 +74,28 @@ exports.getEmployeeLeaveRequests = async (req, res) => {
 // Lấy thông tin chi tiết yêu cầu nghỉ phép
 exports.getLeaveRequestById = async (req, res) => {
   try {
-    const leaveRequest = await LeaveRequest.findById(req.params.id)
-      .populate('employeeId', 'fullName departmentId position');
-    
+    const leaveRequest = await LeaveRequest.findById(req.params.id).populate(
+      "employeeId",
+      "fullName departmentId position"
+    );
+
     if (!leaveRequest) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy yêu cầu nghỉ phép'
+        message: "Không tìm thấy yêu cầu nghỉ phép",
       });
     }
 
     res.status(200).json({
       success: true,
       data: leaveRequest,
-      message: 'Lấy thông tin yêu cầu nghỉ phép thành công'
+      message: "Lấy thông tin yêu cầu nghỉ phép thành công",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Lỗi khi lấy thông tin yêu cầu nghỉ phép',
-      error: error.message
+      message: "Lỗi khi lấy thông tin yêu cầu nghỉ phép",
+      error: error.message,
     });
   }
 };
@@ -109,19 +113,19 @@ exports.updateLeaveRequest = async (req, res) => {
     if (!existingRequest) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy yêu cầu nghỉ phép'
+        message: "Không tìm thấy yêu cầu nghỉ phép",
       });
     }
 
     // Nếu đang cập nhật trạng thái
     if (req.body.status && req.body.status !== existingRequest.status) {
       // Nếu chuyển sang trạng thái approved
-      if (req.body.status === 'approved') {
+      if (req.body.status === "approved") {
         // Kiểm tra số ngày nghỉ còn lại
         if (existingRequest.remainingDays <= 0) {
           return res.status(400).json({
             success: false,
-            message: 'Số ngày nghỉ còn lại không đủ'
+            message: "Số ngày nghỉ còn lại không đủ",
           });
         }
       }
@@ -131,18 +135,18 @@ exports.updateLeaveRequest = async (req, res) => {
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    ).populate('employeeId', 'fullName departmentId position');
+    ).populate("employeeId", "fullName departmentId position");
 
     res.status(200).json({
       success: true,
       data: leaveRequest,
-      message: 'Cập nhật yêu cầu nghỉ phép thành công'
+      message: "Cập nhật yêu cầu nghỉ phép thành công",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Lỗi khi cập nhật yêu cầu nghỉ phép',
-      error: error.message
+      message: "Lỗi khi cập nhật yêu cầu nghỉ phép",
+      error: error.message,
     });
   }
 };
@@ -155,15 +159,15 @@ exports.deleteLeaveRequest = async (req, res) => {
     if (!leaveRequest) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy yêu cầu nghỉ phép'
+        message: "Không tìm thấy yêu cầu nghỉ phép",
       });
     }
 
     // Chỉ cho phép xóa yêu cầu ở trạng thái pending
-    if (leaveRequest.status !== 'pending') {
+    if (leaveRequest.status !== "pending") {
       return res.status(400).json({
         success: false,
-        message: 'Chỉ có thể xóa yêu cầu nghỉ phép ở trạng thái chờ duyệt'
+        message: "Chỉ có thể xóa yêu cầu nghỉ phép ở trạng thái chờ duyệt",
       });
     }
 
@@ -171,13 +175,13 @@ exports.deleteLeaveRequest = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Xóa yêu cầu nghỉ phép thành công'
+      message: "Xóa yêu cầu nghỉ phép thành công",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Lỗi khi xóa yêu cầu nghỉ phép',
-      error: error.message
+      message: "Lỗi khi xóa yêu cầu nghỉ phép",
+      error: error.message,
     });
   }
-}; 
+};

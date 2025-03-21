@@ -1,5 +1,5 @@
-const Notification = require('../models/Notification');
-const { validationResult } = require('express-validator');
+const Notification = require("../models/Notification");
+const { validationResult } = require("express-validator");
 
 // Create a new notification
 exports.createNotification = async (req, res) => {
@@ -11,17 +11,17 @@ exports.createNotification = async (req, res) => {
 
     const notification = new Notification(req.body);
     await notification.save();
-    
+
     res.status(201).json({
       success: true,
       data: notification,
-      message: 'Notification created successfully'
+      message: "Notification created successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error creating notification',
-      error: error.message
+      message: "Error creating notification",
+      error: error.message,
     });
   }
 };
@@ -30,19 +30,19 @@ exports.createNotification = async (req, res) => {
 exports.getAllNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find()
-      .populate('departmentId', 'name')
+      .populate("departmentId", "name")
       .sort({ createdAt: -1 });
-    
+
     res.status(200).json({
       success: true,
       data: notifications,
-      message: 'Notifications retrieved successfully'
+      message: "Notifications retrieved successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error retrieving notifications',
-      error: error.message
+      message: "Error retrieving notifications",
+      error: error.message,
     });
   }
 };
@@ -50,26 +50,28 @@ exports.getAllNotifications = async (req, res) => {
 // Get notification by ID
 exports.getNotificationById = async (req, res) => {
   try {
-    const notification = await Notification.findById(req.params.id)
-      .populate('departmentId', 'name');
-    
+    const notification = await Notification.findById(req.params.id).populate(
+      "departmentId",
+      "name"
+    );
+
     if (!notification) {
       return res.status(404).json({
         success: false,
-        message: 'Notification not found'
+        message: "Notification not found",
       });
     }
 
     res.status(200).json({
       success: true,
       data: notification,
-      message: 'Notification retrieved successfully'
+      message: "Notification retrieved successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error retrieving notification',
-      error: error.message
+      message: "Error retrieving notification",
+      error: error.message,
     });
   }
 };
@@ -86,25 +88,25 @@ exports.updateNotification = async (req, res) => {
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    ).populate('departmentId', 'name');
+    ).populate("departmentId", "name");
 
     if (!notification) {
       return res.status(404).json({
         success: false,
-        message: 'Notification not found'
+        message: "Notification not found",
       });
     }
 
     res.status(200).json({
       success: true,
       data: notification,
-      message: 'Notification updated successfully'
+      message: "Notification updated successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error updating notification',
-      error: error.message
+      message: "Error updating notification",
+      error: error.message,
     });
   }
 };
@@ -117,7 +119,7 @@ exports.deleteNotification = async (req, res) => {
     if (!notification) {
       return res.status(404).json({
         success: false,
-        message: 'Notification not found'
+        message: "Notification not found",
       });
     }
 
@@ -125,13 +127,13 @@ exports.deleteNotification = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Notification deleted successfully'
+      message: "Notification deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error deleting notification',
-      error: error.message
+      message: "Error deleting notification",
+      error: error.message,
     });
   }
-}; 
+};

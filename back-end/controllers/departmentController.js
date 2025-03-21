@@ -1,6 +1,6 @@
-const Department = require('../models/Department');
-const Employee = require('../models/Employee');
-const { validationResult } = require('express-validator');
+const Department = require("../models/Department");
+const Employee = require("../models/Employee");
+const { validationResult } = require("express-validator");
 
 // Create a new department
 exports.createDepartment = async (req, res) => {
@@ -12,17 +12,17 @@ exports.createDepartment = async (req, res) => {
 
     const department = new Department(req.body);
     await department.save();
-    
+
     res.status(201).json({
       success: true,
       data: department,
-      message: 'Department created successfully'
+      message: "Department created successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error creating department',
-      error: error.message
+      message: "Error creating department",
+      error: error.message,
     });
   }
 };
@@ -30,18 +30,18 @@ exports.createDepartment = async (req, res) => {
 // Get all departments
 exports.getAllDepartments = async (req, res) => {
   try {
-    const departments = await Department.find().populate('employeeIds');
-    
+    const departments = await Department.find().populate("employeeIds");
+
     res.status(200).json({
       success: true,
       data: departments,
-      message: 'Departments retrieved successfully'
+      message: "Departments retrieved successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error retrieving departments',
-      error: error.message
+      message: "Error retrieving departments",
+      error: error.message,
     });
   }
 };
@@ -49,25 +49,27 @@ exports.getAllDepartments = async (req, res) => {
 // Get department by ID
 exports.getDepartmentById = async (req, res) => {
   try {
-    const department = await Department.findById(req.params.id).populate('employeeIds');
-    
+    const department = await Department.findById(req.params.id).populate(
+      "employeeIds"
+    );
+
     if (!department) {
       return res.status(404).json({
         success: false,
-        message: 'Department not found'
+        message: "Department not found",
       });
     }
 
     res.status(200).json({
       success: true,
       data: department,
-      message: 'Department retrieved successfully'
+      message: "Department retrieved successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error retrieving department',
-      error: error.message
+      message: "Error retrieving department",
+      error: error.message,
     });
   }
 };
@@ -89,20 +91,20 @@ exports.updateDepartment = async (req, res) => {
     if (!department) {
       return res.status(404).json({
         success: false,
-        message: 'Department not found'
+        message: "Department not found",
       });
     }
 
     res.status(200).json({
       success: true,
       data: department,
-      message: 'Department updated successfully'
+      message: "Department updated successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error updating department',
-      error: error.message
+      message: "Error updating department",
+      error: error.message,
     });
   }
 };
@@ -115,7 +117,7 @@ exports.deleteDepartment = async (req, res) => {
     if (!department) {
       return res.status(404).json({
         success: false,
-        message: 'Department not found'
+        message: "Department not found",
       });
     }
 
@@ -129,13 +131,13 @@ exports.deleteDepartment = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Department deleted successfully'
+      message: "Department deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error deleting department',
-      error: error.message
+      message: "Error deleting department",
+      error: error.message,
     });
   }
 };
@@ -151,7 +153,7 @@ exports.addEmployeeToDepartment = async (req, res) => {
     if (!employee) {
       return res.status(404).json({
         success: false,
-        message: 'Employee not found'
+        message: "Employee not found",
       });
     }
 
@@ -159,24 +161,23 @@ exports.addEmployeeToDepartment = async (req, res) => {
     if (!departmentId) {
       if (employee.departmentId) {
         // Remove employee from current department
-        await Department.findByIdAndUpdate(
-          employee.departmentId,
-          { $pull: { employeeIds: employeeId } }
-        );
-        
+        await Department.findByIdAndUpdate(employee.departmentId, {
+          $pull: { employeeIds: employeeId },
+        });
+
         // Update employee's department to null
         employee.departmentId = null;
         await employee.save();
 
         return res.status(200).json({
           success: true,
-          message: 'Employee removed from department successfully',
-          data: { employee }
+          message: "Employee removed from department successfully",
+          data: { employee },
         });
       }
       return res.status(400).json({
         success: false,
-        message: 'Employee is not assigned to any department'
+        message: "Employee is not assigned to any department",
       });
     }
 
@@ -185,24 +186,26 @@ exports.addEmployeeToDepartment = async (req, res) => {
     if (!department) {
       return res.status(404).json({
         success: false,
-        message: 'Department not found'
+        message: "Department not found",
       });
     }
 
     // Check if employee is already in this department
-    if (employee.departmentId && employee.departmentId.toString() === departmentId) {
+    if (
+      employee.departmentId &&
+      employee.departmentId.toString() === departmentId
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Employee is already in this department'
+        message: "Employee is already in this department",
       });
     }
 
     // If employee is in another department, remove from that department
     if (employee.departmentId) {
-      await Department.findByIdAndUpdate(
-        employee.departmentId,
-        { $pull: { employeeIds: employeeId } }
-      );
+      await Department.findByIdAndUpdate(employee.departmentId, {
+        $pull: { employeeIds: employeeId },
+      });
     }
 
     // Add employee to department
@@ -217,17 +220,17 @@ exports.addEmployeeToDepartment = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Employee added to department successfully',
+      message: "Employee added to department successfully",
       data: {
-        department: await department.populate('employeeIds'),
-        employee
-      }
+        department: await department.populate("employeeIds"),
+        employee,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error managing employee department assignment',
-      error: error.message
+      message: "Error managing employee department assignment",
+      error: error.message,
     });
   }
 };
@@ -242,7 +245,7 @@ exports.removeEmployeeFromDepartment = async (req, res) => {
     if (!employee) {
       return res.status(404).json({
         success: false,
-        message: 'Employee not found'
+        message: "Employee not found",
       });
     }
 
@@ -250,7 +253,7 @@ exports.removeEmployeeFromDepartment = async (req, res) => {
     if (!employee.departmentId) {
       return res.status(400).json({
         success: false,
-        message: 'Employee is not assigned to any department'
+        message: "Employee is not assigned to any department",
       });
     }
 
@@ -259,12 +262,14 @@ exports.removeEmployeeFromDepartment = async (req, res) => {
     if (!department) {
       return res.status(404).json({
         success: false,
-        message: 'Department not found'
+        message: "Department not found",
       });
     }
 
     // Remove employee from department's employeeIds array
-    department.employeeIds = department.employeeIds.filter(id => id.toString() !== employeeId);
+    department.employeeIds = department.employeeIds.filter(
+      (id) => id.toString() !== employeeId
+    );
     await department.save();
 
     // Remove department reference from employee
@@ -273,14 +278,14 @@ exports.removeEmployeeFromDepartment = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Employee removed from department successfully',
-      data: { employee }
+      message: "Employee removed from department successfully",
+      data: { employee },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error removing employee from department',
-      error: error.message
+      message: "Error removing employee from department",
+      error: error.message,
     });
   }
-}; 
+};
