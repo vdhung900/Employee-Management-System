@@ -13,6 +13,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const leaveRequestRoutes = require("./routes/leaveRequestRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
 const backupRoutes = require("./routes/backupRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 const authMiddleware = require("./middlewares/authMiddleware");
 

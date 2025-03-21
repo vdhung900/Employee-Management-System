@@ -2,6 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
+const Employee = require("../models/Employee");
 
 // Helper function to generate tokens
 const generateTokens = (user) => {
@@ -205,5 +206,69 @@ exports.deleteUser = async (req, res) => {
     res.json({ message: "User deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+// Liên kết User với Employee
+exports.linkEmployee = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { userId, employeeId } = req.body;
+
+    // Kiểm tra User có tồn tại không
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy người dùng'
+      });
+    }
+
+    // Kiểm tra Employee có tồn tại không
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy nhân viên'
+      });
+    }
+
+    // Kiểm tra Employee đã được liên kết với User khác chưa
+    const existingLink = await User.findOne({ employeeId });
+    if (existingLink && existingLink._id.toString() !== userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nhân viên này đã được liên kết với một tài khoản khác'
+      });
+    }
+
+    // Kiểm tra User đã được liên kết với Employee khác chưa
+    if (user.employeeId && user.employeeId.toString() !== employeeId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Người dùng này đã được liên kết với một nhân viên khác'
+      });
+    }
+
+    // Cập nhật liên kết
+    user.employeeId = employeeId;
+    user.role = 'employee'; // Tự động cập nhật role thành employee
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: user,
+      message: 'Liên kết người dùng với nhân viên thành công'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi liên kết người dùng với nhân viên',
+      error: error.message
+    });
   }
 };
