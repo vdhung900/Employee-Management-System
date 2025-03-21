@@ -1,6 +1,7 @@
 const Department = require("../models/Department");
 const Employee = require("../models/Employee");
 const { validationResult } = require("express-validator");
+const { createActivityLog } = require("./activityLogController");
 
 // Create a new department
 exports.createDepartment = async (req, res) => {
@@ -11,7 +12,15 @@ exports.createDepartment = async (req, res) => {
     }
 
     const department = new Department(req.body);
-    await department.save();
+    const savedDepartment = await department.save();
+    await createActivityLog(
+      req.user.userId,
+      "CREATE",
+      "DEPARTMENT",
+      savedDepartment._id,
+      "Department created successfully",
+      { departmentData: savedDepartment }
+    );
 
     res.status(201).json({
       success: true,
@@ -95,6 +104,15 @@ exports.updateDepartment = async (req, res) => {
       });
     }
 
+    await createActivityLog(
+      req.user.userId,
+      "UPDATE",
+      "DEPARTMENT",
+      department._id,
+      "Department updated successfully",
+      { departmentData: department }
+    );
+
     res.status(200).json({
       success: true,
       data: department,
@@ -128,6 +146,15 @@ exports.deleteDepartment = async (req, res) => {
     );
 
     await department.deleteOne();
+
+    await createActivityLog(
+      req.user.userId,
+      "DELETE",
+      "DEPARTMENT",
+      department._id,
+      "Department deleted successfully",
+      { departmentData: department }
+    );
 
     res.status(200).json({
       success: true,

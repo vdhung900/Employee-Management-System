@@ -12,7 +12,16 @@ exports.markAttendance = async (req, res) => {
       overtimeHours,
     });
 
-    await attendance.save();
+    const savedAttendance = await attendance.save();
+    await createActivityLog(
+      req.user.userId,
+      "CREATE",
+      "ATTENDANCE",
+      savedAttendance._id,
+      "Attendance created successfully",
+      { attendanceData: savedAttendance }
+    );
+
     res.status(201).json(attendance);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -72,6 +81,15 @@ exports.updateAttendance = async (req, res) => {
         .json({ message: "Không tìm thấy bản ghi chấm công" });
     }
 
+    await createActivityLog(
+      req.user.userId,
+      "UPDATE",
+      "ATTENDANCE",
+      attendance._id,
+      "Attendance updated successfully",
+      { attendanceData: attendance }
+    );
+
     res.json(attendance);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -89,6 +107,15 @@ exports.deleteAttendance = async (req, res) => {
         .status(404)
         .json({ message: "Không tìm thấy bản ghi chấm công" });
     }
+
+    await createActivityLog(
+      req.user.userId,
+      "DELETE",
+      "ATTENDANCE",
+      attendance._id,
+      "Attendance deleted successfully",
+      { attendanceData: attendance }
+    );
 
     res.json({ message: "Xóa bản ghi chấm công thành công" });
   } catch (error) {

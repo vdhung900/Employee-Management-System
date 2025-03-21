@@ -84,8 +84,17 @@ exports.addSalary = async (req, res) => {
       paymentDate,
     });
 
-    await salary.save();
-    res.status(201).json(salary);
+    const savedSalary = await salary.save();
+    await createActivityLog(
+      req.user.userId,
+      "CREATE",
+      "SALARY",
+      savedSalary._id,
+      "Salary created successfully",
+      { salaryData: savedSalary }
+    );
+
+    res.status(201).json(savedSalary);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -128,6 +137,15 @@ exports.updateSalary = async (req, res) => {
       },
     });
 
+    await createActivityLog(
+      req.user.userId,
+      "UPDATE",
+      "SALARY",
+      salary._id,
+      "Salary updated successfully",
+      { salaryData: salary }
+    );
+
     if (!salary) {
       return res.status(404).json({
         success: false,
@@ -149,6 +167,14 @@ exports.deleteSalary = async (req, res) => {
   try {
     const salary = await Salary.findByIdAndDelete(req.params.id);
     if (!salary) return res.status(404).json({ message: "Salary not found" });
+
+    await createActivityLog(
+      req.user.userId,
+      "DELETE",
+      "SALARY",
+      salary._id,
+      "Salary deleted successfully"
+    );
     res.json({ message: "Salary deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

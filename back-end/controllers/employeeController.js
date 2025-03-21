@@ -1,6 +1,7 @@
 const Employee = require("../models/Employee");
 const Department = require("../models/Department");
 const { validationResult } = require("express-validator");
+const { createActivityLog } = require("./activityLogController");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -40,7 +41,16 @@ exports.createEmployee = async (req, res) => {
       }
 
       const employee = new Employee(employeeData);
-      await employee.save();
+      const savedEmployee = await employee.save();
+
+      await createActivityLog(
+        req.user.userId,
+        "CREATE",
+        "EMPLOYEE",
+        savedEmployee._id,
+        "Employee created successfully",
+        { employeeData: savedEmployee }
+      );
 
       res.status(201).json({
         success: true,
@@ -156,6 +166,15 @@ exports.updateEmployee = async (req, res) => {
         }
       ).populate("departmentId");
 
+      await createActivityLog(
+        req.user.userId,
+        "UPDATE",
+        "EMPLOYEE",
+        updatedEmployee._id,
+        "Employee updated successfully",
+        { employeeData: updatedEmployee }
+      );
+
       res.status(200).json({
         success: true,
         data: updatedEmployee,
@@ -182,6 +201,15 @@ exports.deleteEmployee = async (req, res) => {
         message: "Employee not found",
       });
     }
+
+    await createActivityLog(
+      req.user.userId,
+      "DELETE",
+      "EMPLOYEE",
+      employee._id,
+      "Employee deleted successfully",
+      { employeeData: employee }
+    );
 
     res.status(200).json({
       success: true,

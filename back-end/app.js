@@ -11,6 +11,8 @@ const salaryRoutes = require("./routes/salaryRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const leaveRequestRoutes = require("./routes/leaveRequestRoutes");
+const activityLogRoutes = require("./routes/activityLogRoutes");
+const backupRoutes = require("./routes/backupRoutes");
 
 const authMiddleware = require("./middlewares/authMiddleware");
 
@@ -49,6 +51,8 @@ app.use("/api/salaries", salaryRoutes);
 app.use("/api/attendances", attendanceRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/leave-requests", leaveRequestRoutes);
+app.use("/api/activity-logs", activityLogRoutes);
+app.use("/api/backups", backupRoutes);
 app.use("/uploads", express.static("uploads"));
 
 module.exports = app; // Xuất app để sử dụng trong server.js

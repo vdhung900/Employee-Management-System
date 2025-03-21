@@ -23,7 +23,15 @@ exports.createLeaveRequest = async (req, res) => {
       ...req.body,
       status: "pending", // Mặc định là pending khi tạo mới
     });
-    await leaveRequest.save();
+    const savedLeaveRequest = await leaveRequest.save();
+    await createActivityLog(
+      req.user.userId,
+      "CREATE",
+      "LEAVE_REQUEST",
+      savedLeaveRequest._id,
+      "Leave request created successfully",
+      { leaveRequestData: savedLeaveRequest }
+    );
 
     res.status(201).json({
       success: true,
@@ -172,6 +180,15 @@ exports.deleteLeaveRequest = async (req, res) => {
     }
 
     await leaveRequest.deleteOne();
+
+    await createActivityLog(
+      req.user.userId,
+      "DELETE",
+      "LEAVE_REQUEST",
+      leaveRequest._id,
+      "Leave request deleted successfully",
+      { leaveRequestData: leaveRequest }
+    );
 
     res.status(200).json({
       success: true,
