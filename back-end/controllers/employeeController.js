@@ -70,6 +70,7 @@ exports.createEmployee = async (req, res) => {
 // Get all employees
 exports.getAllEmployees = async (req, res) => {
   try {
+
     const employees = await Employee.find().populate("departmentId");
 
     res.status(200).json({
@@ -89,6 +90,17 @@ exports.getAllEmployees = async (req, res) => {
 // Get employee by ID
 exports.getEmployeeById = async (req, res) => {
   try {
+    // const user = await User.findById(req.user.userId);
+
+    // Kiểm tra xem user có phải là admin không và có phải là chính mình không
+    const isSelf = true;
+    if (req.user.role !== "admin" && !isSelf) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     const employee = await Employee.findById(req.params.id).populate(
       "departmentId"
     );

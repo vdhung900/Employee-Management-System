@@ -42,7 +42,12 @@ app.use((req, res, next) => {
 //Middleware kiểm tra Authorization (Admin)
 app.use((req, res, next) => {
   console.log(`Request URL: ${req.url}`);
-  const whiteList = ["/api/auth/login", "/api/auth/logout", "/uploads"];
+  const whiteList = [
+    "/api/auth/login",
+    "/api/auth/logout",
+    "/uploads",
+    "/api/employees",
+  ];
 
   if (whiteList.some((url) => req.url.startsWith(url))) {
     next();

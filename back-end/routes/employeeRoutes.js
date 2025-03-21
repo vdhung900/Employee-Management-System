@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { check } = require("express-validator");
 const employeeController = require("../controllers/employeeController");
-
+const isAdmin = require("../middlewares/adminMiddleware");
 // Validation middleware
 const employeeValidation = [
   check("fullName").notEmpty().withMessage("Full name is required"),
@@ -30,7 +30,7 @@ const employeeValidation = [
 
 // Routes
 router.post("/", employeeValidation, employeeController.createEmployee);
-router.get("/", employeeController.getAllEmployees);
+router.get("/", isAdmin, employeeController.getAllEmployees);
 router.get("/:id", employeeController.getEmployeeById);
 router.put("/:id", employeeValidation, employeeController.updateEmployee);
 router.delete("/:id", employeeController.deleteEmployee);
