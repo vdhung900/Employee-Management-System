@@ -2,8 +2,6 @@ const express = require("express");
 const router = express.Router();
 const { check } = require("express-validator");
 const UserController = require("../controllers/UserController");
-const verifyToken = require("../middlewares/authMiddleware");
-const isAdmin = require("../middlewares/adminMiddleware");
 
 // Validation middleware
 const authValidation = [
@@ -41,19 +39,14 @@ router.post(
   UserController.login
 );
 
-router.get("/profile", verifyToken, UserController.getUserProfile);
+router.get("/profile", UserController.getUserProfile);
 
 router.post("/refresh", UserController.refreshToken);
 
-router.post("/logout", verifyToken, UserController.logout);
+router.post("/logout", UserController.logout);
 
 // Admin routes
-router.get("/admin/users", verifyToken, isAdmin, UserController.getAllUsers);
-router.delete(
-  "/admin/users/:id",
-  verifyToken,
-  isAdmin,
-  UserController.deleteUser
-);
+router.get("/admin/users", UserController.getAllUsers);
+router.delete("/admin/users/:id", UserController.deleteUser);
 
 module.exports = router;
