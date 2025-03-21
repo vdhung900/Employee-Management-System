@@ -16,6 +16,7 @@ const backupRoutes = require("./routes/backupRoutes");
 const userRoutes = require("./routes/userRoutes");
 
 const authMiddleware = require("./middlewares/authMiddleware");
+const isAdmin = require("./middlewares/adminMiddleware");
 
 // Cấu hình middleware
 app.use(express.json());
@@ -28,16 +29,32 @@ app.use(
 );
 app.use(cookieParser());
 
+//Middleware kiểm tra Authentication
 app.use((req, res, next) => {
   console.log(`Request URL: ${req.url}`);
-
-  //Auth và upload (tạm thời) không cần jwt
-  if (req.url.startsWith("/api/auth") || req.url.startsWith("/uploads")) {
+  const whiteList = ["/api/auth/login", "/uploads"];
+  if (whiteList.some((url) => req.url.startsWith(url))) {
     next();
   } else {
     authMiddleware(req, res, next);
   }
-  // next(); // Chuyển sang middleware hoặc route tiếp theo
+});
+
+//Middleware kiểm tra Authorization (Admin)
+app.use((req, res, next) => {
+  console.log(`Request URL: ${req.url}`);
+  const whiteList = [
+    "/api/auth/login",
+    "/api/auth/logout",
+    "/uploads",
+    "/api/employees",
+  ];
+
+  if (whiteList.some((url) => req.url.startsWith(url))) {
+    next();
+  } else {
+    isAdmin(req, res, next);
+  }
 });
 
 // Định nghĩa route
