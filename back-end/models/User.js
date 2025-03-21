@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
     role: { type: String, enum: ["admin", "employee"], required: true },
     refreshToken: { type: String },
     //comment for testing register and login and protected route, remove later
-    // employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
+    employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
   },
   { timestamps: true }
 );
