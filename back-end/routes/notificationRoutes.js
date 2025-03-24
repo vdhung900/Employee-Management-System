@@ -8,10 +8,6 @@ const validateNotification = [
   body("title").notEmpty().withMessage("Title is required"),
   body("content").notEmpty().withMessage("Content is required"),
   body("target").isIn(["all", "department"]).withMessage("Invalid target type"),
-  body("departmentId")
-    .optional()
-    .isMongoId()
-    .withMessage("Invalid department ID"),
 ];
 
 // Routes
