@@ -33,7 +33,7 @@ const Sidebar = () => {
     },
     {
       label: "Quản lý chấm công",
-      href: "attendences",
+      href: "attendances",
     },
     {
       label: "Quản lý nghỉ phép",
