@@ -1,0 +1,156 @@
+.attendance-table {
+  font-size: 14px;
+  background-color: #fff;
+}
+
+.attendance-table th,
+.attendance-table td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 8px !important;
+  min-width: 40px;
+}
+
+.name-column {
+  min-width: 200px;
+  text-align: left !important;
+}
+
+.employee-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.employee-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.status-cell {
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+
+.status-cell:hover {
+  opacity: 0.8;
+}
+
+.status-cell.present {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-cell.absent {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-cell.leave {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+.status-cell.holiday {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-cell.weekend,
+th.weekend {
+  background-color: #f5f5f5;
+  color: #9e9e9e;
+}
+
+.status-cell.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.status-cell.clickable:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(1.05);
+}
+
+.attendance-legend {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.status-icon.present {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-icon.absent {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-icon.leave {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+.status-icon.holiday {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-icon.weekend {
+  background-color: #f5f5f5;
+  color: #9e9e9e;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .attendance-legend {
+    gap: 10px;
+  }
+
+  .legend-item {
+    font-size: 12px;
+    padding: 2px 4px;
+  }
+
+  .status-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+  }
+
+  .attendance-table {
+    font-size: 12px;
+  }
+
+  .status-cell {
+    font-size: 14px;
+  }
+} 

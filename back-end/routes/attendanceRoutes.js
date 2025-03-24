@@ -9,7 +9,7 @@ router.post("/", attendanceController.markAttendance);
 router.get("/:employeeId", attendanceController.getEmployeeAttendance);
 
 // Generate attendance reports
-router.get("/reports", attendanceController.generateReports);
+router.get("/employees/reports", attendanceController.generateReports);
 
 // Update attendance record
 router.put("/:id", attendanceController.updateAttendance);

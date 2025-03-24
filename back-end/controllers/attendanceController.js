@@ -5,22 +5,34 @@ exports.markAttendance = async (req, res) => {
   try {
     const { employeeId, date, status, overtimeHours } = req.body;
 
+    // Kiểm tra xem đã có bản ghi chấm công cho ngày này chưa
+    const existingAttendance = await Attendance.findOne({
+      employeeId,
+      date: new Date(date)
+    });
+
+    if (existingAttendance) {
+      return res.status(400).json({ 
+        message: "Đã tồn tại bản ghi chấm công cho ngày này"
+      });
+    }
+
     const attendance = new Attendance({
       employeeId,
       date,
-      status,
+      status, 
       overtimeHours,
     });
 
     const savedAttendance = await attendance.save();
-    await createActivityLog(
-      req.user.userId,
-      "CREATE",
-      "ATTENDANCE",
-      savedAttendance._id,
-      "Attendance created successfully",
-      { attendanceData: savedAttendance }
-    );
+    // await createActivityLog(
+    //   req.user.userId,
+    //   "CREATE", 
+    //   "ATTENDANCE",
+    //   savedAttendance._id,
+    //   "Attendance created successfully",
+    //   { attendanceData: savedAttendance }
+    // );
 
     res.status(201).json(attendance);
   } catch (error) {
@@ -55,7 +67,7 @@ exports.generateReports = async (req, res) => {
     }
 
     const reports = await Attendance.find(query)
-      .populate("employeeId", "name department")
+      .populate("employeeId", "fullName")
       .sort({ date: -1 });
 
     res.json(reports);
@@ -81,14 +93,14 @@ exports.updateAttendance = async (req, res) => {
         .json({ message: "Không tìm thấy bản ghi chấm công" });
     }
 
-    await createActivityLog(
-      req.user.userId,
-      "UPDATE",
-      "ATTENDANCE",
-      attendance._id,
-      "Attendance updated successfully",
-      { attendanceData: attendance }
-    );
+    // await createActivityLog(
+    //   req.user.userId,
+    //   "UPDATE",
+    //   "ATTENDANCE",
+    //   attendance._id,
+    //   "Attendance updated successfully",
+    //   { attendanceData: attendance }
+    // );
 
     res.json(attendance);
   } catch (error) {
@@ -108,14 +120,14 @@ exports.deleteAttendance = async (req, res) => {
         .json({ message: "Không tìm thấy bản ghi chấm công" });
     }
 
-    await createActivityLog(
-      req.user.userId,
-      "DELETE",
-      "ATTENDANCE",
-      attendance._id,
-      "Attendance deleted successfully",
-      { attendanceData: attendance }
-    );
+    // await createActivityLog(
+    //   req.user.userId,
+    //   "DELETE",
+    //   "ATTENDANCE",
+    //   attendance._id,
+    //   "Attendance deleted successfully",
+    //   { attendanceData: attendance }
+    // );
 
     res.json({ message: "Xóa bản ghi chấm công thành công" });
   } catch (error) {
