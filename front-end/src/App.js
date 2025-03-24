@@ -23,7 +23,7 @@ import SalaryDetail from "./components/salary/SalaryDetail";
 import DepartmentList from "./components/departments/DepartmentList";
 import DepartmentForm from "./components/departments/DepartmentForm";
 import DepartmentDetail from "./components/departments/DepartmentDetail";
-import AttendancePage from './pages/AttendancePage';
+import AttendancePage from './components/attendance/AttendancePage';
 import NotificationList from "./components/notifications/NotificationList";
 
 const PrivateRoute = ({ children }) => {
