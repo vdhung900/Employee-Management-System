@@ -47,6 +47,31 @@ exports.createLeaveRequest = async (req, res) => {
   }
 };
 
+exports.getAllLeaveRequests = async (req, res) =>{
+  try {
+    const leaveRequests = await LeaveRequest.find()
+      .populate({
+        path: 'employeeId',
+        populate: {
+          path: 'departmentId'
+        }
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: leaveRequests,
+      message: "Lấy danh sách yêu cầu nghỉ phép thành công",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách yêu cầu nghỉ phép",
+      error: error.message,
+    });
+  }
+};
+
 // Lấy danh sách yêu cầu nghỉ phép của nhân viên
 exports.getEmployeeLeaveRequests = async (req, res) => {
   try {

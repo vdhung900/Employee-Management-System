@@ -29,6 +29,7 @@ import UserAttendance from './components/userPage/UserAttendance';
 import ActivityLogList from "./components/activityLogs/ActivityLogList";
 import BackupPage from "./components/backup/BackupPage";
 import Statistic from "./components/statistics/Statistic";
+import LeaveRequestAdmin from "./components/leaverequests/LeaveRequestAdmin";
 
 const PrivateRoute = ({ children }) => {
   const { auth } = useAuth();
@@ -111,6 +112,10 @@ function App() {
                             <Route
                               path="notifications"
                               element={<NotificationList />}
+                            />
+                            <Route
+                            path="leaves"
+                            element={<LeaveRequestAdmin/>}
                             />
                             <Route
                               path="action-histories"
