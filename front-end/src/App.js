@@ -28,6 +28,7 @@ import NotificationList from "./components/notifications/NotificationList";
 import UserAttendance from './components/userPage/UserAttendance';
 import ActivityLogList from "./components/activityLogs/ActivityLogList";
 import BackupPage from "./components/backup/BackupPage";
+import Statistic from "./components/statistics/Statistic";
 
 const PrivateRoute = ({ children }) => {
   const { auth } = useAuth();
@@ -120,6 +121,11 @@ function App() {
                               element={<UserAttendance/>}
                             />
                             <Route path="backups" element={<BackupPage />} />
+
+                            <Route
+                              path='/reports'
+                              element= {<Statistic/>}
+                            />
                           </Routes>
                         </div>
                       </div>
