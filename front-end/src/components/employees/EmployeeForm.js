@@ -198,8 +198,7 @@ const EmployeeForm = () => {
 
         // Create employee
         const employeeResponse = await employeeService.createEmployee(formData);
-        console.log("employeeResponse", employeeResponse);
-        const newEmployeeId = employeeResponse.data.data._id;
+        const newEmployeeId = employeeResponse.data._id;
 
         // Create user account
         const userResponse = await userService.register({
