@@ -29,6 +29,8 @@ import NotificationList from "./components/notifications/NotificationList";
 import UserAttendance from './components/userPage/UserAttendance';
 import ActivityLogList from "./components/activityLogs/ActivityLogList";
 import BackupPage from "./components/backup/BackupPage";
+import Statistic from "./components/statistics/Statistic";
+import LeaveRequestAdmin from "./components/leaverequests/LeaveRequestAdmin";
 import userService from "./services/userService";
 import useRoleCheck from "./hooks/useRoleCheck";
 import { ToastContainer } from 'react-toastify';
@@ -190,7 +192,15 @@ const UserCheck = () => {
                       element={<UserAttendance/>}
                     />
                     <Route path="backups" element={<BackupPage />} />
+                    <Route
+                      path='/reports'
+                      element= {<Statistic/>}
+                    />
                   </Routes>
+                  <Route
+                            path="leaves"
+                            element={<LeaveRequestAdmin/>}
+                            />
                 </AdminLayout>
               )}
             </PrivateRoute>

@@ -11,8 +11,13 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.8.2",
     "bootstrap": "^5.3.3",
+    "echarts": "^5.6.0",
+    "echarts-for-react": "^3.0.2",
+    "file-saver": "^2.0.5",
     "frontend": "file:",
     "json-server": "^0.17.3",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "moment": "^2.30.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.9",
@@ -23,7 +28,8 @@
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
     "react-toastify": "^11.0.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "react-scripts start",
