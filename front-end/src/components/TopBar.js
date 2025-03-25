@@ -1,14 +1,26 @@
 import React from "react";
 import { Navbar, Nav, NavDropdown, NavLink } from "react-bootstrap";
 import { BellFill } from "react-bootstrap-icons";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const TopBar = ({ user }) => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
   if (user == null) {
     user = {
       name: "Guest",
       avatar: "/avatar.jpg",
     };
   }
+
+  const handleLogout = () => {
+    logout();
+    // Clear all localStorage data
+    localStorage.clear();
+    navigate("/login");
+  };
 
   return (
     <Navbar bg="light" expand="lg">
@@ -33,7 +45,9 @@ const TopBar = ({ user }) => {
             id="user-dropdown"
           >
             <NavDropdown.Item href="#action/3.1">{user?.name}</NavDropdown.Item>
-            <NavDropdown.Item href="#action/3.2">Đăng xuất</NavDropdown.Item>
+            <NavDropdown.Item onClick={handleLogout}>
+              Đăng xuất
+            </NavDropdown.Item>
           </NavDropdown>
         </Nav>
       </Navbar.Collapse>

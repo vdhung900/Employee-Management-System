@@ -43,6 +43,15 @@ exports.createEmployee = async (req, res) => {
       const employee = new Employee(employeeData);
       const savedEmployee = await employee.save();
 
+      // If employee has a department, update the department's employeeIds array
+      if (employeeData.departmentId) {
+        await Department.findByIdAndUpdate(
+          employeeData.departmentId,
+          { $addToSet: { employeeIds: savedEmployee._id } },
+          { new: true }
+        );
+      }
+
       await createActivityLog(
         req.user.userId,
         "CREATE",
@@ -70,7 +79,6 @@ exports.createEmployee = async (req, res) => {
 // Get all employees
 exports.getAllEmployees = async (req, res) => {
   try {
-
     const employees = await Employee.find().populate("departmentId");
 
     res.status(200).json({
@@ -168,6 +176,12 @@ exports.updateEmployee = async (req, res) => {
         updateData.avatar = `uploads/${req.file.filename}`;
       }
 
+      // Check if department is changing
+      const oldDepartmentId = currentEmployee.departmentId
+        ? currentEmployee.departmentId.toString()
+        : null;
+      const newDepartmentId = updateData.departmentId || null;
+
       // Cập nhật employee
       const updatedEmployee = await Employee.findByIdAndUpdate(
         req.params.id,
@@ -177,6 +191,23 @@ exports.updateEmployee = async (req, res) => {
           runValidators: true,
         }
       ).populate("departmentId");
+
+      // Handle department changes
+      // If employee was in a department and now isn't, or changed departments
+      if (oldDepartmentId && oldDepartmentId !== newDepartmentId) {
+        // Remove from old department
+        await Department.findByIdAndUpdate(oldDepartmentId, {
+          $pull: { employeeIds: currentEmployee._id },
+        });
+      }
+
+      // If employee is assigned to a new department
+      if (newDepartmentId && oldDepartmentId !== newDepartmentId) {
+        // Add to new department
+        await Department.findByIdAndUpdate(newDepartmentId, {
+          $addToSet: { employeeIds: currentEmployee._id },
+        });
+      }
 
       await createActivityLog(
         req.user.userId,
@@ -205,7 +236,7 @@ exports.updateEmployee = async (req, res) => {
 // Delete employee
 exports.deleteEmployee = async (req, res) => {
   try {
-    const employee = await Employee.findByIdAndDelete(req.params.id);
+    const employee = await Employee.findById(req.params.id);
 
     if (!employee) {
       return res.status(404).json({
@@ -213,6 +244,15 @@ exports.deleteEmployee = async (req, res) => {
         message: "Employee not found",
       });
     }
+
+    // If employee is part of a department, remove from department's employeeIds
+    if (employee.departmentId) {
+      await Department.findByIdAndUpdate(employee.departmentId, {
+        $pull: { employeeIds: employee._id },
+      });
+    }
+
+    await Employee.findByIdAndDelete(req.params.id);
 
     await createActivityLog(
       req.user.userId,

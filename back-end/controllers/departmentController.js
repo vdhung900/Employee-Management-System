@@ -91,17 +91,54 @@ exports.updateDepartment = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
+    // Get current department to track changes
+    const currentDepartment = await Department.findById(req.params.id);
+    if (!currentDepartment) {
+      return res.status(404).json({
+        success: false,
+        message: "Department not found",
+      });
+    }
+
+    // If employeeIds is being updated, keep a copy of the old list
+    const oldEmployeeIds = [...currentDepartment.employeeIds];
+
+    // Update department with new data
     const department = await Department.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
 
-    if (!department) {
-      return res.status(404).json({
-        success: false,
-        message: "Department not found",
-      });
+    // If employeeIds field was included in the update
+    if (req.body.employeeIds) {
+      const newEmployeeIds = req.body.employeeIds;
+
+      // Find employees who have been removed from the department
+      const removedEmployeeIds = oldEmployeeIds.filter(
+        (id) => !newEmployeeIds.includes(id.toString())
+      );
+
+      // Find employees who have been added to the department
+      const addedEmployeeIds = newEmployeeIds.filter(
+        (id) => !oldEmployeeIds.map((oid) => oid.toString()).includes(id)
+      );
+
+      // Update employees who have been removed
+      if (removedEmployeeIds.length > 0) {
+        await Employee.updateMany(
+          { _id: { $in: removedEmployeeIds } },
+          { $unset: { departmentId: "" } }
+        );
+      }
+
+      // Update employees who have been added
+      if (addedEmployeeIds.length > 0) {
+        await Employee.updateMany(
+          { _id: { $in: addedEmployeeIds } },
+          { departmentId: department._id }
+        );
+      }
     }
 
     await createActivityLog(
