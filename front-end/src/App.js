@@ -25,6 +25,7 @@ import DepartmentForm from "./components/departments/DepartmentForm";
 import DepartmentDetail from "./components/departments/DepartmentDetail";
 import AttendancePage from "./components/attendance/AttendancePage";
 import NotificationList from "./components/notifications/NotificationList";
+import UserAttendance from './components/userPage/UserAttendance';
 import ActivityLogList from "./components/activityLogs/ActivityLogList";
 import BackupPage from "./components/backup/BackupPage";
 
@@ -113,6 +114,10 @@ function App() {
                             <Route
                               path="action-histories"
                               element={<ActivityLogList />}
+                            />
+                            <Route
+                              path="/user-attendance"
+                              element={<UserAttendance/>}
                             />
                             <Route path="backups" element={<BackupPage />} />
                           </Routes>
