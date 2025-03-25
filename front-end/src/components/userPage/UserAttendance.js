@@ -9,7 +9,9 @@ import {
   Badge,
   Modal,
   Form,
-  ButtonGroup
+  ButtonGroup,
+  Alert,
+  Spinner
 } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -34,6 +36,7 @@ import {
   deleteAttendance
 } from '../../services/attendanceService';
 import userService from '../../services/userService';
+import useRoleCheck from '../../hooks/useRoleCheck';
 
 const UserAttendance = () => {
   const [attendanceData, setAttendanceData] = useState([]);
@@ -52,6 +55,9 @@ const UserAttendance = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  
+  // Sử dụng hook để lấy thông tin người dùng
+  const { userData, loading: userLoading, error: userError } = useRoleCheck();
 
   useEffect(() => {
     const loadData = async () => {
@@ -145,7 +151,7 @@ const UserAttendance = () => {
   const fetchAttendanceData = async () => {
     try {
       const userInfo = await userService.getUserProfile();
-      const response = await getEmployeeAttendance(userInfo.employeeId);
+      const response = await getEmployeeAttendance(userInfo.employeeId._id);
       
       if (!response || !response.data) {
         throw new Error('Không có dữ liệu chấm công');
@@ -217,7 +223,7 @@ const UserAttendance = () => {
       const userInfo = await userService.getUserProfile();
 
       await createAttendance({
-        employeeId: userInfo.employeeId,
+        employeeId: userInfo.employeeId._id,
         date: selectedDate,
         status: selectedStatus,
       });
@@ -289,6 +295,24 @@ const UserAttendance = () => {
     ];
     return monthNames[month];
   };
+
+  if (userLoading) {
+    return (
+      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+        <Spinner animation="border" variant="primary" />
+      </Container>
+    );
+  }
+
+  if (userError) {
+    return (
+      <Container className="py-3">
+        <Alert variant="danger">
+          Lỗi: {userError}
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container fluid className="py-3">

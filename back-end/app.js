@@ -50,6 +50,7 @@ app.use((req, res, next) => {
     "/api/employees",
     "/api/auth/profile",
     "/api/attendances",
+    "/api/notifications"
   ];
 
   if (whiteList.some((url) => req.url.startsWith(url))) {

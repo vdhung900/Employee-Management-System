@@ -14,9 +14,11 @@ const LoginScreen = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    
     try {
-      setError("");
-      setLoading(true);
+      console.log("Đang gửi yêu cầu đăng nhập cho:", username);
       const response = await axios.post(
         "http://localhost:9999/api/auth/login",
         {
@@ -24,11 +26,25 @@ const LoginScreen = () => {
           password,
         }
       );
-
+      
+      // Thêm debug
+      console.log("Đăng nhập thành công, response:", response.data);
+      console.log("Access token:", response.data.accessToken);
+      
       login(response.data.accessToken);
+      
+      // Thêm debug xác nhận token đã được lưu
+      console.log("Token đã được lưu vào localStorage:", localStorage.getItem('token'));
+      
       navigate("/home");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to login");
+    } catch (error) {
+      console.error("Lỗi đăng nhập:", error);
+      if (error.response) {
+        console.error("Chi tiết lỗi:", error.response.data);
+        setError(error.response.data.message || 'Đăng nhập thất bại');
+      } else {
+        setError('Lỗi kết nối đến server');
+      }
     } finally {
       setLoading(false);
     }
