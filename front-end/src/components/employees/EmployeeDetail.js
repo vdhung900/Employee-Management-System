@@ -3,10 +3,13 @@ import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaEdit, FaArrowLeft } from "react-icons/fa";
 
+const IMAGE_URL = "http://localhost:9999/";
+
 const EmployeeDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const employee = location.state?.employee;
+  console.log(employee);
 
   if (!employee) {
     return <div className="text-center">Employee not found</div>;
@@ -26,10 +29,7 @@ const EmployeeDetail = () => {
             </Button>
             <h2 className="mb-0">Employee Details</h2>
           </div>
-          <Button
-            variant="primary"
-            onClick={() => navigate(`/employees/${employee._id}/edit`)}
-          >
+          <Button variant="primary" onClick={() => navigate(`/employees/${employee._id}/edit`)}>
             <FaEdit /> Edit Employee
           </Button>
         </Card.Header>
@@ -37,7 +37,8 @@ const EmployeeDetail = () => {
           <Row>
             <Col md={4} className="text-center mb-4">
               <img
-                src={"/avatar.jpg"}
+                // src={"/avatar.jpg"}
+                src={employee.avatar ? IMAGE_URL + employee.avatar : "/avatar.jpg"}
                 alt={employee.fullName}
                 className="img-thumbnail mb-3"
                 style={{ maxWidth: "200px" }}

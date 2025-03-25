@@ -1,19 +1,39 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navbar, Nav, NavDropdown, NavLink } from "react-bootstrap";
 import { BellFill } from "react-bootstrap-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import userService from "../services/userService";
+
+const IMAGE_URL = "http://localhost:9999/";
 
 const TopBar = ({ user }) => {
+  const [userState, setUserState] = useState(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const response = await userService.getUserProfile();
+        if (response) {
+          setUserState(response);
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+
+    getUser();
+  }, []);
+
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  if (user == null) {
-    user = {
-      name: "Guest",
-      avatar: "/avatar.jpg",
-    };
-  }
+  // if (user == null) {
+  //   user = {
+  //     name: "Guest",
+  //     avatar: "/avatar.jpg",
+  //   };
+  // }
 
   const handleLogout = () => {
     logout();
@@ -34,9 +54,9 @@ const TopBar = ({ user }) => {
           <NavDropdown
             title={
               <>
-                <span className="me-2">{user.name}</span>
+                <span className="me-2">{userState?.username}</span>
                 <img
-                  src={user?.avatar}
+                  src={userState?.avatar ? IMAGE_URL + userState?.avatar : "/avatar.jpg"}
                   alt="Avatar"
                   style={{ width: "40px", height: "40px", borderRadius: "50%" }}
                 />
@@ -45,9 +65,7 @@ const TopBar = ({ user }) => {
             id="user-dropdown"
           >
             <NavDropdown.Item href="#action/3.1">{user?.name}</NavDropdown.Item>
-            <NavDropdown.Item onClick={handleLogout}>
-              Đăng xuất
-            </NavDropdown.Item>
+            <NavDropdown.Item onClick={handleLogout}>Đăng xuất</NavDropdown.Item>
           </NavDropdown>
         </Nav>
       </Navbar.Collapse>

@@ -1,16 +1,24 @@
 import api from "./api";
 
 const userService = {
+  register: async (userData) => {
+    try {
+      const response = await api.post("/auth/register", userData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 
   // Lấy thông tin profile của user đang đăng nhập
   getUserProfile: async () => {
     try {
       // Kiểm tra token trước khi gọi API
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error("No authentication token found");
       }
-      
+
       const response = await api.get(`/auth/profile`);
       console.log("Kết quả API profile:", response.data);
       return response.data;
@@ -18,7 +26,7 @@ const userService = {
       // Xử lý lỗi 401, 403
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
         // Xóa token nếu không hợp lệ
-        localStorage.removeItem('token');
+        localStorage.removeItem("token");
       }
       throw error;
     }
@@ -27,17 +35,17 @@ const userService = {
   // Kiểm tra token hợp lệ
   checkTokenValidity: async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
         return false;
       }
-      
-      await api.get('/auth/verify-token');
+
+      await api.get("/auth/verify-token");
       return true;
     } catch (error) {
       // Xóa token nếu không hợp lệ
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-        localStorage.removeItem('token');
+        localStorage.removeItem("token");
       }
       return false;
     }
@@ -87,7 +95,7 @@ const userService = {
   getUserAttendance: async (userId, month, year) => {
     try {
       const response = await api.get(`/attendances/user/${userId}`, {
-        params: { month, year }
+        params: { month, year },
       });
       return response.data;
     } catch (error) {
@@ -109,7 +117,7 @@ const userService = {
   getUserSalary: async (userId, month, year) => {
     try {
       const response = await api.get(`/salaries/user/${userId}`, {
-        params: { month, year }
+        params: { month, year },
       });
       return response.data;
     } catch (error) {
@@ -118,4 +126,4 @@ const userService = {
   },
 };
 
-export default userService; 
+export default userService;

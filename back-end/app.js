@@ -29,6 +29,9 @@ app.use(
 );
 app.use(cookieParser());
 
+// Đường dẫn đến thư mục uploads
+app.use("/uploads", express.static("uploads"));
+
 //Middleware kiểm tra Authentication
 app.use((req, res, next) => {
   console.log(`Request URL: ${req.url}`);
@@ -50,7 +53,7 @@ app.use((req, res, next) => {
     "/api/employees",
     "/api/auth/profile",
     "/api/attendances",
-    "/api/notifications"
+    "/api/notifications",
   ];
 
   if (whiteList.some((url) => req.url.startsWith(url))) {
