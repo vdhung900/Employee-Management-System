@@ -26,6 +26,7 @@ import DepartmentDetail from "./components/departments/DepartmentDetail";
 import AttendancePage from "./components/attendance/AttendancePage";
 import NotificationList from "./components/notifications/NotificationList";
 import ActivityLogList from "./components/activityLogs/ActivityLogList";
+import BackupPage from "./components/backup/BackupPage";
 
 const PrivateRoute = ({ children }) => {
   const { auth } = useAuth();
@@ -113,6 +114,7 @@ function App() {
                               path="action-histories"
                               element={<ActivityLogList />}
                             />
+                            <Route path="backups" element={<BackupPage />} />
                           </Routes>
                         </div>
                       </div>
