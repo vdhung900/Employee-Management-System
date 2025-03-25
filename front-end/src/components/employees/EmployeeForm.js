@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  Container,
-  Form,
-  Button,
-  Row,
-  Col,
-  Card,
-  Alert,
-} from "react-bootstrap";
+import { Container, Form, Button, Row, Col, Card, Alert } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import { employeeService } from "../../services/employeeService";
 import { departmentService } from "../../services/departmentService";
 import { FaArrowLeft } from "react-icons/fa";
 import axios from "axios";
+import userService from "../../services/userService";
 
 const EmployeeForm = () => {
   const navigate = useNavigate();
@@ -62,9 +55,7 @@ const EmployeeForm = () => {
       const formattedEmployee = {
         ...employeeData,
         departmentId: employeeData.departmentId?._id || "",
-        dob: employeeData.dob
-          ? new Date(employeeData.dob).toISOString().split("T")[0]
-          : "",
+        dob: employeeData.dob ? new Date(employeeData.dob).toISOString().split("T")[0] : "",
         startDate: employeeData.startDate
           ? new Date(employeeData.startDate).toISOString().split("T")[0]
           : "",
@@ -200,30 +191,30 @@ const EmployeeForm = () => {
         const newEmployeeId = employeeResponse.data.data._id;
 
         // Create user account
-        const userResponse = await axios.post(
-          "http://localhost:9999/api/auth/register",
-          {
-            username: accountInfo.username,
-            email: accountInfo.email,
-            password: accountInfo.password,
-          }
-        );
+        const userResponse = await userService.register({
+          username: accountInfo.username,
+          email: accountInfo.email,
+          password: accountInfo.password,
+        });
+        // const userResponse = await axios.post(
+        //   "http://localhost:9999/api/auth/register",
+        //   {
+        //     username: accountInfo.username,
+        //     email: accountInfo.email,
+        //     password: accountInfo.password,
+        //   }
+        // );
 
         // Link employee with user
         if (userResponse.status === 201) {
           // Get the user ID of the newly created user
-          const usersResponse = await axios.get(
-            "http://localhost:9999/api/users",
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          );
+          const usersResponse = await axios.get("http://localhost:9999/api/users", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
 
-          const newUser = usersResponse.data.find(
-            (user) => user.username === accountInfo.username
-          );
+          const newUser = usersResponse.data.find((user) => user.username === accountInfo.username);
 
           if (newUser) {
             // Link the employee and user
@@ -246,9 +237,7 @@ const EmployeeForm = () => {
       }
     } catch (error) {
       console.error("Error saving employee:", error);
-      setError(
-        error.response?.data?.message || "Error creating employee and account"
-      );
+      setError(error.response?.data?.message || "Error creating employee and account");
     } finally {
       setLoading(false);
     }
@@ -270,9 +259,7 @@ const EmployeeForm = () => {
             >
               <FaArrowLeft /> Back to List
             </Button>
-            <h2 className="mb-0">
-              {isEditing ? "Edit Employee" : "Add New Employee"}
-            </h2>
+            <h2 className="mb-0">{isEditing ? "Edit Employee" : "Add New Employee"}</h2>
           </div>
         </Card.Header>
         <Card.Body>
@@ -481,20 +468,13 @@ const EmployeeForm = () => {
                       />
                     </div>
                   )}
-                  <Form.Control
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
+                  <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
                 </Form.Group>
               </Col>
             </Row>
 
             <div className="d-flex gap-2 justify-content-end">
-              <Button
-                variant="secondary"
-                onClick={() => navigate("/employees")}
-              >
+              <Button variant="secondary" onClick={() => navigate("/employees")}>
                 Cancel
               </Button>
               <Button type="submit" variant="primary" disabled={loading}>

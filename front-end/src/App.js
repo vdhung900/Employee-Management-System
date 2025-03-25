@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { UserProvider } from "./contexts/UserContext";
 import LoginScreenOld from "./components/LoginScreen";
 import TopBar from "./components/TopBar";
@@ -26,13 +21,13 @@ import DepartmentForm from "./components/departments/DepartmentForm";
 import DepartmentDetail from "./components/departments/DepartmentDetail";
 import AttendancePage from "./components/attendance/AttendancePage";
 import NotificationList from "./components/notifications/NotificationList";
-import UserAttendance from './components/userPage/UserAttendance';
+import UserAttendance from "./components/userPage/UserAttendance";
 import ActivityLogList from "./components/activityLogs/ActivityLogList";
 import BackupPage from "./components/backup/BackupPage";
 import userService from "./services/userService";
 import useRoleCheck from "./hooks/useRoleCheck";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import UserProfile from "./components/userPage/UserProfile";
 import UserNotifications from "./components/userPage/UserNotifications";
 
@@ -47,9 +42,7 @@ const AdminLayout = ({ children }) => {
       <Sidebar />
       <div className="flex-grow-1 d-flex flex-column overflow-hidden">
         <TopBar />
-        <div className="flex-grow-1 overflow-auto p-3">
-          {children}
-        </div>
+        <div className="flex-grow-1 overflow-auto p-3">{children}</div>
       </div>
     </div>
   );
@@ -58,7 +51,7 @@ const AdminLayout = ({ children }) => {
 // Component con để kiểm tra vai trò người dùng
 const AppRoutes = () => {
   const { auth } = useAuth();
-  
+
   // Hiển thị giao diện đăng nhập nếu không có auth
   if (!auth) {
     return (
@@ -69,7 +62,7 @@ const AppRoutes = () => {
       </Routes>
     );
   }
-  
+
   // Sử dụng component UserCheck để có thể sử dụng useNavigate với useRoleCheck
   return <UserCheck />;
 };
@@ -77,7 +70,7 @@ const AppRoutes = () => {
 // Component con này đảm bảo useNavigate hoạt động với useRoleCheck
 const UserCheck = () => {
   const { isEmployee, isAdmin, loading, error } = useRoleCheck();
-  
+
   // Hiển thị loading trong khi kiểm tra vai trò
   if (loading) {
     return (
@@ -91,9 +84,7 @@ const UserCheck = () => {
   if (error) {
     return (
       <Container className="d-flex justify-content-center align-items-center vh-100">
-        <Alert variant="danger">
-          Lỗi khi kiểm tra vai trò: {error}
-        </Alert>
+        <Alert variant="danger">Lỗi khi kiểm tra vai trò: {error}</Alert>
       </Container>
     );
   }
@@ -123,72 +114,24 @@ const UserCheck = () => {
                 // Giao diện cho Admin
                 <AdminLayout>
                   <Routes>
-                    <Route
-                      path="/"
-                      element={<Navigate to="/home" replace />}
-                    />
+                    <Route path="/" element={<Navigate to="/home" replace />} />
                     <Route path="/home" element={<Home />} />
-                    <Route
-                      path="/employees"
-                      element={<EmployeeList />}
-                    />
-                    <Route
-                      path="/employees/new"
-                      element={<EmployeeForm />}
-                    />
-                    <Route
-                      path="/employees/:id"
-                      element={<EmployeeDetail />}
-                    />
-                    <Route
-                      path="/employees/:id/edit"
-                      element={<EmployeeForm />}
-                    />
+                    <Route path="/employees" element={<EmployeeList />} />
+                    <Route path="/employees/new" element={<EmployeeForm />} />
+                    <Route path="/employees/:id" element={<EmployeeDetail />} />
+                    <Route path="/employees/:id/edit" element={<EmployeeForm />} />
                     <Route path="/salaries" element={<SalaryList />} />
-                    <Route
-                      path="/salaries/new"
-                      element={<SalaryForm />}
-                    />
-                    <Route
-                      path="/salaries/:id"
-                      element={<SalaryDetail />}
-                    />
-                    <Route
-                      path="/salaries/:id/edit"
-                      element={<SalaryForm />}
-                    />
-                    <Route
-                      path="/departments"
-                      element={<DepartmentList />}
-                    />
-                    <Route
-                      path="/departments/new"
-                      element={<DepartmentForm />}
-                    />
-                    <Route
-                      path="/departments/:id"
-                      element={<DepartmentDetail />}
-                    />
-                    <Route
-                      path="/departments/:id/edit"
-                      element={<DepartmentForm />}
-                    />
-                    <Route
-                      path="/attendances"
-                      element={<AttendancePage />}
-                    />
-                    <Route
-                      path="notifications"
-                      element={<NotificationList />}
-                    />
-                    <Route
-                      path="action-histories"
-                      element={<ActivityLogList />}
-                    />
-                    <Route
-                      path="/user-attendance"
-                      element={<UserAttendance/>}
-                    />
+                    <Route path="/salaries/new" element={<SalaryForm />} />
+                    <Route path="/salaries/:id" element={<SalaryDetail />} />
+                    <Route path="/salaries/:id/edit" element={<SalaryForm />} />
+                    <Route path="/departments" element={<DepartmentList />} />
+                    <Route path="/departments/new" element={<DepartmentForm />} />
+                    <Route path="/departments/:id" element={<DepartmentDetail />} />
+                    <Route path="/departments/:id/edit" element={<DepartmentForm />} />
+                    <Route path="/attendances" element={<AttendancePage />} />
+                    <Route path="notifications" element={<NotificationList />} />
+                    <Route path="action-histories" element={<ActivityLogList />} />
+                    <Route path="/user-attendance" element={<UserAttendance />} />
                     <Route path="backups" element={<BackupPage />} />
                   </Routes>
                 </AdminLayout>
