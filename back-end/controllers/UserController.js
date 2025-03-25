@@ -33,8 +33,14 @@ exports.register = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { username, email, password } = req.body;
+    const { username, email, password, employeeId } = req.body;
 
+    const existingEmployee = await Employee.findById(employeeId);
+    if (!existingEmployee) {
+      return res.status(400).json({
+        message: "Employee not found",
+      });
+    }
     // Check if user already exists
     const existingUser = await User.findOne({
       $or: [{ email: email.toLowerCase() }, { username: username }],
@@ -58,9 +64,12 @@ exports.register = async (req, res) => {
       username,
       email: email.toLowerCase(),
       password: hashedPassword,
+      employeeId: existingEmployee._id,
       role: "employee", //Default role is employee
     });
-    await user.save();
+
+    const savedUser = await user.save();
+    existingEmployee.userId = savedUser._id;
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
@@ -229,7 +238,7 @@ exports.linkEmployee = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy người dùng'
+        message: "Không tìm thấy người dùng",
       });
     }
 
@@ -238,7 +247,7 @@ exports.linkEmployee = async (req, res) => {
     if (!employee) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy nhân viên'
+        message: "Không tìm thấy nhân viên",
       });
     }
 
@@ -247,7 +256,7 @@ exports.linkEmployee = async (req, res) => {
     if (existingLink && existingLink._id.toString() !== userId) {
       return res.status(400).json({
         success: false,
-        message: 'Nhân viên này đã được liên kết với một tài khoản khác'
+        message: "Nhân viên này đã được liên kết với một tài khoản khác",
       });
     }
 
@@ -255,25 +264,25 @@ exports.linkEmployee = async (req, res) => {
     if (user.employeeId && user.employeeId.toString() !== employeeId) {
       return res.status(400).json({
         success: false,
-        message: 'Người dùng này đã được liên kết với một nhân viên khác'
+        message: "Người dùng này đã được liên kết với một nhân viên khác",
       });
     }
 
     // Cập nhật liên kết
     user.employeeId = employeeId;
-    user.role = 'employee'; // Tự động cập nhật role thành employee
+    user.role = "employee"; // Tự động cập nhật role thành employee
     await user.save();
 
     res.status(200).json({
       success: true,
       data: user,
-      message: 'Liên kết người dùng với nhân viên thành công'
+      message: "Liên kết người dùng với nhân viên thành công",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Lỗi khi liên kết người dùng với nhân viên',
-      error: error.message
+      message: "Lỗi khi liên kết người dùng với nhân viên",
+      error: error.message,
     });
   }
 };
