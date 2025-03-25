@@ -169,7 +169,12 @@ exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select(
       "-password -refreshToken"
-    ).populate('employeeId');
+    ).populate({
+      path: 'employeeId',
+      populate: {
+        path: 'departmentId',
+      }
+    });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

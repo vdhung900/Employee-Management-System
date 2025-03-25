@@ -24,12 +24,14 @@ const EmployeeHome = () => {
   const navigate = useNavigate();
   const {  loading, error } = useUser();
   const [user, setUser] = useState(null);
+  const IMAGE_URL = "http://localhost:9999/";
 
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
         const userResponse = await userService.getUserProfile();
         setUser(userResponse);
+        console.log(userResponse);
       } catch (err) {
         console.error('Error fetching user data:', err);
       }
@@ -73,7 +75,7 @@ const EmployeeHome = () => {
               <div className="d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center">
                   <img 
-                    src={user?.employeeId?.avatar || "/avatar-placeholder.jpg"} 
+                    src={user?.employeeId?.avatar ? IMAGE_URL + user?.employeeId?.avatar : "/avatar.jpg"}
                     alt="Avatar" 
                     style={{ width: '60px', height: '60px', borderRadius: '50%', marginRight: '15px' }}
                   />
@@ -150,7 +152,7 @@ const EmployeeHome = () => {
                   <Row className="mt-3">
                     <Col md={4} className="text-center mb-4">
                       <img 
-                        src={user?.employeeId?.avatar || "/avatar-placeholder.jpg"} 
+                        src={user?.employeeId?.avatar ? IMAGE_URL + user?.employeeId?.avatar : "/avatar.jpg"}
                         alt="Avatar" 
                         style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover' }}
                       />
