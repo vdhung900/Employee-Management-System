@@ -17,59 +17,25 @@ import useUser from '../hooks/useUser';
 import { notificationService } from '../services/notificationService';
 import { toast } from 'react-toastify';
 import UserNotifications from './userPage/UserNotifications';
-
+import  userService  from '../services/userService';
 const EmployeeHome = () => {
   const [activeTab, setActiveTab] = useState('attendance');
-  const [notifications, setNotifications] = useState([]);
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const { user, loading, error } = useUser();
+  const {  loading, error } = useUser();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
-    }
-  }, [user]);
-
-  const fetchNotifications = async () => {
-    try {
-      const response = await notificationService.getAllNotifications();
-      const allNotifications = response.data.data || [];
-      
-      // Lọc thông báo dành cho tất cả hoặc phòng ban của nhân viên
-      const userNotifications = allNotifications.filter(notification => {
-        // Thông báo cho tất cả người dùng
-        if (notification.target === 'all') return true;
-        
-        // Thông báo cho phòng ban của nhân viên
-        if (notification.target === 'department' && 
-            user && 
-            user.employeeId && 
-            user.employeeId.departmentId && 
-            notification.departmentId && 
-            notification.departmentId._id === user.employeeId.departmentId._id) {
-          return true;
-        }
-        
-        // Thông báo gửi trực tiếp cho người dùng cụ thể
-        if (notification.target === 'specific' && 
-            notification.recipients && 
-            notification.recipients.includes(user._id)) {
-          return true;
-        }
-        
-        return false;
-      });
-      
-      // Sắp xếp theo thời gian tạo giảm dần (mới nhất lên đầu)
-      userNotifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setNotifications(userNotifications);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      toast.error('Không thể tải thông báo');
-    }
-  };
-
+    const fetchUserInfo = async () => {
+      try {
+        const userResponse = await userService.getUserProfile();
+        setUser(userResponse);
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+      }
+    };
+    fetchUserInfo();
+  }, []);
   const handleLogout = () => {
     logout();
     localStorage.clear();
@@ -120,10 +86,6 @@ const EmployeeHome = () => {
                 </div>
                 
                 <div>
-                  <Button variant="outline-primary" className="me-2" onClick={() => navigate('/user-profile')}>
-                    <FontAwesomeIcon icon={faIdCard} className="me-2" />
-                    Trang cá nhân
-                  </Button>
                   <Button variant="outline-danger" onClick={handleLogout}>
                     <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
                     Đăng xuất
@@ -161,11 +123,6 @@ const EmployeeHome = () => {
                 <span>
                   <FontAwesomeIcon icon={faBell} className="me-2" />
                   Thông báo
-                  {notifications.length > 0 && (
-                    <Badge bg="danger" pill className="ms-2">
-                      {notifications.length}
-                    </Badge>
-                  )}
                 </span>
               }
             >

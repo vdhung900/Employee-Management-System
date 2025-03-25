@@ -196,11 +196,11 @@ const UserCheck = () => {
                       path='/reports'
                       element= {<Statistic/>}
                     />
+                    <Route
+                      path="leaves"
+                      element={<LeaveRequestAdmin/>}
+                    />
                   </Routes>
-                  <Route
-                            path="leaves"
-                            element={<LeaveRequestAdmin/>}
-                            />
                 </AdminLayout>
               )}
             </PrivateRoute>
