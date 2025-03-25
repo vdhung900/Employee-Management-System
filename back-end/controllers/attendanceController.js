@@ -123,14 +123,14 @@ exports.deleteAttendance = async (req, res) => {
         .json({ message: "Không tìm thấy bản ghi chấm công" });
     }
 
-    // await createActivityLog(
-    //   req.user.userId,
-    //   "DELETE",
-    //   "ATTENDANCE",
-    //   attendance._id,
-    //   "Attendance deleted successfully",
-    //   { attendanceData: attendance }
-    // );
+    await createActivityLog(
+      req.user.userId,
+      "DELETE",
+      "ATTENDANCE",
+      attendance._id,
+      "Attendance deleted successfully",
+      { attendanceData: attendance }
+    );
 
     res.json({ message: "Xóa bản ghi chấm công thành công" });
   } catch (error) {

@@ -1,6 +1,7 @@
 const LeaveRequest = require("../models/LeaveRequest");
 const Employee = require("../models/Employee");
 const { validationResult } = require("express-validator");
+const { createActivityLog } = require("./activityLogController");
 
 // Tạo yêu cầu nghỉ phép mới
 exports.createLeaveRequest = async (req, res) => {
@@ -25,6 +26,15 @@ exports.createLeaveRequest = async (req, res) => {
       remainingDays: 1,
     });
     const savedLeaveRequest = await leaveRequest.save();
+    
+    await createActivityLog(
+      req.user.userId,
+      "CREATE",
+      "LEAVE_REQUEST",
+      leaveRequest._id,
+      "Leave request created successfully",
+      { leaveRequestData: leaveRequest }
+    );
 
     res.status(201).json({
       success: true,
@@ -162,6 +172,15 @@ exports.updateLeaveRequest = async (req, res) => {
       req.body,
       { new: true, runValidators: true }
     ).populate("employeeId", "fullName departmentId position");
+
+    await createActivityLog(
+      req.user.userId,
+      "UPDATE",
+      "LEAVE_REQUEST",
+      leaveRequest._id,
+      "Leave request updated successfully",
+      { leaveRequestData: leaveRequest }
+    );
 
     res.status(200).json({
       success: true,

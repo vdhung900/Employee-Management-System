@@ -1,4 +1,5 @@
 const Salary = require("../models/Salary");
+const { createActivityLog } = require("./activityLogController");
 
 // Tính tổng thu nhập
 totalIncome = (salaryBase, allowances, bonus, penalty) => {
