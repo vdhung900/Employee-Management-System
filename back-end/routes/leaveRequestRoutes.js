@@ -14,9 +14,6 @@ const validateLeaveRequest = [
   body("status")
     .isIn(["pending", "approved", "rejected"])
     .withMessage("Trạng thái không hợp lệ"),
-  body("remainingDays")
-    .isInt({ min: 0 })
-    .withMessage("Số ngày nghỉ còn lại phải là số nguyên dương"),
 ];
 
 // Routes

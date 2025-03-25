@@ -22,16 +22,9 @@ exports.createLeaveRequest = async (req, res) => {
     const leaveRequest = new LeaveRequest({
       ...req.body,
       status: "pending", // Mặc định là pending khi tạo mới
+      remainingDays: 1,
     });
     const savedLeaveRequest = await leaveRequest.save();
-    await createActivityLog(
-      req.user.userId,
-      "CREATE",
-      "LEAVE_REQUEST",
-      savedLeaveRequest._id,
-      "Leave request created successfully",
-      { leaveRequestData: savedLeaveRequest }
-    );
 
     res.status(201).json({
       success: true,

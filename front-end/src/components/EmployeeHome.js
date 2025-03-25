@@ -18,6 +18,7 @@ import { notificationService } from '../services/notificationService';
 import { toast } from 'react-toastify';
 import UserNotifications from './userPage/UserNotifications';
 import  userService  from '../services/userService';
+import LeaveRequestForm from './leaverequests/LeaveRequestEmployee';
 const EmployeeHome = () => {
   const [activeTab, setActiveTab] = useState('attendance');
   const { logout } = useAuth();
@@ -129,6 +130,18 @@ const EmployeeHome = () => {
               }
             >
               <UserNotifications />
+            </Tab>
+
+            <Tab 
+              eventKey="leaverequest" 
+              title={
+                <span>
+                  <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
+                  Tạo đơn nghỉ phép 
+                </span>
+              }
+            >
+              <LeaveRequestForm employeeId={user?.employeeId?._id}/>
             </Tab>
             
             <Tab 
