@@ -23,8 +23,9 @@ import SalaryDetail from "./components/salary/SalaryDetail";
 import DepartmentList from "./components/departments/DepartmentList";
 import DepartmentForm from "./components/departments/DepartmentForm";
 import DepartmentDetail from "./components/departments/DepartmentDetail";
-import AttendancePage from './components/attendance/AttendancePage';
+import AttendancePage from "./components/attendance/AttendancePage";
 import NotificationList from "./components/notifications/NotificationList";
+import ActivityLogList from "./components/activityLogs/ActivityLogList";
 
 const PrivateRoute = ({ children }) => {
   const { auth } = useAuth();
@@ -71,10 +72,7 @@ function App() {
                               path="/employees/:id/edit"
                               element={<EmployeeForm />}
                             />
-                            <Route
-                              path="/salaries"
-                              element={<SalaryList />}
-                            />
+                            <Route path="/salaries" element={<SalaryList />} />
                             <Route
                               path="/salaries/new"
                               element={<SalaryForm />}
@@ -103,13 +101,17 @@ function App() {
                               path="/departments/:id/edit"
                               element={<DepartmentForm />}
                             />
-                            <Route 
-                              path="/attendances" 
-                              element={<AttendancePage />} 
+                            <Route
+                              path="/attendances"
+                              element={<AttendancePage />}
                             />
                             <Route
                               path="notifications"
-                              element={<NotificationList/>}
+                              element={<NotificationList />}
+                            />
+                            <Route
+                              path="action-histories"
+                              element={<ActivityLogList />}
                             />
                           </Routes>
                         </div>
