@@ -11,6 +11,8 @@ export const updateAttendance = (id, attendanceData) =>
   api.put(`/attendances/${id}`, attendanceData);
 export const deleteAttendance = (id) => 
   api.delete(`/attendances/${id}`);
+export const getEmployeeAttendance = (employeeId) =>
+  api.get(`/attendances/${employeeId}`);
 
 export const attendanceService = {
   getAllAttendances,
@@ -18,4 +20,5 @@ export const attendanceService = {
   createAttendance,
   updateAttendance,
   deleteAttendance,
+  getEmployeeAttendance,
 }; 

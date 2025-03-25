@@ -25,6 +25,7 @@ import DepartmentForm from "./components/departments/DepartmentForm";
 import DepartmentDetail from "./components/departments/DepartmentDetail";
 import AttendancePage from './components/attendance/AttendancePage';
 import NotificationList from "./components/notifications/NotificationList";
+import UserAttendance from './components/userPage/UserAttendance';
 
 const PrivateRoute = ({ children }) => {
   const { auth } = useAuth();
@@ -110,6 +111,10 @@ function App() {
                             <Route
                               path="notifications"
                               element={<NotificationList/>}
+                            />
+                            <Route
+                              path="/user-attendance"
+                              element={<UserAttendance/>}
                             />
                           </Routes>
                         </div>
