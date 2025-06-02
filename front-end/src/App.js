@@ -1,11 +1,52 @@
+import React from 'react';
+import './assets/styles/global.css';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import PrivateRoute from './components/auth/PrivateRoute';
+import PublicRoute from './components/auth/PublicRoute';
+import MainLayout from './layouts/MainLayout';
+import Login from './pages/auth/Login';
+import EmployeeDashboard from './pages/employee/Dashboard';
 
 function App() {
   return (
-    <div className="App">
-      <header>
-        AAAAAAAAAAAA
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        } />
+
+        <Route element={<PrivateRoute roles={['admin']} />}>
+          <Route path="/admin" element={<MainLayout />}>
+
+          </Route>
+        </Route>
+
+        <Route element={<PrivateRoute roles={['hr']} />}>
+          <Route path="/hr" element={<MainLayout />}>
+
+          </Route>
+        </Route>
+
+        <Route element={<PrivateRoute roles={['manager']} />}>
+          <Route path="/manager" element={<MainLayout />}>
+
+          </Route>
+        </Route>
+
+        <Route element={<PrivateRoute roles={['employee']} />}>
+          <Route path="/employee" element={<MainLayout />}>
+            <Route index element={<EmployeeDashboard />} />
+            <Route path="dashboard" element={<EmployeeDashboard />} />
+          </Route>
+        </Route>
+
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* <Route path="*" element={<NotFound />} /> */}
+      </Routes>
+    </Router>
   );
 }
 

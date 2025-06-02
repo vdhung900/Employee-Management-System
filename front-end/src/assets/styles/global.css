@@ -1,0 +1,67 @@
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f6f8fa;
+}
+
+body {
+  min-height: 100vh;
+  min-width: 100vw;
+  background: #f6f8fa;
+}
+
+.ant-layout {
+  min-height: 100vh !important;
+  background: #f6f8fa !important;
+}
+
+.ant-layout-content {
+  min-height: calc(100vh - 64px - 48px);
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  margin: 24px 16px 0 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* Sidebar đẹp hơn */
+.ant-layout-sider {
+  background: linear-gradient(135deg, #1976d2 0%, #90caf9 100%) !important;
+  min-height: 100vh !important;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.10);
+}
+
+/* Nút, tiêu đề, highlight */
+.highlight-text {
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: #888;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ant-layout-content {
+    margin: 12px 4px 0 4px;
+    padding: 8px;
+  }
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: #e3f2fd !important;
+  color: #1976d2 !important;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.ant-menu-dark .ant-menu-item:hover {
+  background-color: #90caf9 !important;
+  color: #1976d2 !important;
+} 
