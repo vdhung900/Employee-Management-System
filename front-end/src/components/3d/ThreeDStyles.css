@@ -1,0 +1,99 @@
+/* 3D Button Styles */
+.threed-button {
+  position: relative;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 0 #00000030;
+}
+
+.threed-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #00000030;
+}
+
+.threed-button-primary {
+  background-color: #1890ff;
+  color: white;
+}
+
+.threed-button-success {
+  background-color: #52c41a;
+  color: white;
+}
+
+.threed-button-warning {
+  background-color: #faad14;
+  color: white;
+}
+
+.threed-button-danger {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+.threed-button-small {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.threed-button-medium {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.threed-button-large {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.threed-button-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.threed-button-disabled:active {
+  transform: none;
+  box-shadow: 0 4px 0 #00000030;
+}
+
+/* 3D Container Styles */
+.threed-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.threed-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 12px 20px rgba(0, 0, 0, 0.15),
+    0 8px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode adjustments */
+body.dark-theme .threed-container {
+  background-color: #1f1f1f;
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 3D text effect */
+.threed-text {
+  color: #1890ff;
+  text-shadow: 
+    1px 1px 0 #075fb4,
+    2px 2px 0 #064a8c;
+  letter-spacing: 1px;
+} 
