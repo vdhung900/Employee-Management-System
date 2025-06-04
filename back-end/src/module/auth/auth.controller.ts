@@ -2,29 +2,36 @@ import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/commo
 import { AuthService } from './auth.service';
 import { LoginReq } from 'src/interfaces/loginReq.interface';
 import { BaseResponse } from 'src/interfaces/response/base.response';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { User } from 'src/schemas/user.schema';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
-@ApiTags('departments') // Nhóm các API này trong Swagger UI
-// @ApiBearerAuth() // Nếu dùng JWT
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
-    ){
+    ) {
 
     }
 
     @Post('/login')
-    @ApiOperation({ summary: 'Dang nhap' })
-    @ApiResponse({ status: 200, description: 'Phòng ban đã tạo', type: User })
-    async login(@Body() loginReq: LoginReq): Promise<BaseResponse>{
-        try{
+    @ApiOperation({ summary: 'User login' })
+    @ApiBody({ type: LoginReq })
+    @ApiResponse({
+        status: 200,
+        description: 'Login successful',
+        type: BaseResponse
+    })
+    @ApiResponse({
+        status: 500,
+        description: 'Internal server error'
+    })
+    async login(@Body() loginReq: LoginReq): Promise<BaseResponse> {
+        try {
             const resData = await this.authService.login(loginReq);
             return BaseResponse.success(resData, 'Dang nhap thanh cong', HttpStatus.OK);
-        }catch(e){
+        } catch (e) {
             // throw e;
-            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

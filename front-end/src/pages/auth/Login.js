@@ -7,7 +7,8 @@ import ThreeDButton from '../../components/3d/ThreeDButton';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
 import '../../components/3d/ThreeDStyles.css';
 import Loading from '../../components/loading/Loading';
-import {MESSAGE} from '../../constants/Message';
+import { MESSAGE } from '../../constants/Message';
+import { API_URL } from '../../config';
 const { Title, Text } = Typography;
 
 const Login = () => {
@@ -15,17 +16,17 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Check if already logged in on mount and redirect if needed
   useEffect(() => {
     if (isAuthenticated()) {
       const role = localStorage.getItem('role');
       let redirectTo = '/employee/dashboard';
-      
+
       if (role === 'admin') redirectTo = '/admin/dashboard';
       else if (role === 'hr') redirectTo = '/hr/dashboard';
       else if (role === 'manager') redirectTo = '/manager/dashboard';
-      
+
       navigate(redirectTo, { replace: true });
     }
   }, [navigate]);
@@ -33,25 +34,39 @@ const Login = () => {
   const handleLogin = async (values) => {
     setLoading(true);
     setError('');
-    
+
     try {
-      // Simulate a network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const result = login(values.username, values.password);
-      
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        login(data);
         message.success(MESSAGE.LOGIN_SUCCESS);
-        
+
         let redirectTo = '/employee/dashboard';
-        
-        
+        const role = data.role;
+
+        if (role === 'admin') redirectTo = '/admin/dashboard';
+        else if (role === 'hr') redirectTo = '/hr/dashboard';
+        else if (role === 'manager') redirectTo = '/manager/dashboard';
+
         setTimeout(() => {
           navigate(redirectTo, { replace: true });
         }, 100);
-
+      } else {
+        setError(data.message || 'Đăng nhập thất bại');
+      }
     } catch (err) {
       console.error('Login error:', err);
       setError('Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.');
+    } finally {
       setLoading(false);
     }
   };
@@ -76,7 +91,7 @@ const Login = () => {
       overflow: 'hidden'
     }}>
       {loading && <Loading text="Đang đăng nhập..." color="#1976d2" />}
-      
+
       {/* Background patterns */}
       <div style={{
         position: 'absolute',
@@ -124,10 +139,10 @@ const Login = () => {
         `}
       </style>
 
-      <ThreeDContainer 
-        glassEffect={true} 
-        style={{ 
-          maxWidth: '420px', 
+      <ThreeDContainer
+        glassEffect={true}
+        style={{
+          maxWidth: '420px',
           width: '90%',
           margin: '20px',
           padding: '40px',
@@ -139,17 +154,17 @@ const Login = () => {
           zIndex: 1
         }}
       >
-        <div 
-          style={{ 
-            textAlign: 'center', 
+        <div
+          style={{
+            textAlign: 'center',
             marginBottom: '30px',
             position: 'relative',
           }}
         >
           <div className="pulse-animation" style={{ marginBottom: '16px' }}>
-            <div style={{ 
-              width: '80px', 
-              height: '80px', 
+            <div style={{
+              width: '80px',
+              height: '80px',
               margin: '0 auto',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #1976d2, #90caf9)',
@@ -174,7 +189,7 @@ const Login = () => {
             message={error}
             type="error"
             showIcon
-            style={{ 
+            style={{
               marginBottom: '24px',
               boxShadow: '0 4px 12px rgba(255, 77, 79, 0.1)',
               borderRadius: '8px',
@@ -195,11 +210,11 @@ const Login = () => {
               name="username"
               rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
             >
-              <Input 
-                prefix={<UserOutlined style={{ color: '#1976d2' }} />} 
-                placeholder="Tên đăng nhập (admin hoặc employee)" 
+              <Input
+                prefix={<UserOutlined style={{ color: '#1976d2' }} />}
+                placeholder="Tên đăng nhập (admin hoặc employee)"
                 className="neumorphic-input"
-                style={{ 
+                style={{
                   borderRadius: '8px',
                   padding: '12px 16px',
                   height: 'auto',
@@ -219,7 +234,7 @@ const Login = () => {
                 prefix={<LockOutlined style={{ color: '#1976d2' }} />}
                 placeholder="Mật khẩu (1)"
                 className="neumorphic-input"
-                style={{ 
+                style={{
                   borderRadius: '8px',
                   padding: '12px 16px',
                   height: 'auto',
@@ -236,9 +251,9 @@ const Login = () => {
                 <Form.Item name="remember" valuePropName="checked" noStyle>
                   <Checkbox>Ghi nhớ đăng nhập</Checkbox>
                 </Form.Item>
-                <a 
-                  href="#" 
-                  style={{ 
+                <a
+                  href="#"
+                  style={{
                     color: '#1976d2',
                     textDecoration: 'none',
                     fontWeight: '500',
@@ -254,9 +269,9 @@ const Login = () => {
                 type="submit"
                 className="btn-green-theme"
                 disabled={loading}
-                style={{ 
-                  width: '100%', 
-                  height: '46px', 
+                style={{
+                  width: '100%',
+                  height: '46px',
                   fontSize: '16px',
                   borderRadius: '8px',
                   cursor: 'pointer',
@@ -285,9 +300,9 @@ const Login = () => {
             </Divider>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button 
+              <button
                 onClick={handleGoogleLogin}
-                style={{ 
+                style={{
                   padding: '8px 16px',
                   display: 'flex',
                   alignItems: 'center',
@@ -304,9 +319,9 @@ const Login = () => {
                 <GoogleOutlined style={{ color: '#ea4335' }} />
                 <span>Google</span>
               </button>
-              <button 
+              <button
                 onClick={handleOtpLogin}
-                style={{ 
+                style={{
                   padding: '8px 16px',
                   display: 'flex',
                   alignItems: 'center',

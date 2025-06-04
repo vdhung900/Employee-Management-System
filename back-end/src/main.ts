@@ -5,39 +5,32 @@ import { HttpExceptionFilter } from './middleware/http-exception.filter';
 import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-function getRandomInt(min: number, max: number) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new HttpExceptionFilter());
   app.enableCors({
-    origin: process.env.FE_URL || 'http://localhost:3000',
+    // Development
+    // origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+
+    // Production
+    origin: process.env.FRONTEND_URL,
     method: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     credentials: true
   })
   app.use(helmet());
 
+  // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle('Employee Management API')
-    .setDescription('API documentation for Employee Management System')
+    .setTitle('Employee Management System API')
+    .setDescription('The Employee Management System API description')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  if(process.env.NODE_ENV === 'prod'){
-    const port = process.env.PORT || 3000;
-    await app.listen(port);
-    Logger.log(`Application is running on: ${await app.getUrl()}`);
-  }else if(process.env.NODE_ENV === 'dev'){
-    const port = getRandomInt(30000, 40000);
-    await app.listen(port);
-    Logger.log(`Application is running on: ${await app.getUrl()}`);
-  }
+  const port = parseInt(process.env.PORT || '9123');
+  await app.listen(port, '0.0.0.0');
+  Logger.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();
