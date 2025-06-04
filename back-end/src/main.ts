@@ -9,8 +9,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new HttpExceptionFilter());
   app.enableCors({
-    // origin: process.env.FE_URL || 'http://localhost:3000', // Commented for local development
-    origin: 'http://103.82.22.29:3123', // Production URL
+    // Development
+    // origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+
+    // Production
+    origin: process.env.FRONTEND_URL,
     method: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     credentials: true
   })
@@ -26,8 +29,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = 9123; // Fixed port for production
-  await app.listen(port, '0.0.0.0'); // Listen on all network interfaces
+  const port = parseInt(process.env.PORT || '9123');
+  await app.listen(port, '0.0.0.0');
   Logger.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();
