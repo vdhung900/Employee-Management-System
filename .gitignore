@@ -23,3 +23,6 @@ yarn-error.log*
 # System Files
 .DS_Store
 Thumbs.db
+
+# Frontend config (ignore changes after initial commit)
+front-end/src/config.js
