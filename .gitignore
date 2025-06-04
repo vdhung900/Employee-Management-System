@@ -25,4 +25,6 @@ yarn-error.log*
 Thumbs.db
 
 # Frontend config (ignore changes after initial commit)
+/front-end/src/config.js
+src/config.js
 front-end/src/config.js
