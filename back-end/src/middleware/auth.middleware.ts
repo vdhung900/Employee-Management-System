@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { HttpCode, HttpException, HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { JwtPayload } from 'jsonwebtoken';
@@ -14,7 +14,7 @@ export class AuthMiddleware implements NestMiddleware {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-      return res.status(401).json({ message: 'Access denied. No token provided.' });
+      throw new HttpException({message: 'Access denied. No token provided.'}, HttpStatus.UNAUTHORIZED);
     }
 
     try {
@@ -23,13 +23,13 @@ export class AuthMiddleware implements NestMiddleware {
 
       const now = Math.floor(Date.now() / 1000);
       if (decoded.exp && decoded.exp < now) {
-        return res.status(401).json({ message: 'Token has expired' });
+        throw new HttpException({message: 'Token has expired.'}, HttpStatus.UNAUTHORIZED);
       }
 
       req.user = decoded;
       next();
     } catch (err) {
-      return res.status(401).json({ message: 'Invalid token' });
+      throw new HttpException({message: 'Invalid token.'}, HttpStatus.UNAUTHORIZED);
     }
   }
 }
