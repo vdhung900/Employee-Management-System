@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
 import { HttpExceptionFilter } from './middleware/http-exception.filter';
 import helmet from 'helmet';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 function getRandomInt(min: number, max: number) {
   min = Math.ceil(min);
@@ -19,6 +20,16 @@ async function bootstrap() {
     credentials: true
   })
   app.use(helmet());
+
+  const config = new DocumentBuilder()
+    .setTitle('Employee Management API')
+    .setDescription('API documentation for Employee Management System')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
   if(process.env.NODE_ENV === 'prod'){
     const port = process.env.PORT || 3000;
     await app.listen(port);
