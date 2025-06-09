@@ -14,7 +14,8 @@ export const logout = () => {
 
 export const login = (userData) => {
   localStorage.setItem('user', JSON.stringify(userData));
-  localStorage.setItem('role', 'employee');
+  localStorage.setItem('token', JSON.stringify(userData));
+  localStorage.setItem('role', 'admin');
 };
 
 export const isAuthenticated = () => {

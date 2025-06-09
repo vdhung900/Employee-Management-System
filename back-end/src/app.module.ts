@@ -8,6 +8,7 @@ import { RequestLog, RequestLogSchema } from './schemas/request-log.schema';
 import { RequestLoggerMiddleware } from './middleware/request-logger.middleware';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { RequestManageModule } from './module/request-manage/request-manage.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { APP_GUARD } from '@nestjs/core';
         ttl: 60000,
         limit: 15
       }
-    ])
+    ]),
+    RequestManageModule
   ],
   controllers: [],
   providers: [
@@ -44,6 +46,7 @@ export class AppModule implements NestModule {
       { path: 'auth/login', method: RequestMethod.POST },
       { path: 'auth/register', method: RequestMethod.POST },
       { path: 'api', method: RequestMethod.GET },
+      { path: 'request-manage/all-logs', method: RequestMethod.POST },
     )
     .forRoutes('*');
   }

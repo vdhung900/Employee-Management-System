@@ -13,7 +13,7 @@ async function bootstrap() {
     // origin: process.env.FRONTEND_URL || 'http://localhost:3000',
 
     // Production
-    origin: process.env.FRONTEND_URL,
+    origin: 'http://localhost:3123',
     method: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     credentials: true
   })
