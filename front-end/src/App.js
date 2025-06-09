@@ -6,6 +6,8 @@ import PublicRoute from './components/auth/PublicRoute';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/auth/Login';
 import EmployeeDashboard from './pages/employee/Dashboard';
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import LogRequest from "./pages/admin/LogRequest";
 
 function App() {
   return (
@@ -19,7 +21,9 @@ function App() {
 
         <Route element={<PrivateRoute roles={['admin']} />}>
           <Route path="/admin" element={<MainLayout />}>
-
+            <Route index element={<AdminDashboard/>}/>
+            <Route path="dashboard" element={<AdminDashboard/>}/>
+            <Route path="request-manage" element={<LogRequest/>}/>
           </Route>
         </Route>
 
