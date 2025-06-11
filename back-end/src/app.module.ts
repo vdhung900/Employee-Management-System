@@ -9,6 +9,8 @@ import { RequestLoggerMiddleware } from './middleware/request-logger.middleware'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { RequestManageModule } from './module/request-manage/request-manage.module';
+import { RequestModule } from './module/request/request.module';
+import { CategoryModule } from './module/category/category.module';
 
 @Module({
   imports: [
@@ -24,7 +26,9 @@ import { RequestManageModule } from './module/request-manage/request-manage.modu
         limit: 15
       }
     ]),
-    RequestManageModule
+    RequestManageModule,
+    RequestModule,
+    CategoryModule
   ],
   controllers: [],
   providers: [
@@ -46,7 +50,7 @@ export class AppModule implements NestModule {
       { path: 'auth/login', method: RequestMethod.POST },
       { path: 'auth/register', method: RequestMethod.POST },
       { path: 'api', method: RequestMethod.GET },
-      { path: 'request-manage/all-logs', method: RequestMethod.POST },
+      { path: 'hr-request/create', method: RequestMethod.POST },
     )
     .forRoutes('*');
   }

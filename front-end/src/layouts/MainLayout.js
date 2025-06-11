@@ -77,7 +77,7 @@ const MainLayout = () => {
     const handleLogout = () => {
         logout();
         message.success('Đã đăng xuất thành công');
-        navigate('/auth/login');
+        navigate('/login');
     };
 
     const userMenuItems = [
@@ -123,6 +123,21 @@ const MainLayout = () => {
             key: '/admin/request-manage',
             icon: <PullRequestOutlined /> ,
             label: 'Thống kê requests',
+        },
+        {
+            key: '/admin/setting',
+            icon: <PullRequestOutlined /> ,
+            label: 'Cài đặt hệ thống',
+        },
+        {
+            key: '/admin/account-request',
+            icon: <PullRequestOutlined /> ,
+            label: 'Yêu cầu tạo tài khoản',
+        },
+        {
+            key: '/hr/request',
+            icon: <PullRequestOutlined /> ,
+            label: 'Yêu cầu nhân sự',
         },
     ];
 
