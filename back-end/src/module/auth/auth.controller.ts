@@ -11,13 +11,17 @@ export class AuthController {
 
   @Get("/me")
   async getRequestMakerInfo(@Req() req): Promise<BaseResponse> {
-    console.log("awffaw", req.user);
+    try {
+      console.log("awffaw", req.user);
 
-    const user = await this.authService.findUserById(req.user.userId);
+      const user = await this.authService.findUserById(req.user.userId);
 
-    console.log("awffaw", user);
+      console.log("awffaw", user);
 
-    return BaseResponse.success(user, "", HttpStatus.OK);
+      return BaseResponse.success(user, "", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Post("/login")
