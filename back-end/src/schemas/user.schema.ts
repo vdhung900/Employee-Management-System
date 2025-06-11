@@ -13,7 +13,7 @@ export class User extends BaseSchema {
     @Prop({ required: true})
     password: string;
 
-    @Prop({ required: true})
+    @Prop({ required: true, default: 'employee'})
     role: string;
 
     @Prop({ default: '00'})
