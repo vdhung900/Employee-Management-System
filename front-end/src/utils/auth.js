@@ -16,7 +16,7 @@ export const login = (userData) => {
   localStorage.setItem('user', JSON.stringify(userData));
   localStorage.setItem('token', JSON.stringify(userData));
   // sua thong tin o day
-  localStorage.setItem('role', 'admin');
+  localStorage.setItem('role', 'staff');
 };
 
 export const isAuthenticated = () => {

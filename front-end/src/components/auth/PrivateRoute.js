@@ -14,8 +14,7 @@ const PrivateRoute = ({ roles = [] }) => {
   if (roles.length > 0 && !roles.includes(userRole)) {
     let redirectTo = '/employee/dashboard';
     if (userRole === 'admin') redirectTo = '/admin/dashboard';
-    else if (userRole === 'hr') redirectTo = '/hr/dashboard';
-    else if (userRole === 'manager') redirectTo = '/manager/dashboard';
+    else if (userRole === 'manager' || userRole === 'employee' || userRole === 'hr') redirectTo = '/employee/dashboard';
     
     return <Navigate to={redirectTo} replace />;
   }
