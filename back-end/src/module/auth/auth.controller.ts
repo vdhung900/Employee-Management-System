@@ -10,7 +10,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get("/me")
-  async getRequestMakerInfo(@Req() req): Promise<BaseResponse> {
+  async getRequestMakerInfo(@Req() req: any): Promise<BaseResponse> {
     try {
       console.log("awffaw", req.user);
 

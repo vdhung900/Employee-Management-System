@@ -5,13 +5,13 @@ import * as jwt from "jsonwebtoken";
 import { JwtPayload } from "jsonwebtoken";
 import { decode } from "punycode";
 
-// export interface CustomRequest extends Request {
-//   user?: any;
-// }
+export interface CustomRequest extends Request {
+  user?: any;
+}
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-  use(req: Request, res: Response, next: NextFunction) {
+  use(req: CustomRequest, res: Response, next: NextFunction) {
     console.log("used AuthMiddleWare");
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
