@@ -108,23 +108,7 @@ const MainLayout = () => {
     },
   ];
 
-  const getMenuItems = () => [
-    {
-      key: "/employee/dashboard",
-      icon: <DashboardOutlined />,
-      label: "Dashboard",
-    },
-    {
-      key: "/admin/dashboard",
-      icon: <DashboardOutlined />,
-      label: "Dashboard",
-    },
-    {
-      key: "/admin/request-manage",
-      icon: <PullRequestOutlined />,
-      label: "Thống kê requests",
-    },
-  ];
+  
 
   // Page title based on current route
   const getPageTitle = () => {
@@ -140,6 +124,44 @@ const MainLayout = () => {
     if (location.pathname.includes("/help")) return "Help Center";
     return "";
   };
+    const getMenuItems = () => [
+        {
+            key: '/employee/dashboard',
+            icon: <DashboardOutlined/>,
+            label: 'Dashboard',
+        },
+        {
+            key: '/admin/dashboard',
+            icon: <DashboardOutlined/>,
+            label: 'Dashboard',
+        },
+        {
+            key: '/admin/request-manage',
+            icon: <PullRequestOutlined /> ,
+            label: 'Thống kê requests',
+        },
+        {
+            key: '/admin/setting',
+            icon: <PullRequestOutlined /> ,
+            label: 'Cài đặt hệ thống',
+        },
+        {
+            key: '/admin/account-request',
+            icon: <PullRequestOutlined /> ,
+            label: 'Yêu cầu tạo tài khoản',
+        },
+        {
+            key: '/hr/request',
+            icon: <PullRequestOutlined /> ,
+            label: 'Yêu cầu nhân sự',
+           
+        },
+        {
+            key: '/admin/account',
+            icon: <UserOutlined /> ,
+            label: 'Quản lý tài khoản',
+        },
+    ];
 
   return (
     <Layout style={{ minHeight: "100vh" }}>

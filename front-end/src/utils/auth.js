@@ -19,6 +19,7 @@ export const login = (userData) => {
   localStorage.setItem("user", JSON.stringify(userData));
   localStorage.setItem("token", JSON.stringify(userData));
   localStorage.setItem("role", "admin");
+
 };
 
 export const isAuthenticated = () => {
