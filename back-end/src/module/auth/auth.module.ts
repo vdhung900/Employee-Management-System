@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Account, AccountSchema } from "src/schemas/account.schema";
 import { Employees, EmployeesSchema } from "src/schemas/employees.schema";
+import { JwtModule } from "@nestjs/jwt";
 
 @Module({
   imports: [
@@ -11,6 +12,9 @@ import { Employees, EmployeesSchema } from "src/schemas/employees.schema";
       { name: Account.name, schema: AccountSchema },
       { name: Employees.name, schema: EmployeesSchema },
     ]),
+    JwtModule.register({
+      global: true,
+    }),
   ],
   controllers: [AuthController],
   providers: [AuthService],

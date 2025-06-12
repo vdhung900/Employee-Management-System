@@ -12,8 +12,7 @@ import {
     Typography,
     Tag,
     message,
-    Tooltip,
-    Button
+    Tooltip
 } from 'antd';
 import {
     MenuFoldOutlined,
