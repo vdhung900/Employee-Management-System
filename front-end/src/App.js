@@ -17,7 +17,18 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import LogRequest from "./pages/admin/LogRequest";
 import Setting from "./pages/admin/Setting";
 import AdminAccountRequests from "./pages/admin/AdminAccountRequests";
-import Requests from "./pages/hr/Request";
+import Requests from "./pages/employee/Request";
+import AttendanceReview from "./pages/employee/AttendanceReview";
+import Calender from "./pages/employee/Calender";
+import Help from "./pages/employee/Help";
+import Overtime from "./pages/employee/Overtime";
+import Payroll from "./pages/employee/Payroll";
+import PayrollManagement from "./pages/employee/PayrollManagement";
+import Reports from "./pages/employee/Reports";
+import StaffManagement from "./pages/employee/StaffManagement";
+import TeamManagement from "./pages/employee/TeamManagement";
+import TeamPerformance from "./pages/employee/TeamPerformance";
+import NotFound from "./pages/NotFound";
 
 const router = createBrowserRouter([
   {
@@ -26,6 +37,14 @@ const router = createBrowserRouter([
       <PublicRoute>
         <Login />
       </PublicRoute>
+    )
+  },
+  {
+    path: "/404",
+    element: (
+        <PublicRoute>
+          <NotFound />
+        </PublicRoute>
     )
   },
   {
@@ -45,36 +64,26 @@ const router = createBrowserRouter([
     ]
   },
   {
-    path: "/hr",
-    element: <PrivateRoute roles={['hr']} />,
-    children: [
-      {
-        element: <MainLayout />,
-        children: [
-          { path: "request", element: <Requests /> }
-        ]
-      }
-    ]
-  },
-  {
-    path: "/manager",
-    element: <PrivateRoute roles={['manager']} />,
-    children: [
-      {
-        element: <MainLayout />,
-        children: []
-      }
-    ]
-  },
-  {
     path: "/employee",
-    element: <PrivateRoute roles={['employee']} />,
+    element: <PrivateRoute roles={['staff', 'manager', 'hr']} />,
     children: [
       {
         element: <MainLayout />,
         children: [
           { index: true, element: <EmployeeDashboard /> },
-          { path: "dashboard", element: <EmployeeDashboard /> }
+          { path: "dashboard", element: <EmployeeDashboard /> },
+          { path: "attendance-review", element: <AttendanceReview /> },
+          { path: "calender", element: <Calender /> },
+          { path: "help", element: <Help /> },
+          { path: "overtime", element: <Overtime /> },
+          { path: "payroll", element: <Payroll /> },
+          { path: "payroll-management", element: <PayrollManagement /> },
+          { path: "payroll-management", element: <PayrollManagement /> },
+          { path: "reports", element: <Reports /> },
+          { path: "requests", element: <Requests /> },
+          { path: "staff-management", element: <StaffManagement /> },
+          { path: "team-management", element: <TeamManagement /> },
+          { path: "team-performance", element: <TeamPerformance /> },
         ]
       }
     ]
@@ -82,6 +91,11 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/login" replace />
+  }
+  ,
+  {
+    path: "*",
+    element: <Navigate to="/404" replace />
   }
 ], {
   future: {
