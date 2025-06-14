@@ -12,7 +12,7 @@ export interface CustomRequest extends Request {
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   use(req: CustomRequest, res: Response, next: NextFunction) {
-    console.log("used AuthMiddleWare");
+    // console.log("used AuthMiddleWare");
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 

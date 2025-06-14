@@ -14,7 +14,6 @@ import { CategoryModule } from './module/category/category.module';
 import { AdminAccountModule } from './module/admin/admin_account.module';
 import { BadRequestException } from '@nestjs/common';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -31,8 +30,7 @@ import { BadRequestException } from '@nestjs/common';
     ]),
     RequestManageModule,
     RequestModule,
-    CategoryModule,
-    AdminAccountModule
+    CategoryModule
   ],
   controllers: [],
   providers: [
@@ -54,16 +52,16 @@ export class AppModule implements NestModule {
       { path: 'auth/login', method: RequestMethod.POST },
       { path: 'auth/register', method: RequestMethod.POST },
       { path: 'api', method: RequestMethod.GET },
-      { path: 'hr-request/create', method: RequestMethod.POST },
-      { path: 'request-manage/all-logs', method: RequestMethod.POST },
+      { path: 'category/type-request/:role', method: RequestMethod.GET },
       { path: 'admin-accounts', method: RequestMethod.POST },
       { path: 'admin-accounts', method: RequestMethod.GET },
       { path: 'admin-accounts/:id', method: RequestMethod.PATCH },
       { path: 'admin-accounts/:id/reset-password', method: RequestMethod.PATCH },
       { path: 'admin-accounts/:id', method: RequestMethod.GET },
       { path: 'admin-accounts/:id', method: RequestMethod.DELETE},
-      
     )
     .forRoutes('*');
   }
 }
+
+ 
