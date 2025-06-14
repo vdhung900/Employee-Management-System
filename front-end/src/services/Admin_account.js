@@ -12,9 +12,10 @@ const Admin_account = {
 
   async getAccountById(id) {
     try {
-      return await fetchWithAuth(`/admin-accounts/${id}`, 'GET');
-    } catch (e) {
-      throw handleApiError(e);
+      const response = await fetchWithAuth(`/admin-accounts/${id}`, 'GET');
+      return response;
+    } catch (error) {
+      throw error.response?.data || error;
     }
   },
 
@@ -28,14 +29,14 @@ const Admin_account = {
 
   async updateAccount(id, Data) {
     try {
-      return await fetchWithAuth(`/admin-accounts/${id}`, 'PUT', Data);
+      return await fetchWithAuth(`/admin-accounts/${id}`, 'PATCH', Data);
     } catch (e) {
       throw handleApiError(e);
     }
   },
   async resetPassword(id, Data) {
     try {
-      return await fetchWithAuth(`/admin-accounts/${id}/reset-password`, 'PUT', Data);
+      return await fetchWithAuth(`/admin-accounts/${id}/reset-password`, 'PATCH', Data);
     } catch (e) {
       throw handleApiError(e);
     }
@@ -44,6 +45,22 @@ const Admin_account = {
   async deleteAccount(id) {
     try {
       return await fetchWithAuth(`/admin-accounts/${id}`, 'DELETE');
+    } catch (e) {
+      throw handleApiError(e);
+    }
+  },
+
+  async getAllDepartments() {
+    try {
+      return await fetchWithAuth(`/admin-accounts/departments`, 'GET');
+    } catch (e) {
+      throw handleApiError(e);
+    }
+  },
+
+  async getAllPositions() {
+    try {
+      return await fetchWithAuth(`/admin-accounts/positions`, 'GET');
     } catch (e) {
       throw handleApiError(e);
     }

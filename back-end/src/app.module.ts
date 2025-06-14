@@ -12,6 +12,7 @@ import { RequestManageModule } from './module/request-manage/request-manage.modu
 import { RequestModule } from './module/request/request.module';
 import { CategoryModule } from './module/category/category.module';
 import { AdminAccountModule } from './module/admin/admin_account.module';
+import { AdminModule } from './module/admin/admin.module';
 import { BadRequestException } from '@nestjs/common';
 
 
@@ -32,6 +33,7 @@ import { BadRequestException } from '@nestjs/common';
     RequestManageModule,
     RequestModule,
     CategoryModule,
+    AdminModule,
     AdminAccountModule
   ],
   controllers: [],
@@ -62,6 +64,8 @@ export class AppModule implements NestModule {
       { path: 'admin-accounts/:id/reset-password', method: RequestMethod.PATCH },
       { path: 'admin-accounts/:id', method: RequestMethod.GET },
       { path: 'admin-accounts/:id', method: RequestMethod.DELETE},
+      { path: 'admin-accounts/departments', method: RequestMethod.GET },
+      { path: 'admin-accounts/positions', method: RequestMethod.GET },
       
     )
     .forRoutes('*');
