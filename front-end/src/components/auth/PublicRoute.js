@@ -7,7 +7,6 @@ const PublicRoute = ({ children }) => {
   const isAuth = isAuthenticated();
   const userRole = localStorage.getItem('role');
 
-  // Nếu đã đăng nhập, chuyển hướng về dashboard tương ứng
   if (isAuth) {
     let redirectTo = '/employee/dashboard';
     if (userRole === 'admin') redirectTo = '/admin/dashboard';
@@ -17,7 +16,6 @@ const PublicRoute = ({ children }) => {
     return <Navigate to={redirectTo} replace />;
   }
 
-  // Nếu chưa đăng nhập, cho phép truy cập route công khai
   return children;
 };
 
