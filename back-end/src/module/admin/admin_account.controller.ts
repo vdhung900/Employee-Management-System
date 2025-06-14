@@ -12,7 +12,20 @@ export class AdminAccountController {
     return this.adminAccountService.create(CreateAccount);
   }
 
-  
+  @Get()
+  findAll() {
+    return this.adminAccountService.findAll();
+  }
+
+  @Get('departments')
+  getAllDepartments() {
+    return this.adminAccountService.getDepartments();
+  }
+
+  @Get('positions')
+  getAllPositions() {
+    return this.adminAccountService.getPositions();
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -31,10 +44,5 @@ export class AdminAccountController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.adminAccountService.remove(id);
-  }
-
-  @Get()
-  findAll(@Query() query: string) {
-    return this.adminAccountService.findAll(query);
   }
 }
