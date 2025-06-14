@@ -3,6 +3,7 @@ import { AuthService } from "./auth.service";
 import { LoginReq } from "src/interfaces/loginReq.interface";
 import { BaseResponse } from "src/interfaces/response/base.response";
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger";
+// import { CustomRequest } from "src/middleware/auth.middleware";
 
 @ApiTags("Authentication")
 @Controller("auth")

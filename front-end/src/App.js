@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import LogRequest from "./pages/admin/LogRequest";
 import Setting from "./pages/admin/Setting";
 import AdminAccountRequests from "./pages/admin/AdminAccountRequests";
+import AdminAccount from "./pages/admin/AdminAccount";
 import Requests from "./pages/employee/Request";
 import AttendanceReview from "./pages/employee/AttendanceReview";
 import Calender from "./pages/employee/Calender";
@@ -60,6 +61,7 @@ const router = createBrowserRouter(
             { path: "request-manage", element: <LogRequest /> },
             { path: "setting", element: <Setting /> },
             { path: "account-request", element: <AdminAccountRequests /> },
+            { path: "admin-account", element: <AdminAccount /> }
           ],
         },
       ],
