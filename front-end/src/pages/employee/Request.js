@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Card,
     Typography,
@@ -51,6 +51,7 @@ import {
     QuestionCircleOutlined
 } from '@ant-design/icons';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
+import CategoryService from "../../services/CategoryService";
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -62,7 +63,16 @@ const Requests = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
+    const [requestCategories, setRequestCategories] = useState([]);
     const [form] = Form.useForm();
+
+    useEffect(() => {
+        try{
+            loadTypeReq();
+        }catch (e) {
+            console.log(e);
+        }
+    }, []);
 
     // Sample data
     const requests = [
@@ -143,15 +153,22 @@ const Requests = () => {
         }
     ];
 
-    const requestCategories = [
-        'Nghỉ phép',
-        'Tăng ca',
-        'Đi muộn',
-        'Về sớm',
-        'Công tác',
-        'Đào tạo',
-        'Khác'
-    ];
+    const loadTypeReq = async () => {
+        try{
+            const response = await CategoryService.getTypeReqByRole();
+            console.log(response);
+            if(response.success){
+                const data = response.data;
+                data.map(item => ({
+                    code: item.code,
+                    name: item.name
+                }))
+                setRequestCategories(data)
+            }
+        }catch(e){
+            console.log(e)
+        }
+    }
 
     const getStatusColor = (status) => {
         switch(status) {
@@ -358,7 +375,7 @@ const Requests = () => {
     const cancelledRequests = requests.filter(r => r.status === 'cancelled').length;
 
     return (
-        <div>
+        <div style={{padding: '10px'}}>
             <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
                 <Col span={24}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -565,7 +582,7 @@ const Requests = () => {
                     >
                         <Select placeholder="Chọn loại yêu cầu">
                             {requestCategories.map(category => (
-                                <Option key={category} value={category}>{category}</Option>
+                                <Option key={category.code} value={category.code}>{category.name}</Option>
                             ))}
                         </Select>
                     </Form.Item>
