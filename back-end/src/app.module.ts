@@ -50,7 +50,7 @@ export class AppModule implements NestModule {
       { path: 'auth/login', method: RequestMethod.POST },
       { path: 'auth/register', method: RequestMethod.POST },
       { path: 'api', method: RequestMethod.GET },
-      { path: 'hr-request/create', method: RequestMethod.POST },
+      { path: 'category/type-request/:role', method: RequestMethod.GET },
     )
     .forRoutes('*');
   }

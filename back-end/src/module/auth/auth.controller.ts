@@ -12,12 +12,7 @@ export class AuthController {
   @Get("/me")
   async getRequestMakerInfo(@Req() req: any): Promise<BaseResponse> {
     try {
-      console.log("awffaw", req.user);
-
       const user = await this.authService.findUserById(req.user.userId);
-
-      console.log("awffaw", user);
-
       return BaseResponse.success(user, "", HttpStatus.OK);
     } catch (e) {
       throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -39,8 +34,6 @@ export class AuthController {
   async login(@Body() loginReq: LoginReq): Promise<BaseResponse> {
     try {
       const jwtSecret = process.env.JWT_SECRET;
-      console.log("JWT Secret:", jwtSecret);
-
       const loginResult = await this.authService.login(loginReq);
       return BaseResponse.success(loginResult, "Dang nhap thanh cong", HttpStatus.OK);
     } catch (e) {
