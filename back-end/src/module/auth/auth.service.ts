@@ -35,9 +35,15 @@ export class AuthService {
   }
 
   async login(req: LoginReq) {
+    // console.log("Login request received:", req);
+    // console.log("all user", await this.accountModel.find().exec());
+
     try {
       const account = await this.findUserByUsername(req.username);
+
+      //Edit later when password is hashed
       const isPasswordValid = account && account.password === req.password;
+
       if (!account || !isPasswordValid) {
         throw new Error("Invalid username or password");
       }
