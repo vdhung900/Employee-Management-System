@@ -6,7 +6,7 @@ const Admin_account = {
     try {
       return await fetchWithAuth("/admin-accounts", 'GET');
     } catch (e) {
-      throw handleApiError(error);
+      throw handleApiError(e);
     }
   },
 
@@ -14,7 +14,7 @@ const Admin_account = {
     try {
       return await fetchWithAuth(`/admin-accounts/${id}`, 'GET');
     } catch (e) {
-      throw handleApiError(error);
+      throw handleApiError(e);
     }
   },
 
@@ -22,7 +22,7 @@ const Admin_account = {
     try {
       return await fetchWithAuth("/admin-accounts", 'POST', Data);
     } catch (e) {
-      throw handleApiError(error);
+      throw handleApiError(e);
     }
   },
 
@@ -30,22 +30,22 @@ const Admin_account = {
     try {
       return await fetchWithAuth(`/admin-accounts/${id}`, 'PUT', Data);
     } catch (e) {
-      throw handleApiError(error);
+      throw handleApiError(e);
     }
   },
   async resetPassword(id, Data) {
     try {
       return await fetchWithAuth(`/admin-accounts/${id}/reset-password`, 'PUT', Data);
     } catch (e) {
-      throw handleApiError(error);
+      throw handleApiError(e);
     }
   },
 
   async deleteAccount(id) {
     try {
-      return await fetchWithAuth(`/reset-password/${id}`, 'DELETE');
+      return await fetchWithAuth(`/admin-accounts/${id}`, 'DELETE');
     } catch (e) {
-      throw handleApiError(error);
+      throw handleApiError(e);
     }
   },
 };

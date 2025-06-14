@@ -59,7 +59,8 @@ const router = createBrowserRouter([
           { path: "dashboard", element: <AdminDashboard /> },
           { path: "request-manage", element: <LogRequest /> },
           { path: "setting", element: <Setting /> },
-          { path: "account-request", element: <AdminAccountRequests /> }
+          { path: "account-request", element: <AdminAccountRequests /> },
+          { path: "admin-account", element: <AdminAccount /> },
         ]
       }
     ]

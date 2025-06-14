@@ -130,6 +130,11 @@ const MainLayout = () => {
                 icon: <BulbOutlined />,
                 label: 'Cài đặt hệ thống',
             },
+            {
+                key: '/admin/admin-account',
+                icon: <UserOutlined />,
+                label: 'Quản lý tài khoản',
+            },
         ];
 
         const employeeMenuItems = [
@@ -215,6 +220,7 @@ const MainLayout = () => {
         if (location.pathname.includes('/chat')) return 'Internal Chat';
         if (location.pathname.includes('/payroll')) return 'My Payroll';
         if (location.pathname.includes('/help')) return 'Help Center';
+        if (location.pathname.includes('/admin-account')) return 'Thông tin tài khoản';
         return '';
     };
 
