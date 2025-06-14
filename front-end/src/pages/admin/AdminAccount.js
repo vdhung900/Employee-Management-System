@@ -15,7 +15,9 @@ import {
   Modal,
   message,
   Form,
-  Select
+  Select,
+  Divider,
+  DatePicker
 } from 'antd';
 import { 
   UserOutlined, 
@@ -26,12 +28,16 @@ import {
   EllipsisOutlined,
   ExportOutlined,
   ImportOutlined,
-  FilterOutlined
+  FilterOutlined,
+  LockOutlined,
+  MailOutlined,
+  PhoneOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Admin_account from '../../services/Admin_account';
+import moment from 'moment';
 
 const { Title, Text } = Typography;
 
@@ -50,37 +56,39 @@ const AdminAccount = () => {
   const [resetPasswordForm] = Form.useForm();
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [addForm] = Form.useForm();
-  const [employeeList, setEmployeeList] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [positions, setPositions] = useState([]);
 
   useEffect(() => {
-    const fetchAccounts = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const accounts = await Admin_account.getAllAcount();
-        // Map dữ liệu trả về từ API sang format cho table, id là số thứ tự
+        const [accounts, departmentsData, positionsData] = await Promise.all([
+          Admin_account.getAllAcount(),
+          Admin_account.getAllDepartments(),
+          Admin_account.getAllPositions()
+        ]);
+        
+        // Map dữ liệu trả về từ API sang format cho table
         const users = (accounts || []).map((user, idx) => ({
           key: user._id || idx,
-          id: idx + 1, // Số thứ tự
+          id: idx + 1,
           name: user.employeeId?.fullName || '',
           username: user.username,
           role: user.role,
           status: user.status,
         }));
         setData(users);
-        // Lấy danh sách employeeId để chọn khi thêm tài khoản
-        // Giả sử có API Admin_account.getAllEmployees()
-        if (Admin_account.getAllEmployees) {
-          const employees = await Admin_account.getAllEmployees();
-          setEmployeeList(employees);
-        }
+        setDepartments(departmentsData || []);
+        setPositions(positionsData || []);
       } catch (error) {
-        message.error(error.message || 'Lỗi khi lấy danh sách tài khoản!');
+        message.error(error.message || 'Lỗi khi lấy dữ liệu!');
         setData([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchAccounts();
+    fetchData();
   }, []);
 
   const columns = [
@@ -178,24 +186,29 @@ const AdminAccount = () => {
       key: 'action',
       render: (_, record) => (
         <Dropdown
-          overlay={
-            <Menu>
-              <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => showEditModal(record)}>
-                Chỉnh sửa
-              </Menu.Item>
-              <Menu.Item key="reset" icon={<EditOutlined />} onClick={() => showResetPasswordModal(record)}>
-                Reset password
-              </Menu.Item>
-              <Menu.Item 
-                key="delete" 
-                icon={<DeleteOutlined />} 
-                danger
-                onClick={() => showDeleteConfirm(record)}
-              >
-                Xóa
-              </Menu.Item>
-            </Menu>
-          }
+          menu={{
+            items: [
+              {
+                key: 'edit',
+                icon: <EditOutlined />,
+                label: 'Chỉnh sửa',
+                onClick: () => showEditModal(record)
+              },
+              {
+                key: 'reset',
+                icon: <EditOutlined />,
+                label: 'Reset password',
+                onClick: () => showResetPasswordModal(record)
+              },
+              {
+                key: 'delete',
+                icon: <DeleteOutlined />,
+                label: 'Xóa',
+                danger: true,
+                onClick: () => showDeleteConfirm(record)
+              }
+            ]
+          }}
           trigger={['click']}
         >
           <Button type="text" icon={<EllipsisOutlined />} />
@@ -209,20 +222,60 @@ const AdminAccount = () => {
     setDeleteModalVisible(true);
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setData(prev => prev.filter(user => user.id !== userToDelete.id));
+    try {
+      await Admin_account.deleteAccount(userToDelete.key);
       message.success(`Đã xóa người dùng: ${userToDelete.name}`);
-      setLoading(false);
       setDeleteModalVisible(false);
-      // Ở đây sẽ cần gọi API để xóa người dùng thực tế
-    }, 1000);
+      // Reload lại danh sách tài khoản
+      const accounts = await Admin_account.getAllAcount();
+      const users = (accounts || []).map((user, idx) => ({
+        key: user._id || idx,
+        id: idx + 1,
+        name: user.employeeId?.fullName || '',
+        username: user.username,
+        role: user.role,
+        status: user.status,
+      }));
+      setData(users);
+    } catch (error) {
+      message.error(error.message || 'Lỗi khi xóa người dùng!');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const showEditModal = (user) => {
+  const showEditModal = async (user) => {
     setUserToEdit(user);
-    form.setFieldsValue(user);
+    try {
+      // Lấy thông tin chi tiết của tài khoản
+      const accountDetail = await Admin_account.getAccountById(user.key);
+      if (accountDetail) {
+        // Chuẩn bị dữ liệu cho form
+        const formData = {
+          _id: accountDetail._id,
+          username: accountDetail.username,
+          role: accountDetail.role,
+          status: accountDetail.status,
+          // Thông tin nhân viên
+          fullName: accountDetail.employeeId?.fullName,
+          email: accountDetail.employeeId?.email,
+          phone: accountDetail.employeeId?.phone,
+          dob: accountDetail.employeeId?.dob ? moment(accountDetail.employeeId.dob) : null,
+          gender: accountDetail.employeeId?.gender,
+          departmentId: accountDetail.employeeId?.departmentId,
+          positionId: accountDetail.employeeId?.positionId,
+          joinDate: accountDetail.employeeId?.joinDate ? moment(accountDetail.employeeId.joinDate) : null,
+          bankAccount: accountDetail.employeeId?.bankAccount,
+          bankName: accountDetail.employeeId?.bankName
+        };
+        form.setFieldsValue(formData);
+      }
+    } catch (error) {
+      message.error('Không thể lấy thông tin chi tiết tài khoản!');
+      console.error('Error fetching account details:', error);
+    }
     setEditModalVisible(true);
   };
 
@@ -230,8 +283,15 @@ const AdminAccount = () => {
     form.validateFields().then(async (values) => {
       setLoading(true);
       try {
+        // Chuyển đổi dữ liệu trước khi gửi lên server
+        const accountData = {
+          ...values,
+          departmentId: values.departmentId ? values.departmentId : null,
+          positionId: values.positionId ? values.positionId : null
+        };
+
         // Gọi API cập nhật tài khoản
-        await Admin_account.updateAccount(userToEdit.key, values);
+        await Admin_account.updateAccount(userToEdit.key, accountData);
         message.success('Đã cập nhật người dùng thành công!');
         setEditModalVisible(false);
         // Reload lại danh sách tài khoản
@@ -349,14 +409,20 @@ const AdminAccount = () => {
     resetPasswordForm.validateFields().then(async (values) => {
       setLoading(true);
       try {
-        await Admin_account.resetPassword(userToReset.key, { password: values.password });
+        const response = await Admin_account.resetPassword(userToReset.key, { password: values.password });
+        if (response) {
         message.success('Đặt lại mật khẩu thành công!');
         setResetPasswordModalVisible(false);
+        }
       } catch (error) {
-        message.error(error.message || 'Lỗi khi đặt lại mật khẩu!');
+        console.error('Reset password error:', error);
+        message.error(error.response?.data?.message || 'Lỗi khi đặt lại mật khẩu!');
       } finally {
         setLoading(false);
       }
+    }).catch(error => {
+      console.error('Form validation error:', error);
+      message.error('Vui lòng kiểm tra lại thông tin!');
     });
   };
 
@@ -378,7 +444,14 @@ const AdminAccount = () => {
     addForm.validateFields().then(async (values) => {
       setLoading(true);
       try {
-        await Admin_account.createAccount(values);
+        // Chuyển đổi dữ liệu trước khi gửi lên server
+        const accountData = {
+          ...values,
+          departmentId: values.departmentId ? values.departmentId : null,
+          positionId: values.positionId ? values.positionId : null
+        };
+
+        await Admin_account.createAccount(accountData);
         message.success('Thêm tài khoản thành công!');
         setAddModalVisible(false);
         // Reload lại danh sách tài khoản
@@ -511,69 +584,162 @@ const AdminAccount = () => {
         onOk={handleEditUser}
         okText="Lưu"
         cancelText="Hủy"
+        width={800}
       >
         <Form
           form={form}
           layout="vertical"
           name="editUserForm"
         >
-          {/* <Form.Item
-            name="name"
-            label="Tên người dùng"
-            rules={[{ required: true, message: 'Vui lòng nhập tên người dùng!' }]}
-          >
-            <Input />
-          </Form.Item> */}
+          <Row gutter={16}>
+            <Col span={24}>
+              <Title level={5}>Thông tin tài khoản</Title>
+            </Col>
+            <Col span={12}>
           <Form.Item
             name="username"
             label="Tên đăng nhập"
             rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
           >
-            <Input />
+                <Input prefix={<UserOutlined />} placeholder="Nhập tên đăng nhập" />
           </Form.Item>
-          {/* <Form.Item
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="role"
+                label="Vai trò"
+                rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
+              >
+                <Select placeholder="Chọn vai trò">
+                  <Select.Option value="admin">Quản trị viên</Select.Option>
+                  <Select.Option value="manager">Quản lý</Select.Option>
+                  <Select.Option value="staff">Nhân viên</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider />
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Title level={5}>Thông tin cá nhân</Title>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="fullName"
+                label="Họ và tên"
+                rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
+              >
+                <Input prefix={<UserOutlined />} placeholder="Nhập họ và tên" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
             name="email"
             label="Email"
-            rules={[{ required: true, message: 'Vui lòng nhập email!' }]}
-          >
-            <Input />
-          </Form.Item> */}
-          {/* <Form.Item
-            name="department"
+                rules={[
+                  { required: true, message: 'Vui lòng nhập email!' },
+                  { type: 'email', message: 'Email không hợp lệ!' }
+                ]}
+              >
+                <Input prefix={<MailOutlined />} placeholder="Nhập email" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="phone"
+                label="Số điện thoại"
+                rules={[
+                  { pattern: /^[0-9]{10}$/, message: 'Số điện thoại không hợp lệ!' }
+                ]}
+              >
+                <Input prefix={<PhoneOutlined />} placeholder="Nhập số điện thoại" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="dob"
+                label="Ngày sinh"
+              >
+                <DatePicker 
+                  style={{ width: '100%' }} 
+                  placeholder="Chọn ngày sinh"
+                  format="DD/MM/YYYY"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="gender"
+                label="Giới tính"
+              >
+                <Select placeholder="Chọn giới tính">
+                  <Select.Option value="male">Nam</Select.Option>
+                  <Select.Option value="female">Nữ</Select.Option>
+                  <Select.Option value="other">Khác</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider />
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Title level={5}>Thông tin công việc</Title>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="departmentId"
             label="Phòng ban"
-            rules={[{ required: true, message: 'Vui lòng chọn phòng ban!' }]}
-          >
-            <Select placeholder="Chọn phòng ban">
-              <Select.Option value="IT">IT</Select.Option>
-              <Select.Option value="HR">HR</Select.Option>
-              <Select.Option value="Finance">Finance</Select.Option>
-              <Select.Option value="Marketing">Marketing</Select.Option>
+              >
+                <Select 
+                  placeholder="Chọn phòng ban"
+                  allowClear
+                  showSearch
+                  optionFilterProp="children"
+                >
+                  {departments.map(dept => (
+                    <Select.Option key={dept._id} value={dept._id}>
+                      {dept.name}
+                    </Select.Option>
+                  ))}
             </Select>
-          </Form.Item> */}
-          {/* <Form.Item
-            name="position"
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="positionId"
             label="Chức vụ"
-            rules={[{ required: true, message: 'Vui lòng chọn chức vụ!' }]}
-          >
-            <Select placeholder="Chọn chức vụ">
-              <Select.Option value="Manager">Manager</Select.Option>
-              <Select.Option value="Team Lead">Team Lead</Select.Option>
-              <Select.Option value="Senior Staff">Senior Staff</Select.Option>
-              <Select.Option value="Staff">Staff</Select.Option>
-              <Select.Option value="Intern">Intern</Select.Option>
+              >
+                <Select 
+                  placeholder="Chọn chức vụ"
+                  allowClear
+                  showSearch
+                  optionFilterProp="children"
+                >
+                  {positions.map(pos => (
+                    <Select.Option key={pos._id} value={pos._id}>
+                      {pos.name}
+                    </Select.Option>
+                  ))}
             </Select>
-          </Form.Item> */}
+              </Form.Item>
+            </Col>
+            <Col span={12}>
           <Form.Item
-            name="role"
-            label="Vai trò"
-            rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
-          >
-            <Select placeholder="Chọn vai trò">
-              <Select.Option value="admin">Quản trị viên</Select.Option>
-              <Select.Option value="manager">Quản lý</Select.Option>
-              <Select.Option value="staff">Nhân viên</Select.Option>
-            </Select>
+                name="joinDate"
+                label="Ngày vào làm"
+              >
+                <DatePicker 
+                  style={{ width: '100%' }} 
+                  placeholder="Chọn ngày vào làm"
+                  format="DD/MM/YYYY"
+                />
           </Form.Item>
+            </Col>
+            <Col span={12}>
           <Form.Item
             name="status"
             label="Trạng thái"
@@ -584,6 +750,32 @@ const AdminAccount = () => {
               <Select.Option value="inactive">Vô hiệu hóa</Select.Option>
             </Select>
           </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider />
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Title level={5}>Thông tin ngân hàng</Title>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="bankAccount"
+                label="Số tài khoản"
+              >
+                <Input placeholder="Nhập số tài khoản" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="bankName"
+                label="Tên ngân hàng"
+              >
+                <Input placeholder="Nhập tên ngân hàng" />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
 
@@ -599,7 +791,28 @@ const AdminAccount = () => {
           <Form.Item
             name="password"
             label="Mật khẩu mới"
-            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu mới!' }, { min: 8, message: 'Mật khẩu phải có ít nhất 8 ký tự!' }]}
+            rules={[
+              { required: true, message: 'Vui lòng nhập mật khẩu mới!' },
+              { min: 8, message: 'Mật khẩu phải có ít nhất 8 ký tự!' }
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="Xác nhận mật khẩu"
+            dependencies={['password']}
+            rules={[
+              { required: true, message: 'Vui lòng xác nhận mật khẩu!' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('password') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
+                },
+              }),
+            ]}
           >
             <Input.Password />
           </Form.Item>
@@ -613,42 +826,157 @@ const AdminAccount = () => {
         onOk={handleAddUser}
         okText="Thêm"
         cancelText="Hủy"
+        width={800}
       >
         <Form form={addForm} layout="vertical">
+          <Row gutter={16}>
+            <Col span={24}>
+              <Title level={5}>Thông tin tài khoản</Title>
+            </Col>
+            <Col span={12}>
           <Form.Item
             name="username"
             label="Tên đăng nhập"
             rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
           >
-            <Input />
+                <Input prefix={<UserOutlined />} placeholder="Nhập tên đăng nhập" />
           </Form.Item>
+            </Col>
+            <Col span={12}>
           <Form.Item
             name="password"
             label="Mật khẩu"
-            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }, { min: 8, message: 'Mật khẩu phải có ít nhất 8 ký tự!' }]}
+                rules={[
+                  { required: true, message: 'Vui lòng nhập mật khẩu!' }, 
+                  { min: 8, message: 'Mật khẩu phải có ít nhất 8 ký tự!' }
+                ]}
           >
-            <Input.Password />
+                <Input.Password prefix={<LockOutlined />} placeholder="Nhập mật khẩu" />
           </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider />
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Title level={5}>Thông tin cá nhân</Title>
+            </Col>
+            <Col span={12}>
           <Form.Item
-            name="employeeId"
-            label="Nhân viên (employeeId)"
-            rules={[{ required: true, message: 'Vui lòng chọn nhân viên!' }]}
+                name="fullName"
+                label="Họ và tên"
+                rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
+              >
+                <Input prefix={<UserOutlined />} placeholder="Nhập họ và tên" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="email"
+                label="Email"
+                rules={[
+                  { required: true, message: 'Vui lòng nhập email!' },
+                  { type: 'email', message: 'Email không hợp lệ!' }
+                ]}
+              >
+                <Input prefix={<MailOutlined />} placeholder="Nhập email" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="phone"
+                label="Số điện thoại"
+                rules={[
+                  { pattern: /^[0-9]{10}$/, message: 'Số điện thoại không hợp lệ!' }
+                ]}
+              >
+                <Input prefix={<PhoneOutlined />} placeholder="Nhập số điện thoại" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="dob"
+                label="Ngày sinh"
+              >
+                <DatePicker 
+                  style={{ width: '100%' }} 
+                  placeholder="Chọn ngày sinh"
+                  format="DD/MM/YYYY"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="gender"
+                label="Giới tính"
+              >
+                <Select placeholder="Chọn giới tính">
+                  <Select.Option value="male">Nam</Select.Option>
+                  <Select.Option value="female">Nữ</Select.Option>
+                  <Select.Option value="other">Khác</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider />
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Title level={5}>Thông tin công việc</Title>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="departmentId"
+                label="Phòng ban"
           >
             <Select
+                  placeholder="Chọn phòng ban"
+                  allowClear
               showSearch
-              placeholder="Chọn nhân viên"
               optionFilterProp="children"
-              filterOption={(input, option) =>
-                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }
-            >
-              {employeeList.map(emp => (
-                <Select.Option key={emp._id} value={emp._id}>
-                  {emp.fullName} ({emp._id})
+                >
+                  {departments.map(dept => (
+                    <Select.Option key={dept._id} value={dept._id}>
+                      {dept.name}
                 </Select.Option>
               ))}
             </Select>
           </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="positionId"
+                label="Chức vụ"
+              >
+                <Select 
+                  placeholder="Chọn chức vụ"
+                  allowClear
+                  showSearch
+                  optionFilterProp="children"
+                >
+                  {positions.map(pos => (
+                    <Select.Option key={pos._id} value={pos._id}>
+                      {pos.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="joinDate"
+                label="Ngày vào làm"
+              >
+                <DatePicker 
+                  style={{ width: '100%' }} 
+                  placeholder="Chọn ngày vào làm"
+                  format="DD/MM/YYYY"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
           <Form.Item
             name="role"
             label="Vai trò"
@@ -660,6 +988,8 @@ const AdminAccount = () => {
               <Select.Option value="staff">Nhân viên</Select.Option>
             </Select>
           </Form.Item>
+            </Col>
+            <Col span={12}>
           <Form.Item
             name="status"
             label="Trạng thái"
@@ -670,6 +1000,32 @@ const AdminAccount = () => {
               <Select.Option value="inactive">Vô hiệu hóa</Select.Option>
             </Select>
           </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider />
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Title level={5}>Thông tin ngân hàng</Title>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="bankAccount"
+                label="Số tài khoản"
+              >
+                <Input placeholder="Nhập số tài khoản" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="bankName"
+                label="Tên ngân hàng"
+              >
+                <Input placeholder="Nhập tên ngân hàng" />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
 
