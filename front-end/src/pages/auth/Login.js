@@ -32,8 +32,8 @@ const Login = () => {
       const role = localStorage.getItem("role");
       let redirectTo = "/employee/dashboard";
       if (role === "admin") redirectTo = "/admin/dashboard";
-      else if (role === "hr") redirectTo = "/hr/dashboard";
-      else if (role === "manager") redirectTo = "/manager/dashboard";
+      else if (role === "hr") redirectTo = "/employee/dashboard";
+      else if (role === "manager") redirectTo = "/employee/dashboard";
 
       navigate(redirectTo, { replace: true });
     }
@@ -59,8 +59,9 @@ const Login = () => {
         const role = data.user.role;
         let redirectTo = "/employee/dashboard";
         if (role === "admin") redirectTo = "/admin/dashboard";
-        else if (role === "hr") redirectTo = "/hr/dashboard";
-        else if (role === "manager") redirectTo = "/manager/dashboard";
+        else if (role === "hr") redirectTo = "/employee/dashboard";
+        else if (role === "manager") redirectTo = "/employee/dashboard";
+
         setTimeout(() => {
           console.log("User role before nagvifate: ", role);
           navigate(redirectTo, { replace: true });
