@@ -1,0 +1,1 @@
+// Đã có sẵn schema ở back-end/src/schemas/departments.schema.ts, không cần tạo lại file này. 
