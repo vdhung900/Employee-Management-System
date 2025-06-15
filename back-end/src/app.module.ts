@@ -12,9 +12,7 @@ import { RequestManageModule } from './module/request-manage/request-manage.modu
 import { RequestModule } from './module/request/request.module';
 import { CategoryModule } from './module/category/category.module';
 import { AdminAccountModule } from './module/admin/admin_account.module';
-import { AdminModule } from './module/admin/admin.module';
 import { BadRequestException } from '@nestjs/common';
-
 
 @Module({
   imports: [
@@ -33,7 +31,6 @@ import { BadRequestException } from '@nestjs/common';
     RequestManageModule,
     RequestModule,
     CategoryModule,
-    AdminModule,
     AdminAccountModule
   ],
   controllers: [],
