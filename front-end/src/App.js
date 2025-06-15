@@ -1,9 +1,9 @@
 import React from 'react';
 import './assets/styles/global.css';
-import { 
-  BrowserRouter as Router, 
-  Routes, 
-  Route, 
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
   Navigate,
   createBrowserRouter,
   RouterProvider
@@ -30,6 +30,7 @@ import StaffManagement from "./pages/employee/StaffManagement";
 import TeamManagement from "./pages/employee/TeamManagement";
 import TeamPerformance from "./pages/employee/TeamPerformance";
 import NotFound from "./pages/NotFound";
+import Category from "./pages/admin/Category";
 
 const router = createBrowserRouter([
   {
@@ -43,9 +44,9 @@ const router = createBrowserRouter([
   {
     path: "/404",
     element: (
-        <PublicRoute>
-          <NotFound />
-        </PublicRoute>
+      <PublicRoute>
+        <NotFound />
+      </PublicRoute>
     )
   },
   {
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
           { path: "setting", element: <Setting /> },
           { path: "account-request", element: <AdminAccountRequests /> },
           { path: "admin-account", element: <AdminAccount /> },
+          { path: "category", element: <Category /> },
         ]
       }
     ]
@@ -118,10 +120,13 @@ function App() {
 
         <Route element={<PrivateRoute roles={['admin']} />}>
           <Route path="/admin" element={<MainLayout />}>
-            <Route index element={<AdminDashboard/>}/>
-            <Route path="dashboard" element={<AdminDashboard/>}/>
-            <Route path="request-manage" element={<LogRequest/>}/>
-            <Route path="account" element={<AdminAccount/>}/>
+            <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="request-manage" element={<LogRequest />} />
+            <Route path="setting" element={<Setting />} />
+            <Route path="account-request" element={<AdminAccountRequests />} />
+            <Route path="admin-account" element={<AdminAccount />} />
+            <Route path="category" element={<Category />} />
           </Route>
         </Route>
 

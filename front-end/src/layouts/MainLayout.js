@@ -1,5 +1,5 @@
-import {useState, useEffect} from 'react';
-import {Outlet, useLocation, useNavigate} from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
     Layout,
     Menu,
@@ -27,15 +27,15 @@ import {
     LogoutOutlined,
     BulbOutlined,
     BellOutlined,
-    ClockCircleOutlined, PullRequestOutlined
+    ClockCircleOutlined, PullRequestOutlined, TeamOutlined
 } from '@ant-design/icons';
-import {logout, getCurrentUser} from '../utils/auth';
+import { logout, getCurrentUser } from '../utils/auth';
 import ThreeDButton from '../components/3d/ThreeDButton';
 import ThreeDContainer from '../components/3d/ThreeDContainer';
 import '../components/3d/ThreeDStyles.css';
 
-const {Header, Sider, Content, Footer} = Layout;
-const {Title} = Typography;
+const { Header, Sider, Content, Footer } = Layout;
+const { Title } = Typography;
 
 // Định nghĩa theme màu (có thể lấy từ login hoặc fix cứng)
 const colorTheme = {
@@ -61,7 +61,7 @@ const MainLayout = () => {
     const navigate = useNavigate();
 
     const {
-        token: {colorBgContainer},
+        token: { colorBgContainer },
     } = theme.useToken();
 
     useEffect(() => {
@@ -70,7 +70,7 @@ const MainLayout = () => {
         setColor(colorTheme.siderBg);
     }, []);
 
-    const handleMenuClick = ({key}) => {
+    const handleMenuClick = ({ key }) => {
         navigate(key);
     };
 
@@ -84,7 +84,7 @@ const MainLayout = () => {
         {
             key: '/employee/profile',
             label: 'Hồ sơ cá nhân',
-            icon: <UserOutlined/>,
+            icon: <UserOutlined />,
             onClick: () => navigate('/employee/profile'),
         },
         {
@@ -93,7 +93,7 @@ const MainLayout = () => {
         {
             key: 'logout',
             label: 'Đăng xuất',
-            icon: <LogoutOutlined/>,
+            icon: <LogoutOutlined />,
             danger: true,
             onClick: handleLogout,
         },
@@ -129,6 +129,11 @@ const MainLayout = () => {
                 key: '/admin/setting',
                 icon: <BulbOutlined />,
                 label: 'Cài đặt hệ thống',
+            },
+            {
+                key: '/admin/category',
+                icon: <TeamOutlined />,
+                label: 'Danh mục',
             },
             {
                 key: '/admin/admin-account',
@@ -225,7 +230,7 @@ const MainLayout = () => {
     };
 
     return (
-        <Layout style={{minHeight: '100vh'}}>
+        <Layout style={{ minHeight: '100vh' }}>
             <Sider
                 trigger={null}
                 collapsible
@@ -248,7 +253,7 @@ const MainLayout = () => {
                     justifyContent: collapsed ? 'center' : 'flex-start',
                     transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
                 }}>
-                    <div style={{display: 'flex', alignItems: 'center'}}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div
                             style={{
                                 width: '48px',
@@ -332,11 +337,11 @@ const MainLayout = () => {
                         borderBottom: colorTheme.border
                     }}
                 >
-                    <div style={{display: 'flex', alignItems: 'center'}}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                         <Tooltip title={collapsed ? "Mở menu" : "Thu gọn menu"}>
                             <ThreeDButton
                                 type="text"
-                                icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
+                                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                                 onClick={() => setCollapsed(!collapsed)}
                                 style={{
                                     fontSize: '14px',
@@ -351,7 +356,7 @@ const MainLayout = () => {
                                 }}
                             />
                         </Tooltip>
-                        <div style={{marginLeft: 28}}>
+                        <div style={{ marginLeft: 28 }}>
                             <div className="header-title-gradient">
                                 {getPageTitle()}
                             </div>
@@ -373,7 +378,7 @@ const MainLayout = () => {
                                 fontWeight: 500
                             }}
                         >
-                            <ClockCircleOutlined style={{color: '#1976d2'}}/> Trạng thái chấm công
+                            <ClockCircleOutlined style={{ color: '#1976d2' }} /> Trạng thái chấm công
                         </Tag>
                         <Dropdown
                             menu={{
@@ -384,8 +389,8 @@ const MainLayout = () => {
                             trigger={['click']}
                         >
                             <Badge count={3} overflowCount={99}>
-                                <ThreeDButton type="text" icon={<BellOutlined style={{color: '#1976d2'}}/>}
-                                              size="large"/>
+                                <ThreeDButton type="text" icon={<BellOutlined style={{ color: '#1976d2' }} />}
+                                    size="large" />
                             </Badge>
                         </Dropdown>
                         <Dropdown
@@ -413,7 +418,7 @@ const MainLayout = () => {
                                         fontWeight: 600,
                                         boxShadow: '0 2px 5px rgba(25, 118, 210, 0.15)'
                                     }}
-                                    icon={<UserOutlined/>}
+                                    icon={<UserOutlined />}
                                 />
                                 <span
                                     style={{
@@ -422,8 +427,8 @@ const MainLayout = () => {
                                         fontWeight: 600
                                     }}
                                 >
-                  {currentUser?.name || 'Nhân viên'}
-                </span>
+                                    {currentUser?.name || 'Nhân viên'}
+                                </span>
                             </Space>
                         </Dropdown>
                     </Space>
@@ -437,9 +442,9 @@ const MainLayout = () => {
                         position: 'relative',
                         transition: 'all 0.3s ease',
                         overflow: 'auto',
-                     }}
+                    }}
                 >
-                        <Outlet/>
+                    <Outlet />
                 </Content>
 
                 {/*<Footer*/}
