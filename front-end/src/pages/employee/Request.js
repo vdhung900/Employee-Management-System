@@ -25,7 +25,8 @@ import {
     Alert,
     Drawer,
     Timeline,
-    List
+    List,
+    Radio
 } from 'antd';
 import {
     SearchOutlined,
@@ -64,6 +65,8 @@ const Requests = () => {
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [requestCategories, setRequestCategories] = useState([]);
+    const [selectedDataType, setSelectedDataType] = useState(null);
+    const [selectedRequestType, setSelectedRequestType] = useState(null);
     const [form] = Form.useForm();
 
     useEffect(() => {
@@ -227,13 +230,193 @@ const Requests = () => {
 
     const handleCancel = () => {
         setIsModalVisible(false);
+        setSelectedDataType(null);
     };
 
     const handleFormSubmit = (values) => {
-        console.log('Form submitted:', values);
-        // Here you would handle the actual form submission for adding or editing a request
         setIsModalVisible(false);
         form.resetFields();
+        setSelectedDataType(null);
+    };
+
+    const handleDataTypeChange = (e) => {
+        setSelectedDataType(e.target.value);
+        form.setFieldsValue({
+            employeeInfo: undefined,
+            dateInfo: undefined
+        });
+    };
+
+    const handleRequestTypeChange = (value) => {
+        setSelectedRequestType(value);
+        form.setFieldsValue({
+            startDate: undefined,
+            endDate: undefined,
+            reason: undefined,
+            priority: undefined,
+            attachments: undefined
+        });
+    };
+
+    const renderRequestTypeFields = () => {
+        switch(selectedRequestType) {
+            case 'LEAVE':
+                return (
+                    <>
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="startDate"
+                                    label="Ngày bắt đầu nghỉ"
+                                    rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+                                >
+                                    <DatePicker style={{ width: '100%' }} />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="endDate"
+                                    label="Ngày kết thúc nghỉ"
+                                    rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
+                                >
+                                    <DatePicker style={{ width: '100%' }} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Form.Item
+                            name="reason"
+                            label="Lý do nghỉ phép"
+                            rules={[{ required: true, message: 'Vui lòng nhập lý do nghỉ phép' }]}
+                        >
+                            <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép" />
+                        </Form.Item>
+                    </>
+                );
+            case 'OVERTIME':
+                return (
+                    <>
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="startDate"
+                                    label="Ngày tăng ca"
+                                    rules={[{ required: true, message: 'Vui lòng chọn ngày tăng ca' }]}
+                                >
+                                    <DatePicker style={{ width: '100%' }} />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="hours"
+                                    label="Số giờ tăng ca"
+                                    rules={[{ required: true, message: 'Vui lòng nhập số giờ tăng ca' }]}
+                                >
+                                    <Input type="number" min={1} max={24} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Form.Item
+                            name="reason"
+                            label="Lý do tăng ca"
+                            rules={[{ required: true, message: 'Vui lòng nhập lý do tăng ca' }]}
+                        >
+                            <Input.TextArea rows={4} placeholder="Nhập lý do tăng ca" />
+                        </Form.Item>
+                    </>
+                );
+            case 'ACCOUNT_CREATE_REQUEST':
+                return (
+                    <>
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="fullName"
+                                    label="Họ và tên nhân viên"
+                                    rules={[
+                                        { required: true, message: 'Vui lòng nhập họ và tên' },
+                                        { min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự' }
+                                    ]}
+                                >
+                                    <Input placeholder="Nhập họ và tên nhân viên" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="startDate"
+                                    label="Ngày bắt đầu làm việc"
+                                    rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+                                >
+                                    <DatePicker style={{ width: '100%' }} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="email"
+                                    label="Email"
+                                    rules={[
+                                        { required: true, message: 'Vui lòng nhập email' },
+                                        { type: 'email', message: 'Email không hợp lệ' }
+                                    ]}
+                                >
+                                    <Input placeholder="Nhập email" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="phone"
+                                    label="Số điện thoại"
+                                    rules={[
+                                        { required: true, message: 'Vui lòng nhập số điện thoại' },
+                                        { pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại không hợp lệ' }
+                                    ]}
+                                >
+                                    <Input placeholder="Nhập số điện thoại" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="department"
+                                    label="Phòng ban"
+                                    rules={[{ required: true, message: 'Vui lòng chọn phòng ban' }]}
+                                >
+                                    <Select placeholder="Chọn phòng ban">
+                                        <Option value="IT">Phòng IT</Option>
+                                        <Option value="HR">Phòng Nhân sự</Option>
+                                        <Option value="FINANCE">Phòng Tài chính</Option>
+                                        <Option value="MARKETING">Phòng Marketing</Option>
+                                        <Option value="SALES">Phòng Kinh doanh</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="position"
+                                    label="Chức vụ"
+                                    rules={[{ required: true, message: 'Vui lòng chọn chức vụ' }]}
+                                >
+                                    <Select placeholder="Chọn chức vụ">
+                                        <Option value="STAFF">Nhân viên</Option>
+                                        <Option value="MANAGER">Quản lý</Option>
+                                        <Option value="DIRECTOR">Giám đốc</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Form.Item
+                            name="note"
+                            label="Ghi chú"
+                        >
+                            <Input.TextArea rows={4} placeholder="Nhập ghi chú (nếu có)" />
+                        </Form.Item>
+                    </>
+                );
+            default:
+                return null;
+        }
     };
 
     const showDrawer = (request) => {
@@ -580,62 +763,42 @@ const Requests = () => {
                         label="Loại yêu cầu"
                         rules={[{ required: true, message: 'Vui lòng chọn loại yêu cầu' }]}
                     >
-                        <Select placeholder="Chọn loại yêu cầu">
+                        <Select 
+                            placeholder="Chọn loại yêu cầu"
+                            onChange={handleRequestTypeChange}
+                        >
                             {requestCategories.map(category => (
                                 <Option key={category.code} value={category.code}>{category.name}</Option>
                             ))}
                         </Select>
                     </Form.Item>
 
-                    <Row gutter={16}>
-                        <Col span={12}>
+                    {selectedRequestType && (
+                        <>
+                            {renderRequestTypeFields()}
+                            
                             <Form.Item
-                                name="startDate"
-                                label="Ngày bắt đầu"
-                                rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+                                name="priority"
+                                label="Mức độ ưu tiên"
+                                rules={[{ required: true, message: 'Vui lòng chọn mức độ ưu tiên' }]}
                             >
-                                <DatePicker style={{ width: '100%' }} />
+                                <Select placeholder="Chọn mức độ ưu tiên">
+                                    <Option value="high">Cao</Option>
+                                    <Option value="normal">Bình thường</Option>
+                                    <Option value="low">Thấp</Option>
+                                </Select>
                             </Form.Item>
-                        </Col>
-                        <Col span={12}>
+
                             <Form.Item
-                                name="endDate"
-                                label="Ngày kết thúc"
-                                rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
+                                name="attachments"
+                                label="Tài liệu đính kèm"
                             >
-                                <DatePicker style={{ width: '100%' }} />
+                                <Upload listType="picture" multiple>
+                                    <Button icon={<UploadOutlined />}>Tải lên tập tin</Button>
+                                </Upload>
                             </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <Form.Item
-                        name="priority"
-                        label="Mức độ ưu tiên"
-                        rules={[{ required: true, message: 'Vui lòng chọn mức độ ưu tiên' }]}
-                    >
-                        <Select placeholder="Chọn mức độ ưu tiên">
-                            <Option value="high">Cao</Option>
-                            <Option value="normal">Bình thường</Option>
-                            <Option value="low">Thấp</Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                        name="reason"
-                        label="Lý do"
-                        rules={[{ required: true, message: 'Vui lòng nhập lý do' }]}
-                    >
-                        <Input.TextArea rows={4} placeholder="Nhập lý do của yêu cầu" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="attachments"
-                        label="Tài liệu đính kèm"
-                    >
-                        <Upload listType="picture" multiple>
-                            <Button icon={<UploadOutlined />}>Tải lên tập tin</Button>
-                        </Upload>
-                    </Form.Item>
+                        </>
+                    )}
                 </Form>
             </Modal>
 

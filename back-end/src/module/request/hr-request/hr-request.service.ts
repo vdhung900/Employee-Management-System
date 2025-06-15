@@ -15,6 +15,18 @@ export class HrRequestService {
     ) {
     }
 
+    async getRequestByAccountId(req: CreateRequestDto){
+        try{
+            const requests = await this.requestService.findByEmployeeId(req.employeeId.toString());
+            if(!requests || requests.length === 0){
+                throw new Error("No requests found for this employee");
+            }
+            return requests;
+        }catch (e) {
+            throw new Error(e)
+        }
+    }
+
     async createRequest(req: CreateRequestDto){
         try{
             if(!req.typeCode){

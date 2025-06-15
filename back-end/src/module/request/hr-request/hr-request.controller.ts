@@ -20,5 +20,13 @@ export class HrRequestController {
         }
     }
 
-
+    @Post('/get-by-account-id')
+    async getReqByAccountId(@Body() req: CreateRequestDto): Promise<BaseResponse> {
+        try {
+            const resData = await this.hrRequestService.getRequestByAccountId(req);
+            return BaseResponse.success(resData, 'Requests retrieved successfully', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
