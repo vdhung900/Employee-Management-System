@@ -27,6 +27,10 @@ export class RequestService {
         return await this.requestModel.findById(id).populate('employeeId').populate('typeRequest').exec();
     }
 
+    async findByEmployeeId(employeeId: string) {
+        return await this.requestModel.find({employeeId: employeeId}).populate('employeeId').populate('typeRequest').exec();
+    }
+
     async update(id: string, updateData: CreateRequestDto) {
         const data = await this.requestModel.findById(id).populate('employeeId').populate('typeRequest').exec();
         if (!data) {
