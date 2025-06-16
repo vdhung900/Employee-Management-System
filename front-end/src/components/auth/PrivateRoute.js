@@ -10,6 +10,7 @@ const PrivateRoute = ({ roles = [] }) => {
   if (!isAuth) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+  console.log('run 1')
 
   if (roles.length > 0 && !roles.includes(userRole)) {
     let redirectTo = '/employee/dashboard';
@@ -18,6 +19,8 @@ const PrivateRoute = ({ roles = [] }) => {
     
     return <Navigate to={redirectTo} replace />;
   }
+
+  console.log('run run')
 
   return <Outlet />;
 };

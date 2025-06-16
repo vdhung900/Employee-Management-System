@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Row, Col, Typography, Calendar, Badge, Statistic, Timeline, Button, Card, Space, Tooltip } from 'antd';
 import { 
   CheckCircleOutlined, 
@@ -22,6 +22,11 @@ const EmployeeDashboard = () => {
   const [currentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(currentDate);
   const user = getCurrentUser();
+  console.log('run here')
+
+  useEffect(() => {
+    console.log('run here')
+  }, []);
 
   // Mock data for employee stats
   const stats = [
