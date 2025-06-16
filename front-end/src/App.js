@@ -109,52 +109,7 @@ const router = createBrowserRouter([
 });
 
 function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        } />
-
-        <Route element={<PrivateRoute roles={['admin']} />}>
-          <Route path="/admin" element={<MainLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="request-manage" element={<LogRequest />} />
-            <Route path="setting" element={<Setting />} />
-            <Route path="account-request" element={<AdminAccountRequests />} />
-            <Route path="admin-account" element={<AdminAccount />} />
-            <Route path="category" element={<Category />} />
-          </Route>
-        </Route>
-
-        <Route element={<PrivateRoute roles={['hr']} />}>
-          <Route path="/hr" element={<MainLayout />}>
-
-          </Route>
-        </Route>
-
-        <Route element={<PrivateRoute roles={['manager']} />}>
-          <Route path="/manager" element={<MainLayout />}>
-
-          </Route>
-        </Route>
-
-        <Route element={<PrivateRoute roles={['employee']} />}>
-          <Route path="/employee" element={<MainLayout />}>
-            <Route index element={<EmployeeDashboard />} />
-            <Route path="dashboard" element={<EmployeeDashboard />} />
-          </Route>
-        </Route>
-
-        <Route path="/" element={<Navigate to="/login" replace />} />
-
-        {/* <Route path="*" element={<NotFound />} /> */}
-      </Routes>
-    </Router>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
