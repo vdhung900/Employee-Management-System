@@ -10,15 +10,15 @@ export const getCurrentUser = () => {
 
 export const logout = () => {
   localStorage.removeItem("user");
-  localStorage.removeItem("accessToken");
   localStorage.removeItem("token");
+  localStorage.removeItem("role");
   localStorage.removeItem("refreshToken");
 };
 
 export const login = (userData) => {
   localStorage.setItem("user", JSON.stringify(userData));
-  localStorage.setItem("token", JSON.stringify(userData));
-  localStorage.setItem("role", "admin");
+  localStorage.setItem("token", userData.accessToken || "");
+  localStorage.setItem("role", userData.user?.role || "");
 };
 
 export const isAuthenticated = () => {
