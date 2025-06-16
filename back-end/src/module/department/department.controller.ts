@@ -3,18 +3,12 @@ import { DepartmentService } from './department.service';
 import { Departments } from '../../schemas/departments.schema';
 import { BaseResponse } from '../../interfaces/response/base.response';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
-import { InjectModel } from '@nestjs/mongoose';
-import { Account, AccountDocument } from '../../schemas/account.schema';
-import { Model } from 'mongoose';
 
 @ApiTags('Department')
 @ApiBearerAuth()
 @Controller('departments')
 export class DepartmentController {
-    constructor(
-        private readonly departmentService: DepartmentService,
-        @InjectModel(Account.name) private accountModel: Model<AccountDocument>,
-    ) { }
+    constructor(private readonly departmentService: DepartmentService) { }
 
     private checkAdmin(req: any) {
         if (!req.user || req.user.role !== 'admin') {
@@ -38,12 +32,6 @@ export class DepartmentController {
     async findAll() {
         const data = await this.departmentService.findAll();
         return BaseResponse.success(data, 'OK', 200);
-    }
-
-    @Get('managers')
-    async getManagers() {
-        const managers = await this.accountModel.find({ role: 'manager' }, { username: 1, email: 1 }).exec();
-        return managers;
     }
 
     @Get(':id')
