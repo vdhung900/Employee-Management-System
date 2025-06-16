@@ -32,8 +32,8 @@ const Login = () => {
       const role = localStorage.getItem("role");
       let redirectTo = "/employee/dashboard";
       if (role === "admin") redirectTo = "/admin/dashboard";
-      else if (role === "hr") redirectTo = "/hr/dashboard";
-      else if (role === "manager") redirectTo = "/manager/dashboard";
+      else if (role === "hr") redirectTo = "/employee/dashboard";
+      else if (role === "manager") redirectTo = "/employee/dashboard";
 
       navigate(redirectTo, { replace: true });
     }
@@ -50,17 +50,18 @@ const Login = () => {
       const data = response.data;
 
       if (response.status == 200 && data) {
-        login({
-          ...data,
-          accessToken: data.accessToken,
-          user: data.user
-        });
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("token", data.accessToken); // Store access token too
+      localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("role", data.user.role);
         message.success(MESSAGE.LOGIN_SUCCESS);
         const role = data.user.role;
         let redirectTo = "/employee/dashboard";
         if (role === "admin") redirectTo = "/admin/dashboard";
-        else if (role === "hr") redirectTo = "/hr/dashboard";
-        else if (role === "manager") redirectTo = "/manager/dashboard";
+        else if (role === "hr") redirectTo = "/employee/dashboard";
+        else if (role === "manager") redirectTo = "/employee/dashboard";
+
         setTimeout(() => {
           console.log("User role before nagvifate: ", role);
           navigate(redirectTo, { replace: true });

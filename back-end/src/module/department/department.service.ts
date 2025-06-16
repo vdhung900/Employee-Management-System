@@ -15,12 +15,12 @@ export class DepartmentService {
     }
 
     async findAll() {
-        return this.departmentModel.find().populate('manager', 'username').exec();
+        return this.departmentModel.find().exec();
     }
 
     async findOne(id: string) {
         if (!Types.ObjectId.isValid(id)) throw new NotFoundException('Invalid department id');
-        const found = await this.departmentModel.findById(id).populate('manager', 'username').exec();
+        const found = await this.departmentModel.findById(id).exec();
         if (!found) throw new NotFoundException('Department not found');
         return found;
     }
