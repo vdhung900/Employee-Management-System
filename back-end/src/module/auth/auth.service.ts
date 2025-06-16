@@ -10,13 +10,13 @@ import { JwtService } from "@nestjs/jwt";
 export class AuthService {
   constructor(
     @InjectModel(Account.name) private accountModel: Model<AccountDocument>,
-    @InjectModel(Employees.name) private employeesModel: Model<EmployeesDocument>,
     private jwtService: JwtService
   ) {}
 
   async findUserByUsername(username: string): Promise<Account | null> {
     try {
       const user = await this.accountModel.findOne({ username }).populate("employeeId").exec();
+      console.log("User found:", user);
       return user;
     } catch (error) {
       console.error("Error finding user by username:", error);
@@ -39,28 +39,29 @@ export class AuthService {
     // console.log("all user", await this.accountModel.find().exec());
 
     try {
-      const account = await this.findUserByUsername(req.username);
+      const user = await this.findUserByUsername(req.username);
+      console.log("user found:", user);
 
       //Edit later when password is hashed
-      const isPasswordValid = account && account.password === req.password;
+      const isPasswordValid = user && user.password === req.password;
 
-      if (!account || !isPasswordValid) {
+      if (!user || !isPasswordValid) {
         throw new Error("Invalid username or password");
       }
 
       const payload = {
-        userId: account._id,
-        role: account.role,
-        employeeId: account.employeeId ? account.employeeId._id : null,
+        userId: user._id,
+        role: user.role,
+        employeeId: user.employeeId ? user.employeeId._id : null,
       };
 
       const jwtSecret = process.env.JWT_SECRET;
 
       return {
         user: {
-          username: account.username,
-          role: account.role,
-          employeeId: account.employeeId ? account.employeeId._id : null,
+          username: user.username,
+          role: user.role,
+          employee: user.employeeId,
         },
         accessToken: this.jwtService.sign(payload, { secret: jwtSecret, expiresIn: "1h" }),
         refreshToken: this.jwtService.sign(payload, { secret: jwtSecret, expiresIn: "7d" }),

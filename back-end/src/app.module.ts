@@ -33,6 +33,7 @@ import { AttendanceModule } from "./module/attendance/attendance.module";
     CategoryModule,
     AdminAccountModule,
     DepartmentModule,
+    AttendanceModule,
   ],
   controllers: [],
   providers: [

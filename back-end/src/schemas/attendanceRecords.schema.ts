@@ -7,29 +7,29 @@ export type AttendanceRecordsDocument = AttendanceRecords & Document;
 
 @Schema()
 export class AttendanceRecords extends BaseSchema {
-    @Prop({type: Types.ObjectId, ref: Employees.name})
-    employeeId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: Employees.name })
+  employeeId: Types.ObjectId;
 
-    @Prop()
-    date: Date;
+  @Prop()
+  date: Date;
 
-    @Prop()
-    firstCheckIn: Date;
+  @Prop()
+  firstCheckIn: Date;
 
-    @Prop()
-    lastCheckIn: Date;
+  @Prop()
+  lastCheckOut: Date;
 
-    @Prop()
-    totalWorkingHours: number;
+  @Prop()
+  totalWorkingHours: number;
 
-    @Prop()
-    leaveType: string;
+  @Prop()
+  leaveType: string;
 
-    @Prop()
-    status: string;
+  @Prop()
+  status: string;
 
-    @Prop()
-    note: string;
+  @Prop()
+  note: string;
 }
 
 export const AttendanceRecordSchema = SchemaFactory.createForClass(AttendanceRecords);
