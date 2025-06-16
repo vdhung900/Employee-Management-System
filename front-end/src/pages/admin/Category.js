@@ -11,19 +11,38 @@ import {
   message,
   Popconfirm,
   Tabs,
+  Select,
 } from "antd";
 import { TeamOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import APIConfig from "../../services/APIConfig";
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
+const { Option } = Select;
 
 const DepartmentTab = () => {
   const [departments, setDepartments] = useState([]);
+  const [managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form] = Form.useForm();
+
+  const fetchManagers = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`${APIConfig.baseUrl}/departments/managers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setManagers(data.data);
+      }
+      else message.error(data.message || "Lỗi khi tải danh sách quản lý");
+    } catch (err) {
+      message.error("Không thể tải danh sách quản lý");
+    }
+  };
 
   const fetchDepartments = async () => {
     setLoading(true);
@@ -43,7 +62,11 @@ const DepartmentTab = () => {
   };
 
   useEffect(() => {
-    fetchDepartments();
+    const fetchData = async () => {
+      await fetchManagers();
+      await fetchDepartments();
+    };
+    fetchData();
   }, []);
 
   const handleAdd = () => {
@@ -54,7 +77,9 @@ const DepartmentTab = () => {
 
   const handleEdit = (record) => {
     setEditing(record);
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      ...record
+    });
     setModalVisible(true);
   };
 
@@ -112,6 +137,20 @@ const DepartmentTab = () => {
     { title: "Tên phòng ban", dataIndex: "name", key: "name" },
     { title: "Mô tả", dataIndex: "description", key: "description" },
     {
+      title: "Quản lý",
+      dataIndex: "managerId",
+      key: "managerId",
+      render: (managerId) => {
+        if (!managerId) return 'Chưa có quản lý';
+        if (typeof managerId === 'object' && managerId !== null) {
+          return `${managerId.username} (${managerId.employeeId?.fullName || 'N/A'})`;
+        }
+        const managerObj = managers.find(m => m._id === managerId);
+        if (!managerObj) return 'Chưa có quản lý';
+        return `${managerObj.username} (${managerObj.employeeId?.fullName || 'N/A'})`;
+      }
+    },
+    {
       title: "Hành động",
       key: "action",
       render: (_, record) => (
@@ -159,6 +198,21 @@ const DepartmentTab = () => {
           </Form.Item>
           <Form.Item name="description" label="Mô tả">
             <Input.TextArea rows={2} />
+          </Form.Item>
+          <Form.Item
+            name="managerId"
+            label="Quản lý"
+          >
+            <Select
+              placeholder="Chọn quản lý"
+              allowClear
+            >
+              {managers.map((manager) => (
+                <Option key={manager._id} value={manager._id}>
+                  {manager.username} ({manager.employeeId?.fullName || 'N/A'})
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

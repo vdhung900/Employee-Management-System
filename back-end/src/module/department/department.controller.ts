@@ -16,6 +16,14 @@ export class DepartmentController {
         }
     }
 
+    @Get('managers')
+    @ApiOperation({ summary: 'Get all managers' })
+    @ApiResponse({ status: 200, description: 'List of managers', type: BaseResponse })
+    async getManagers() {
+        const managers = await this.departmentService.findAllManagers();
+        return BaseResponse.success(managers, 'OK', 200);
+    }
+
     @Post()
     @ApiOperation({ summary: 'Create department' })
     @ApiBody({ type: Departments })
