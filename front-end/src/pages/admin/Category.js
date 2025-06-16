@@ -10,8 +10,7 @@ import {
     Space,
     message,
     Popconfirm,
-    Tabs,
-    Select
+    Tabs
 } from 'antd';
 import { TeamOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import APIConfig from '../../services/APIConfig';
@@ -25,7 +24,6 @@ const DepartmentTab = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form] = Form.useForm();
-    const [managers, setManagers] = useState([]);
 
     const fetchDepartments = async () => {
         setLoading(true);
@@ -44,37 +42,19 @@ const DepartmentTab = () => {
         }
     };
 
-    const fetchManagers = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${APIConfig.baseUrl}/departments/managers`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            setManagers(Array.isArray(data) ? data : []);
-        } catch (err) {
-            setManagers([]);
-        }
-    };
-
     useEffect(() => {
         fetchDepartments();
     }, []);
 
-    const handleAdd = async () => {
+    const handleAdd = () => {
         setEditing(null);
         form.resetFields();
-        await fetchManagers();
         setModalVisible(true);
     };
 
-    const handleEdit = async (record) => {
+    const handleEdit = (record) => {
         setEditing(record);
-        await fetchManagers();
-        form.setFieldsValue({
-            ...record,
-            manager: record.manager?._id || undefined
-        });
+        form.setFieldsValue(record);
         setModalVisible(true);
     };
 
@@ -132,12 +112,6 @@ const DepartmentTab = () => {
         { title: 'Tên phòng ban', dataIndex: 'name', key: 'name' },
         { title: 'Mô tả', dataIndex: 'description', key: 'description' },
         {
-            title: 'Quản lý',
-            dataIndex: 'manager',
-            key: 'manager',
-            render: (manager) => manager?.username || '',
-        },
-        {
             title: 'Hành động',
             key: 'action',
             render: (_, record) => (
@@ -176,19 +150,6 @@ const DepartmentTab = () => {
                     </Form.Item>
                     <Form.Item name="description" label="Mô tả">
                         <Input.TextArea rows={2} />
-                    </Form.Item>
-                    <Form.Item name="manager" label="Quản lý phòng ban">
-                        <Select
-                            showSearch
-                            placeholder="Chọn quản lý phòng ban"
-                            optionFilterProp="children"
-                            filterOption={(input, option) => (option?.children ?? '').toLowerCase().includes(input.toLowerCase())}
-                            allowClear
-                        >
-                            {managers.map(m => (
-                                <Select.Option key={m._id} value={m._id}>{m.username}</Select.Option>
-                            ))}
-                        </Select>
                     </Form.Item>
                 </Form>
             </Modal>
