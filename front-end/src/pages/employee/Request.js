@@ -73,7 +73,7 @@ const Requests = () => {
         try{
             loadTypeReq();
         }catch (e) {
-            console.log(e);
+            console.log(e, 'test');
         }
     }, []);
 
