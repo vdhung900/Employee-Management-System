@@ -30,6 +30,7 @@ const Login = () => {
   useEffect(() => {
     if (isAuthenticated()) {
       const role = localStorage.getItem("role");
+
       let redirectTo = "/employee/dashboard";
       if (role === "admin") redirectTo = "/admin/dashboard";
       else if (role === "hr") redirectTo = "/employee/dashboard";
@@ -50,11 +51,11 @@ const Login = () => {
       const data = response.data;
 
       if (response.status == 200 && data) {
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("token", data.accessToken); // Store access token too
-      localStorage.setItem("refreshToken", data.refreshToken);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("role", data.user.role);
+        login(data); // Save user data to localStorage
+        // localStorage.setItem("accessToken", data.accessToken);
+        // localStorage.setItem("refreshToken", data.refreshToken);
+        // localStorage.setItem("user", JSON.stringify(data.user));
+
         message.success(MESSAGE.LOGIN_SUCCESS);
         const role = data.user.role;
         let redirectTo = "/employee/dashboard";
