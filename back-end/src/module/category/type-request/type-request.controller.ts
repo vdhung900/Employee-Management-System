@@ -1,6 +1,6 @@
 import {Controller, Get, HttpException, HttpStatus, Param} from '@nestjs/common';
 import {TypeRequestService} from "./type-request.service";
-import {BaseResponse} from "../../../../../../tesst/Employee-Management-System/back-end/src/interfaces/response/base.response";
+import {BaseResponse} from "../../../interfaces/response/base.response";
 
 @Controller('category/type-request')
 export class TypeRequestController {
