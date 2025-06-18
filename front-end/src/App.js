@@ -31,6 +31,7 @@ import TeamManagement from "./pages/employee/TeamManagement";
 import TeamPerformance from "./pages/employee/TeamPerformance";
 import NotFound from "./pages/NotFound";
 import Category from "./pages/admin/Category";
+import {LoadingProvider} from "./contexts/LoadingContext";
 
 const router = createBrowserRouter([
   {
@@ -44,9 +45,7 @@ const router = createBrowserRouter([
   {
     path: "/404",
     element: (
-      <PublicRoute>
         <NotFound />
-      </PublicRoute>
     )
   },
   {
@@ -69,7 +68,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/employee",
-    element: <PrivateRoute roles={['staff', 'manager', 'hr']} />,
+    element: <PrivateRoute roles={['employee', 'manager', 'hr']} />,
     children: [
       {
         element: <MainLayout />,
@@ -109,7 +108,12 @@ const router = createBrowserRouter([
 });
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+      <LoadingProvider>
+        <RouterProvider router={router} />
+      </LoadingProvider>
+  );
+
 }
 
 export default App;

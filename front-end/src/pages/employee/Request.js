@@ -53,11 +53,204 @@ import {
 } from '@ant-design/icons';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
 import CategoryService from "../../services/CategoryService";
+import requestService from "../../services/RequestService";
+import admin_account from "../../services/Admin_account";
+import {formatDate} from "../../utils/format";
+import moment from 'moment';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
+
+const RequestTypeForm = ({ form, requestType, departments = [], positions = [] }) => {
+    const formFields = {
+        LEAVE: {
+            fields: (
+                <>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['requestData', 'startDate']}
+                                label="Ngày bắt đầu nghỉ"
+                                rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+                            >
+                                <DatePicker style={{ width: '100%' }} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['requestData', 'endDate']}
+                                label="Ngày kết thúc nghỉ"
+                                rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
+                            >
+                                <DatePicker style={{ width: '100%' }} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Form.Item
+                        name={['requestData', 'reason']}
+                        label="Lý do nghỉ phép"
+                        rules={[{ required: true, message: 'Vui lòng nhập lý do nghỉ phép' }]}
+                    >
+                        <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép" />
+                    </Form.Item>
+                </>
+            ),
+            initialValues: {
+                dataReq: {
+                    startDate: null,
+                    endDate: null,
+                    reason: ''
+                }
+            }
+        },
+        OVERTIME: {
+            fields: (
+                <>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'startDate']}
+                                label="Ngày tăng ca"
+                                rules={[{ required: true, message: 'Vui lòng chọn ngày tăng ca' }]}
+                            >
+                                <DatePicker style={{ width: '100%' }} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'hours']}
+                                label="Số giờ tăng ca"
+                                rules={[{ required: true, message: 'Vui lòng nhập số giờ tăng ca' }]}
+                            >
+                                <Input type="number" min={1} max={24} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Form.Item
+                        name={['dataReq', 'reason']}
+                        label="Lý do tăng ca"
+                        rules={[{ required: true, message: 'Vui lòng nhập lý do tăng ca' }]}
+                    >
+                        <Input.TextArea rows={4} placeholder="Nhập lý do tăng ca" />
+                    </Form.Item>
+                </>
+            ),
+            initialValues: {
+                dataReq: {
+                    startDate: null,
+                    hours: null,
+                    reason: ''
+                }
+            }
+        },
+        ACCOUNT_CREATE_REQUEST: {
+            fields: (
+                <>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'fullName']}
+                                label="Họ và tên nhân viên"
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập họ và tên' },
+                                    { min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự' }
+                                ]}
+                            >
+                                <Input placeholder="Nhập họ và tên nhân viên" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'startDate']}
+                                label="Ngày bắt đầu làm việc"
+                                rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+                            >
+                                <DatePicker style={{ width: '100%' }} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'email']}
+                                label="Email"
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập email' },
+                                    { type: 'email', message: 'Email không hợp lệ' }
+                                ]}
+                            >
+                                <Input placeholder="Nhập email" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'phone']}
+                                label="Số điện thoại"
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập số điện thoại' },
+                                    { pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại không hợp lệ' }
+                                ]}
+                            >
+                                <Input placeholder="Nhập số điện thoại" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'department']}
+                                label="Phòng ban"
+                                rules={[{ required: true, message: 'Vui lòng chọn phòng ban' }]}
+                            >
+                                <Select placeholder="Chọn phòng ban">
+                                    {departments.map(department => (
+                                        <Option key={department._id} value={department._id}>
+                                            {department.name}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'position']}
+                                label="Chức vụ"
+                                rules={[{ required: true, message: 'Vui lòng chọn chức vụ' }]}
+                            >
+                                <Select placeholder="Chọn chức vụ">
+                                    {positions.map(position => (
+                                        <Option key={position._id} value={position._id}>
+                                            {position.name}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                </>
+            ),
+            initialValues: {
+                dataReq: {
+                    fullName: '',
+                    startDate: null,
+                    email: '',
+                    phone: '',
+                    department: undefined,
+                    position: undefined,
+                    note: ''
+                }
+            }
+        }
+    };
+
+    const selectedForm = formFields[requestType];
+    if (!selectedForm) return null;
+
+    return selectedForm.fields;
+};
 
 const Requests = () => {
     const [searchText, setSearchText] = useState('');
@@ -68,98 +261,61 @@ const Requests = () => {
     const [selectedDataType, setSelectedDataType] = useState(null);
     const [selectedRequestType, setSelectedRequestType] = useState(null);
     const [form] = Form.useForm();
+    const [requests, setRequests] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [positions, setPositions] = useState([]);
+    const [isEdit, setIsEdit] = useState(false);
 
     useEffect(() => {
         try{
             loadTypeReq();
+            loadDataReq();
+            loadDepartments();
+            loadPositions();
         }catch (e) {
             console.log(e, 'test');
         }
     }, []);
 
-    // Sample data
-    const requests = [
-        {
-            id: 1,
-            employee: {
-                id: 1,
-                name: 'Nguyễn Văn A',
-                position: 'Frontend Developer',
-                department: 'Engineering',
-                employeeId: 'EMP001',
-                avatar: null
-            },
-            requestNumber: 'REQ-2024-001',
-            category: 'Nghỉ phép',
-            status: 'pending',
-            submitDate: '2024-03-15',
-            startDate: '2024-03-20',
-            endDate: '2024-03-22',
-            reason: 'Nghỉ phép cá nhân',
-            attachments: ['document1.pdf'],
-            priority: 'normal',
-            history: [
-                { date: '2024-03-15 09:00', action: 'Tạo yêu cầu', user: 'Nguyễn Văn A' },
-                { date: '2024-03-15 10:30', action: 'Chuyển đến quản lý', user: 'System' },
-                { date: '2024-03-15 14:00', action: 'Đang xem xét', user: 'HR Manager' }
-            ]
-        },
-        {
-            id: 2,
-            employee: {
-                id: 2,
-                name: 'Trần Thị B',
-                position: 'UI/UX Designer',
-                department: 'Design',
-                employeeId: 'EMP002',
-                avatar: null
-            },
-            requestNumber: 'REQ-2024-002',
-            category: 'Tăng ca',
-            status: 'approved',
-            submitDate: '2024-03-14',
-            startDate: '2024-03-16',
-            endDate: '2024-03-16',
-            reason: 'Hoàn thành dự án gấp',
-            attachments: [],
-            priority: 'high',
-            history: [
-                { date: '2024-03-14 15:00', action: 'Tạo yêu cầu', user: 'Trần Thị B' },
-                { date: '2024-03-14 16:30', action: 'Chuyển đến quản lý', user: 'System' },
-                { date: '2024-03-15 09:00', action: 'Đã phê duyệt', user: 'HR Manager' }
-            ]
-        },
-        {
-            id: 3,
-            employee: {
-                id: 3,
-                name: 'Lê Văn C',
-                position: 'Project Manager',
-                department: 'Management',
-                employeeId: 'EMP003',
-                avatar: null
-            },
-            requestNumber: 'REQ-2024-003',
-            category: 'Đi muộn',
-            status: 'rejected',
-            submitDate: '2024-03-13',
-            startDate: '2024-03-14',
-            endDate: '2024-03-14',
-            reason: 'Kẹt xe',
-            attachments: ['traffic.jpg'],
-            priority: 'low',
-            history: [
-                { date: '2024-03-13 08:00', action: 'Tạo yêu cầu', user: 'Lê Văn C' },
-                { date: '2024-03-13 09:30', action: 'Chuyển đến quản lý', user: 'System' },
-                { date: '2024-03-13 14:00', action: 'Từ chối', user: 'HR Manager' }
-            ]
+    const loadDepartments = async () => {
+        try{
+            const response = await admin_account.getAllDepartments();
+            setDepartments(response);
+        }catch (e) {
+            console.log(e, 'test');
+
         }
-    ];
+    }
+
+    const loadPositions = async () => {
+        try{
+            const response = await admin_account.getAllPositions();
+            setPositions(response);
+        }catch (e) {
+            console.log(e, 'test');
+
+        }
+    }
+
+    const loadDataReq = async () => {
+        try{
+            const user = JSON.parse(localStorage.getItem("user"));
+            if(!user) throw new Error("Bạn chưa đăng nhập !!!");
+            let body = {
+                employeeId: user.employeeId,
+            }
+            const response = await requestService.getByAccountId(body);
+            if(response.success){
+                setRequests(response.data);
+            }
+        }catch (e) {
+            console.log(e, 'Error loading data requests');
+        }
+    }
 
     const loadTypeReq = async () => {
         try{
             const response = await CategoryService.getTypeReqByRole();
-            console.log(response);
             if(response.success){
                 const data = response.data;
                 data.map(item => ({
@@ -185,10 +341,10 @@ const Requests = () => {
 
     const getStatusLabel = (status) => {
         switch(status) {
-            case 'approved': return 'Đã phê duyệt';
-            case 'rejected': return 'Từ chối';
-            case 'pending': return 'Đang chờ duyệt';
-            case 'cancelled': return 'Đã hủy';
+            case 'Approved': return 'Đã phê duyệt';
+            case 'Rejected': return 'Từ chối';
+            case 'Pending': return 'Đang chờ duyệt';
+            case 'Cancelled': return 'Đã hủy';
             default: return 'Không xác định';
         }
     };
@@ -214,15 +370,30 @@ const Requests = () => {
     const showModal = (request = null) => {
         setSelectedRequest(request);
         setIsModalVisible(true);
-
+        setIsEdit(false)
         if (request) {
+            setIsEdit(true);
+            handleRequestTypeChange(request.typeRequest.code);
             form.setFieldsValue({
-                category: request.category,
-                startDate: request.startDate,
-                endDate: request.endDate,
-                reason: request.reason,
+                requestId: request._id,
+                employeeId: request.employeeId,
+                typeCode: request.typeRequest.code,
                 priority: request.priority,
+                note: request.note,
             });
+            if(request.typeRequest.code === "ACCOUNT_CREATE_REQUEST"){
+                form.setFieldsValue({
+                    dataReq: {
+                        fullName: request.dataReq.fullName || '',
+                        startDate: request.dataReq.startDate ? moment(request.dataReq.startDate) : undefined,
+                        email: request.dataReq.email || '',
+                        phone: request.dataReq.phone || '',
+                        department: request.dataReq.department || '',
+                        position: request.dataReq.position || '',
+                        note: request.dataReq.note || ''
+                    }
+                })
+            }
         } else {
             form.resetFields();
         }
@@ -230,193 +401,62 @@ const Requests = () => {
 
     const handleCancel = () => {
         setIsModalVisible(false);
-        setSelectedDataType(null);
+        setSelectedRequestType(null);
+        setIsEdit(false);
     };
 
-    const handleFormSubmit = (values) => {
-        setIsModalVisible(false);
-        form.resetFields();
-        setSelectedDataType(null);
-    };
+    const handleFormSubmit = async (values) => {
+        try{
+            let body = values;
+            if(body.requestId){
+                await requestService.updateRequest(body);
+            }else{
+                const user = JSON.parse(localStorage.getItem("user"));
+                body.employeeId = user.employeeId;
+                await requestService.createRequest(body);
+            }
+            loadDataReq();
+            setIsModalVisible(false);
+            form.resetFields();
+            setSelectedDataType(null);
+        }catch (e) {
 
-    const handleDataTypeChange = (e) => {
-        setSelectedDataType(e.target.value);
-        form.setFieldsValue({
-            employeeInfo: undefined,
-            dateInfo: undefined
-        });
+        }
     };
 
     const handleRequestTypeChange = (value) => {
         setSelectedRequestType(value);
-        form.setFieldsValue({
-            startDate: undefined,
-            endDate: undefined,
-            reason: undefined,
-            priority: undefined,
-            attachments: undefined
-        });
+        const formFields = {
+            LEAVE: {
+                dataReq: {
+                    startDate: undefined,
+                    endDate: undefined,
+                    reason: undefined
+                }
+            },
+            OVERTIME: {
+                dataReq: {
+                    startDate: undefined,
+                    hours: undefined,
+                    reason: undefined
+                }
+            },
+            ACCOUNT_CREATE_REQUEST: {
+                dataReq: {
+                    fullName: undefined,
+                    startDate: undefined,
+                    email: undefined,
+                    phone: undefined,
+                    department: undefined,
+                    position: undefined,
+                }
+            }
+        };
+        form.setFieldsValue(formFields[value] || {});
     };
 
     const renderRequestTypeFields = () => {
-        switch(selectedRequestType) {
-            case 'LEAVE':
-                return (
-                    <>
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="startDate"
-                                    label="Ngày bắt đầu nghỉ"
-                                    rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
-                                >
-                                    <DatePicker style={{ width: '100%' }} />
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="endDate"
-                                    label="Ngày kết thúc nghỉ"
-                                    rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
-                                >
-                                    <DatePicker style={{ width: '100%' }} />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Form.Item
-                            name="reason"
-                            label="Lý do nghỉ phép"
-                            rules={[{ required: true, message: 'Vui lòng nhập lý do nghỉ phép' }]}
-                        >
-                            <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép" />
-                        </Form.Item>
-                    </>
-                );
-            case 'OVERTIME':
-                return (
-                    <>
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="startDate"
-                                    label="Ngày tăng ca"
-                                    rules={[{ required: true, message: 'Vui lòng chọn ngày tăng ca' }]}
-                                >
-                                    <DatePicker style={{ width: '100%' }} />
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="hours"
-                                    label="Số giờ tăng ca"
-                                    rules={[{ required: true, message: 'Vui lòng nhập số giờ tăng ca' }]}
-                                >
-                                    <Input type="number" min={1} max={24} />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Form.Item
-                            name="reason"
-                            label="Lý do tăng ca"
-                            rules={[{ required: true, message: 'Vui lòng nhập lý do tăng ca' }]}
-                        >
-                            <Input.TextArea rows={4} placeholder="Nhập lý do tăng ca" />
-                        </Form.Item>
-                    </>
-                );
-            case 'ACCOUNT_CREATE_REQUEST':
-                return (
-                    <>
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="fullName"
-                                    label="Họ và tên nhân viên"
-                                    rules={[
-                                        { required: true, message: 'Vui lòng nhập họ và tên' },
-                                        { min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự' }
-                                    ]}
-                                >
-                                    <Input placeholder="Nhập họ và tên nhân viên" />
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="startDate"
-                                    label="Ngày bắt đầu làm việc"
-                                    rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
-                                >
-                                    <DatePicker style={{ width: '100%' }} />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="email"
-                                    label="Email"
-                                    rules={[
-                                        { required: true, message: 'Vui lòng nhập email' },
-                                        { type: 'email', message: 'Email không hợp lệ' }
-                                    ]}
-                                >
-                                    <Input placeholder="Nhập email" />
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="phone"
-                                    label="Số điện thoại"
-                                    rules={[
-                                        { required: true, message: 'Vui lòng nhập số điện thoại' },
-                                        { pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại không hợp lệ' }
-                                    ]}
-                                >
-                                    <Input placeholder="Nhập số điện thoại" />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="department"
-                                    label="Phòng ban"
-                                    rules={[{ required: true, message: 'Vui lòng chọn phòng ban' }]}
-                                >
-                                    <Select placeholder="Chọn phòng ban">
-                                        <Option value="IT">Phòng IT</Option>
-                                        <Option value="HR">Phòng Nhân sự</Option>
-                                        <Option value="FINANCE">Phòng Tài chính</Option>
-                                        <Option value="MARKETING">Phòng Marketing</Option>
-                                        <Option value="SALES">Phòng Kinh doanh</Option>
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="position"
-                                    label="Chức vụ"
-                                    rules={[{ required: true, message: 'Vui lòng chọn chức vụ' }]}
-                                >
-                                    <Select placeholder="Chọn chức vụ">
-                                        <Option value="STAFF">Nhân viên</Option>
-                                        <Option value="MANAGER">Quản lý</Option>
-                                        <Option value="DIRECTOR">Giám đốc</Option>
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Form.Item
-                            name="note"
-                            label="Ghi chú"
-                        >
-                            <Input.TextArea rows={4} placeholder="Nhập ghi chú (nếu có)" />
-                        </Form.Item>
-                    </>
-                );
-            default:
-                return null;
-        }
+        return <RequestTypeForm form={form} requestType={selectedRequestType} departments={departments} positions={positions} />;
     };
 
     const showDrawer = (request) => {
@@ -431,45 +471,53 @@ const Requests = () => {
     const confirmDelete = (request) => {
         Modal.confirm({
             title: 'Xác nhận hủy yêu cầu',
-            content: `Bạn có chắc chắn muốn hủy yêu cầu ${request.requestNumber}?`,
+            content: `Bạn có chắc chắn muốn hủy yêu cầu ${request.typeRequest.name}?`,
             okText: 'Hủy yêu cầu',
             okType: 'danger',
             cancelText: 'Đóng',
-            onOk() {
-                console.log('Cancelled request:', request);
-                // Here you would handle cancelling the request
+            async onOk() {
+                let body = request;
+                body.requestId = request._id;
+                body.status = "Cancelled";
+                const response = await requestService.approveRequest(body);
+                if(response.success){
+                    loadDataReq();
+                    Modal.success({
+                        title: 'Yêu cầu đã được hủy',
+                        content: `Yêu cầu ${request.typeRequest.name} đã được hủy thành công.`,
+                    });
+                }
             },
         });
     };
 
     const columns = [
         {
-            title: 'Nhân viên',
-            dataIndex: ['employee', 'name'],
+            title: 'Nhân viên gửi yêu cầu',
+            dataIndex: ['employeeId', 'fullName'],
             key: 'employeeName',
             render: (text, record) => (
                 <Space>
                     <Avatar style={{ backgroundColor: '#722ed1' }}>{text.charAt(0)}</Avatar>
                     <div>
                         <div style={{ fontWeight: 'bold' }}>{text}</div>
-                        <Text type="secondary">{record.employee.employeeId}</Text>
+                        <Text type="secondary">{record.employeeId.email}</Text>
                     </div>
                 </Space>
             ),
-            sorter: (a, b) => a.employee.name.localeCompare(b.employee.name),
+            sorter: (a, b) => a.employeeId.fullName.localeCompare(b.employeeId.fullName),
             filteredValue: searchText ? [searchText] : null,
             onFilter: (value, record) =>
-                record.employee.name.toLowerCase().includes(value.toLowerCase()) ||
-                record.employee.employeeId.toLowerCase().includes(value.toLowerCase()) ||
-                record.requestNumber.toLowerCase().includes(value.toLowerCase()),
+                record.employeeId.fullName.toLowerCase().includes(value.toLowerCase()) ||
+                record.employeeId.email.toLowerCase().includes(value.toLowerCase())
         },
         {
             title: 'Thông tin yêu cầu',
             key: 'requestInfo',
             render: (_, record) => (
                 <Space direction="vertical" size="small">
-                    <div style={{ fontWeight: 'bold' }}>{record.requestNumber}</div>
-                    <div>Loại: {record.category}</div>
+                    {/*<div style={{ fontWeight: 'bold' }}>{record.requestNumber}</div>*/}
+                    <div>Loại: {record.typeRequest.name}</div>
                     <Tag color={getPriorityColor(record.priority)}>
                         {getPriorityLabel(record.priority)}
                     </Tag>
@@ -481,17 +529,21 @@ const Requests = () => {
             key: 'duration',
             render: (_, record) => (
                 <Space direction="vertical" size="small">
-                    <div>Gửi: {record.submitDate}</div>
-                    <div>Từ: {record.startDate}</div>
-                    <div>Đến: {record.endDate}</div>
+                    <div>Gửi: {formatDate(record.createdAt)}</div>
                 </Space>
             ),
-            sorter: (a, b) => new Date(a.submitDate) - new Date(b.submitDate),
+            sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
         },
         {
-            title: 'Lý do',
-            dataIndex: 'reason',
-            key: 'reason',
+            title: 'Thời gian giải quyết',
+            dataIndex: 'timeResolve',
+            key: 'timeResolve',
+            ellipsis: true,
+        },
+        {
+            title: 'Ghi chú',
+            dataIndex: 'note',
+            key: 'note',
             ellipsis: true,
         },
         {
@@ -501,18 +553,18 @@ const Requests = () => {
             render: status => (
                 <Badge
                     status={
-                        status === 'approved' ? 'success' :
-                            status === 'rejected' ? 'error' :
-                                status === 'pending' ? 'processing' : 'default'
+                        status === 'Approved' ? 'success' :
+                            status === 'Rejected' ? 'error' :
+                                status === 'Pending' ? 'processing' : 'default'
                     }
                     text={getStatusLabel(status)}
                 />
             ),
             filters: [
-                { text: 'Đã phê duyệt', value: 'approved' },
-                { text: 'Từ chối', value: 'rejected' },
-                { text: 'Đang chờ duyệt', value: 'pending' },
-                { text: 'Đã hủy', value: 'cancelled' },
+                { text: 'Đã phê duyệt', value: 'Approved' },
+                { text: 'Từ chối', value: 'Rejected' },
+                { text: 'Đang chờ duyệt', value: 'Pending' },
+                { text: 'Đã hủy', value: 'Cancelled' },
             ],
             onFilter: (value, record) => record.status === value,
         },
@@ -528,7 +580,7 @@ const Requests = () => {
                             onClick={() => showDrawer(record)}
                         />
                     </Tooltip>
-                    {record.status === 'pending' && (
+                    {record.status === 'Pending' && (
                         <>
                             <Tooltip title="Chỉnh sửa">
                                 <Button
@@ -551,11 +603,10 @@ const Requests = () => {
         },
     ];
 
-    // Group requests by status for statistics
-    const pendingRequests = requests.filter(r => r.status === 'pending').length;
-    const approvedRequests = requests.filter(r => r.status === 'approved').length;
-    const rejectedRequests = requests.filter(r => r.status === 'rejected').length;
-    const cancelledRequests = requests.filter(r => r.status === 'cancelled').length;
+    const pendingRequests = requests.filter(r => r.status === 'Pending').length;
+    const approvedRequests = requests.filter(r => r.status === 'Approved').length;
+    const rejectedRequests = requests.filter(r => r.status === 'Rejected').length;
+    const cancelledRequests = requests.filter(r => r.status === 'Cancelled').length;
 
     return (
         <div style={{padding: '10px'}}>
@@ -759,44 +810,59 @@ const Requests = () => {
                     onFinish={handleFormSubmit}
                 >
                     <Form.Item
-                        name="category"
+                        name="requestId"
+                        hidden={true}
+                    >
+                    </Form.Item>
+                    <Form.Item
+                        name="employeeId"
+                        hidden={true}
+                    >
+                    </Form.Item>
+                    <Form.Item
+                        name="typeCode"
                         label="Loại yêu cầu"
                         rules={[{ required: true, message: 'Vui lòng chọn loại yêu cầu' }]}
                     >
                         <Select 
                             placeholder="Chọn loại yêu cầu"
                             onChange={handleRequestTypeChange}
+                            disabled={isEdit}
                         >
                             {requestCategories.map(category => (
                                 <Option key={category.code} value={category.code}>{category.name}</Option>
                             ))}
                         </Select>
                     </Form.Item>
+                    <Form.Item
+                        name="priority"
+                        label="Mức độ ưu tiên"
+                        rules={[{ required: true, message: 'Vui lòng chọn mức độ ưu tiên' }]}
+                    >
+                        <Select placeholder="Chọn mức độ ưu tiên">
+                            <Option value="high">Cao</Option>
+                            <Option value="normal">Bình thường</Option>
+                            <Option value="low">Thấp</Option>
+                        </Select>
+                    </Form.Item>
+                    <Form.Item
+                        name="note"
+                        label="Ghi chú"
+                    >
+                        <Input.TextArea rows={4} placeholder="Nhập ghi chú (nếu có)" />
+                    </Form.Item>
 
+                    <Form.Item
+                        name="attachments"
+                        label="Tài liệu đính kèm"
+                    >
+                        <Upload listType="picture" multiple>
+                            <Button icon={<UploadOutlined />}>Tải lên tập tin</Button>
+                        </Upload>
+                    </Form.Item>
                     {selectedRequestType && (
                         <>
                             {renderRequestTypeFields()}
-                            
-                            <Form.Item
-                                name="priority"
-                                label="Mức độ ưu tiên"
-                                rules={[{ required: true, message: 'Vui lòng chọn mức độ ưu tiên' }]}
-                            >
-                                <Select placeholder="Chọn mức độ ưu tiên">
-                                    <Option value="high">Cao</Option>
-                                    <Option value="normal">Bình thường</Option>
-                                    <Option value="low">Thấp</Option>
-                                </Select>
-                            </Form.Item>
-
-                            <Form.Item
-                                name="attachments"
-                                label="Tài liệu đính kèm"
-                            >
-                                <Upload listType="picture" multiple>
-                                    <Button icon={<UploadOutlined />}>Tải lên tập tin</Button>
-                                </Upload>
-                            </Form.Item>
                         </>
                     )}
                 </Form>
@@ -811,7 +877,7 @@ const Requests = () => {
                 extra={
                     <Space>
                         <Button onClick={closeDrawer}>Đóng</Button>
-                        {selectedRequest && selectedRequest.status === 'pending' && (
+                        {selectedRequest && selectedRequest.status === 'Pending' && (
                             <Button type="primary" onClick={() => showModal(selectedRequest)}>
                                 Chỉnh sửa
                             </Button>
@@ -824,7 +890,7 @@ const Requests = () => {
                         <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
                                 <Title level={4} style={{ marginBottom: 4 }}>
-                                    Yêu cầu {selectedRequest.requestNumber}
+                                    Yêu cầu {selectedRequest.typeRequest.name}
                                 </Title>
                                 <Tag color={getStatusColor(selectedRequest.status)}>
                                     {getStatusLabel(selectedRequest.status)}
@@ -852,10 +918,8 @@ const Requests = () => {
                                             style={{ backgroundColor: '#722ed1', marginRight: 16 }}
                                         />
                                         <div>
-                                            <Title level={5} style={{ marginBottom: 4 }}>{selectedRequest.employee.name}</Title>
-                                            <div>ID: {selectedRequest.employee.employeeId}</div>
-                                            <div>Vị trí: {selectedRequest.employee.position}</div>
-                                            <div>Phòng ban: {selectedRequest.employee.department}</div>
+                                            <Title level={5} style={{ marginBottom: 4 }}>{selectedRequest.employeeId.fullName}</Title>
+                                            <div>Email: {selectedRequest.employeeId.email}</div>
                                         </div>
                                     </div>
                                 </Card>
@@ -867,7 +931,7 @@ const Requests = () => {
                             <Col span={12}>
                                 <Statistic
                                     title="Loại yêu cầu"
-                                    value={selectedRequest.category}
+                                    value={selectedRequest.typeRequest.name}
                                     valueStyle={{ fontSize: '16px' }}
                                 />
                             </Col>
@@ -881,63 +945,45 @@ const Requests = () => {
                             <Col span={12}>
                                 <Statistic
                                     title="Ngày gửi"
-                                    value={selectedRequest.submitDate}
+                                    value={formatDate(selectedRequest.createdAt)}
                                     valueStyle={{ fontSize: '16px' }}
                                 />
                             </Col>
-                            <Col span={12}>
-                                <Statistic
-                                    title="Thời gian yêu cầu"
-                                    value={`${selectedRequest.startDate} - ${selectedRequest.endDate}`}
-                                    valueStyle={{ fontSize: '16px' }}
-                                />
-                            </Col>
+                            {/*<Col span={12}>*/}
+                            {/*    <Statistic*/}
+                            {/*        title="Thời gian yêu cầu"*/}
+                            {/*        value={`${selectedRequest.startDate} - ${selectedRequest.endDate}`}*/}
+                            {/*        valueStyle={{ fontSize: '16px' }}*/}
+                            {/*    />*/}
+                            {/*</Col>*/}
                         </Row>
 
-                        <Divider orientation="left">Lý do</Divider>
-                        <Paragraph>{selectedRequest.reason}</Paragraph>
+                        <Divider orientation="left">Ghi chú</Divider>
+                        <Paragraph>{selectedRequest.note}</Paragraph>
 
-                        {selectedRequest.attachments && selectedRequest.attachments.length > 0 && (
-                            <>
-                                <Divider orientation="left">Tài liệu đính kèm</Divider>
-                                <List
-                                    size="small"
-                                    dataSource={selectedRequest.attachments}
-                                    renderItem={item => (
-                                        <List.Item>
-                                            <Space>
-                                                <FileTextOutlined />
-                                                <a href="#">{item}</a>
-                                            </Space>
-                                        </List.Item>
-                                    )}
-                                />
-                            </>
-                        )}
-
-                        <Divider orientation="left">
-                            <Space>
-                                <HistoryOutlined />
-                                Lịch sử yêu cầu
-                            </Space>
-                        </Divider>
-                        <Timeline mode="left">
-                            {selectedRequest.history.map((item, index) => (
-                                <Timeline.Item
-                                    key={index}
-                                    color={
-                                        item.action.includes('Đã phê duyệt') ? 'green' :
-                                            item.action.includes('Từ chối') ? 'red' :
-                                                item.action.includes('Tạo yêu cầu') ? 'blue' :
-                                                    item.action.includes('Đang xem xét') ? 'orange' : 'gray'
-                                    }
-                                    label={item.date}
-                                >
-                                    <div style={{ fontWeight: 'bold' }}>{item.action}</div>
-                                    <div>Thực hiện bởi: {item.user}</div>
-                                </Timeline.Item>
-                            ))}
-                        </Timeline>
+                        {/*<Divider orientation="left">*/}
+                        {/*    <Space>*/}
+                        {/*        <HistoryOutlined />*/}
+                        {/*        Lịch sử yêu cầu*/}
+                        {/*    </Space>*/}
+                        {/*</Divider>*/}
+                        {/*<Timeline mode="left">*/}
+                        {/*    {selectedRequest.history.map((item, index) => (*/}
+                        {/*        <Timeline.Item*/}
+                        {/*            key={index}*/}
+                        {/*            color={*/}
+                        {/*                item.action.includes('Đã phê duyệt') ? 'green' :*/}
+                        {/*                    item.action.includes('Từ chối') ? 'red' :*/}
+                        {/*                        item.action.includes('Tạo yêu cầu') ? 'blue' :*/}
+                        {/*                            item.action.includes('Đang xem xét') ? 'orange' : 'gray'*/}
+                        {/*            }*/}
+                        {/*            label={item.date}*/}
+                        {/*        >*/}
+                        {/*            <div style={{ fontWeight: 'bold' }}>{item.action}</div>*/}
+                        {/*            <div>Thực hiện bởi: {item.user}</div>*/}
+                        {/*        </Timeline.Item>*/}
+                        {/*    ))}*/}
+                        {/*</Timeline>*/}
                     </>
                 )}
             </Drawer>

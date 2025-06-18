@@ -12,7 +12,7 @@ import {
     Typography,
     Tag,
     message,
-    Tooltip
+    Tooltip, Spin
 } from 'antd';
 import {
     MenuFoldOutlined,
@@ -33,6 +33,7 @@ import { logout, getCurrentUser } from '../utils/auth';
 import ThreeDButton from '../components/3d/ThreeDButton';
 import ThreeDContainer from '../components/3d/ThreeDContainer';
 import '../components/3d/ThreeDStyles.css';
+import {useLoading} from "../contexts/LoadingContext";
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Title } = Typography;
@@ -54,6 +55,7 @@ const colorTheme = {
 };
 
 const MainLayout = () => {
+    const { isLoading } = useLoading();
     const [color, setColor] = useState(colorTheme.siderBg);
     const [collapsed, setCollapsed] = useState(false);
     const [currentUser, setCurrentUser] = useState('');
@@ -444,7 +446,9 @@ const MainLayout = () => {
                         overflow: 'auto',
                     }}
                 >
-                    <Outlet />
+                    <Spin spinning={isLoading} tip="Loading...">
+                        <Outlet />
+                    </Spin>
                 </Content>
 
                 {/*<Footer*/}

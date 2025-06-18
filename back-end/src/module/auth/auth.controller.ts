@@ -39,9 +39,6 @@ export class AuthController {
   })
   async login(@Body() loginReq: LoginReq): Promise<BaseResponse> {
     try {
-      const jwtSecret = process.env.JWT_SECRET;
-      console.log("JWT Secret:", jwtSecret);
-
       const loginResult = await this.authService.login(loginReq);
       return BaseResponse.success(loginResult, "Dang nhap thanh cong", HttpStatus.OK);
     } catch (e) {

@@ -18,19 +18,19 @@ export class Requests extends BaseSchema {
     dataReq: Record<string, any>;
 
     @Prop()
-    startDate: Date;
+    priority: string;
 
     @Prop()
-    endDate: Date;
+    reason: string;
 
     @Prop()
-    reason: String;
-
-    @Prop()
-    status: String;
+    status: string;
 
     @Prop({default: 0})
     timeResolve: number;
+
+    @Prop()
+    note: string;
 
     @Prop({type: Types.ObjectId, ref: Employees.name})
     approverId: Types.ObjectId;
