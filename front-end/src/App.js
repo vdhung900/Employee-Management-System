@@ -1,18 +1,18 @@
-import React from 'react';
-import './assets/styles/global.css';
+import React from "react";
+import "./assets/styles/global.css";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
   createBrowserRouter,
-  RouterProvider
+  RouterProvider,
 } from "react-router-dom";
-import PrivateRoute from './components/auth/PrivateRoute';
-import PublicRoute from './components/auth/PublicRoute';
-import MainLayout from './layouts/MainLayout';
-import Login from './pages/auth/Login';
-import EmployeeDashboard from './pages/employee/Dashboard';
+import PrivateRoute from "./components/auth/PrivateRoute";
+import PublicRoute from "./components/auth/PublicRoute";
+import MainLayout from "./layouts/MainLayout";
+import Login from "./pages/auth/Login";
+import EmployeeDashboard from "./pages/employee/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import LogRequest from "./pages/admin/LogRequest";
 import AdminAccount from "./pages/admin/AdminAccount";
@@ -33,79 +33,83 @@ import NotFound from "./pages/NotFound";
 import Category from "./pages/admin/Category";
 import {LoadingProvider} from "./contexts/LoadingContext";
 
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      path: "/login",
+      element: (
+        <PublicRoute>
+          <Login />
+        </PublicRoute>
+      ),
+    },
+    {
+      path: "/404",
+      element: (
+        <PublicRoute>
+          <NotFound />
+        </PublicRoute>
+      ),
+    },
+    {
+      path: "/admin",
+      element: <PrivateRoute roles={["admin"]} />,
+      children: [
+        {
+          element: <MainLayout />,
+          children: [
+            { index: true, element: <AdminDashboard /> },
+            { path: "dashboard", element: <AdminDashboard /> },
+            { path: "request-manage", element: <LogRequest /> },
+            { path: "setting", element: <Setting /> },
+            { path: "account-request", element: <AdminAccountRequests /> },
+            { path: "admin-account", element: <AdminAccount /> },
+            { path: "category", element: <Category /> },
+          ],
+        },
+      ],
+    },
+    {
+      path: "/employee",
+      element: <PrivateRoute roles={["employee", "manager", "hr"]} />,
+      children: [
+        {
+          element: <MainLayout />,
+          children: [
+            { index: true, element: <EmployeeDashboard /> },
+            { path: "dashboard", element: <EmployeeDashboard /> },
+            { path: "attendance-review", element: <AttendanceReview /> },
+            { path: "calender", element: <Calender /> },
+            { path: "help", element: <Help /> },
+            { path: "overtime", element: <Overtime /> },
+            { path: "payroll", element: <Payroll /> },
+            { path: "payroll-management", element: <PayrollManagement /> },
+            { path: "payroll-management", element: <PayrollManagement /> },
+            { path: "reports", element: <Reports /> },
+            { path: "requests", element: <Requests /> },
+            { path: "staff-management", element: <StaffManagement /> },
+            { path: "team-management", element: <TeamManagement /> },
+            { path: "team-performance", element: <TeamPerformance /> },
+          ],
+        },
+      ],
+    },
+    {
+      path: "/",
+      element: <Navigate to="/login" replace />,
+    },
+    {
+      path: "*",
+      element: <Navigate to="/404" replace />,
+    },
+  ],
   {
-    path: "/login",
-    element: (
-      <PublicRoute>
-        <Login />
-      </PublicRoute>
-    )
-  },
-  {
-    path: "/404",
-    element: (
-        <NotFound />
-    )
-  },
-  {
-    path: "/admin",
-    element: <PrivateRoute roles={['admin']} />,
-    children: [
-      {
-        element: <MainLayout />,
-        children: [
-          { index: true, element: <AdminDashboard /> },
-          { path: "dashboard", element: <AdminDashboard /> },
-          { path: "request-manage", element: <LogRequest /> },
-          { path: "setting", element: <Setting /> },
-          { path: "account-request", element: <AdminAccountRequests /> },
-          { path: "admin-account", element: <AdminAccount /> },
-          { path: "category", element: <Category /> },
-        ]
-      }
-    ]
-  },
-  {
-    path: "/employee",
-    element: <PrivateRoute roles={['employee', 'manager', 'hr']} />,
-    children: [
-      {
-        element: <MainLayout />,
-        children: [
-          { index: true, element: <EmployeeDashboard /> },
-          { path: "dashboard", element: <EmployeeDashboard /> },
-          { path: "attendance-review", element: <AttendanceReview /> },
-          { path: "calender", element: <Calender /> },
-          { path: "help", element: <Help /> },
-          { path: "overtime", element: <Overtime /> },
-          { path: "payroll", element: <Payroll /> },
-          { path: "payroll-management", element: <PayrollManagement /> },
-          { path: "payroll-management", element: <PayrollManagement /> },
-          { path: "reports", element: <Reports /> },
-          { path: "requests", element: <Requests /> },
-          { path: "staff-management", element: <StaffManagement /> },
-          { path: "team-management", element: <TeamManagement /> },
-          { path: "team-performance", element: <TeamPerformance /> },
-        ]
-      }
-    ]
-  },
-  {
-    path: "/",
-    element: <Navigate to="/login" replace />
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
   }
-  ,
-  {
-    path: "*",
-    element: <Navigate to="/404" replace />
-  }
-], {
-  future: {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true
-  }
-});
+);
 
 function App() {
   return (

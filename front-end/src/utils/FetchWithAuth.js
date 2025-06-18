@@ -11,52 +11,52 @@ import APIConfig from "../services/APIConfig";
  * @returns {Promise<any>} - Response data
  */
 export const fetchWithAuth = async (
-    endpoint,
-    method = "GET",
-    body = null,
-    includeUserId = false,
-    customHeaders = {}
+  endpoint,
+  method = "GET",
+  body = null,
+  includeUserId = false,
+  customHeaders = {}
 ) => {
-    try {
-        const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("accessToken");
 
-        if (!token) {
-            throw new Error("Đã hết hạn đăng nhập !!!");
-        }
-
-        let url = `${APIConfig.baseUrl}${endpoint}`;
-
-        if (includeUserId) {
-            const decode = jwtDecode(token);
-            url = `${APIConfig.baseUrl}${endpoint}${endpoint.endsWith('/') ? '' : '/'}${decode.userId}`;
-        }
-
-        const options = {
-            method,
-            headers: {
-                ...APIConfig.getAuthHeaders(token),
-                ...customHeaders
-            }
-        };
-
-        if (body) {
-            options.body = JSON.stringify(body);
-        }
-
-        const response = await fetch(url, options);
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || "Có lỗi xảy ra");
-        }
-
-        return data;
-    } catch (error) {
-        if(error.message === "jwt expired"){
-            window.location.href = "/403";
-        }
-        throw error;
+    if (!token) {
+      throw new Error("Đã hết hạn đăng nhập !!!");
     }
+
+    let url = `${APIConfig.baseUrl}${endpoint}`;
+
+    if (includeUserId) {
+      const decode = jwtDecode(token);
+      url = `${APIConfig.baseUrl}${endpoint}${endpoint.endsWith("/") ? "" : "/"}${decode.userId}`;
+    }
+
+    const options = {
+      method,
+      headers: {
+        ...APIConfig.getAuthHeaders(token),
+        ...customHeaders,
+      },
+    };
+
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, options);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Có lỗi xảy ra");
+    }
+
+    return data;
+  } catch (error) {
+    if (error.message === "jwt expired") {
+      window.location.href = "/403";
+    }
+    throw error;
+  }
 };
 
 /**
@@ -66,12 +66,12 @@ export const fetchWithAuth = async (
  * @returns {Object} - Error object with message
  */
 export const handleApiError = (error, callback = null) => {
-    const errorMessage = error.message || "Có lỗi xảy ra khi kết nối đến máy chủ";
+  const errorMessage = error.message || "Có lỗi xảy ra khi kết nối đến máy chủ";
 
-    // Call custom error handler if provided
-    if (callback && typeof callback === 'function') {
-        callback(errorMessage);
-    }
+  // Call custom error handler if provided
+  if (callback && typeof callback === "function") {
+    callback(errorMessage);
+  }
 
-    return { error: true, message: errorMessage };
+  return { error: true, message: errorMessage };
 };
