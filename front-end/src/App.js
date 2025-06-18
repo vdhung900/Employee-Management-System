@@ -31,6 +31,7 @@ import TeamManagement from "./pages/employee/TeamManagement";
 import TeamPerformance from "./pages/employee/TeamPerformance";
 import NotFound from "./pages/NotFound";
 import Category from "./pages/admin/Category";
+import {LoadingProvider} from "./contexts/LoadingContext";
 
 const router = createBrowserRouter(
   [
@@ -111,7 +112,12 @@ const router = createBrowserRouter(
 );
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+      <LoadingProvider>
+        <RouterProvider router={router} />
+      </LoadingProvider>
+  );
+
 }
 
 export default App;

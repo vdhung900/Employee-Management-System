@@ -1,40 +1,39 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  Layout,
-  Menu,
-  theme,
-  Avatar,
-  Dropdown,
-  Badge,
-  Space,
-  Switch,
-  Typography,
-  Tag,
-  message,
-  Tooltip,
-} from "antd";
+    Layout,
+    Menu,
+    theme,
+    Avatar,
+    Dropdown,
+    Badge,
+    Space,
+    Switch,
+    Typography,
+    Tag,
+    message,
+    Tooltip, Spin
+} from 'antd';
 import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  DashboardOutlined,
-  CalendarOutlined,
-  FormOutlined,
-  MessageOutlined,
-  FileTextOutlined,
-  QuestionCircleOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  BulbOutlined,
-  BellOutlined,
-  ClockCircleOutlined,
-  PullRequestOutlined,
-  TeamOutlined,
-} from "@ant-design/icons";
-import { logout, getCurrentUser } from "../utils/auth";
-import ThreeDButton from "../components/3d/ThreeDButton";
-import ThreeDContainer from "../components/3d/ThreeDContainer";
-import "../components/3d/ThreeDStyles.css";
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+    DashboardOutlined,
+    CalendarOutlined,
+    FormOutlined,
+    MessageOutlined,
+    FileTextOutlined,
+    QuestionCircleOutlined,
+    UserOutlined,
+    LogoutOutlined,
+    BulbOutlined,
+    BellOutlined,
+    ClockCircleOutlined, PullRequestOutlined, TeamOutlined
+} from '@ant-design/icons';
+import { logout, getCurrentUser } from '../utils/auth';
+import ThreeDButton from '../components/3d/ThreeDButton';
+import ThreeDContainer from '../components/3d/ThreeDContainer';
+import '../components/3d/ThreeDStyles.css';
+import {useLoading} from "../contexts/LoadingContext";
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Title } = Typography;
@@ -56,11 +55,12 @@ const colorTheme = {
 };
 
 const MainLayout = () => {
-  const [color, setColor] = useState(colorTheme.siderBg);
-  const [collapsed, setCollapsed] = useState(false);
-  const [currentUser, setCurrentUser] = useState({});
-  const location = useLocation();
-  const navigate = useNavigate();
+    const { isLoading } = useLoading();
+    const [color, setColor] = useState(colorTheme.siderBg);
+    const [collapsed, setCollapsed] = useState(false);
+    const [currentUser, setCurrentUser] = useState('');
+    const location = useLocation();
+    const navigate = useNavigate();
 
   const {
     token: { colorBgContainer },
@@ -440,20 +440,20 @@ const MainLayout = () => {
             </Dropdown>
           </Space>
         </Header>
-
-        <Content
-          style={{
-            padding: "5px",
-            height: "60px", // 72px header + 50px footer
-            background: "white",
-            position: "relative",
-            transition: "all 0.3s ease",
-            overflow: "auto",
-          }}
-        >
-          <Outlet />
-        </Content>
-
+                <Content
+                    style={{
+                        padding: '5px',
+                        height: '60px', // 72px header + 50px footer
+                        background: 'white',
+                        position: 'relative',
+                        transition: 'all 0.3s ease',
+                        overflow: 'auto',
+                    }}
+                >
+                    <Spin spinning={isLoading} tip="Loading...">
+                        <Outlet />
+                    </Spin>
+                </Content>
         {/*<Footer*/}
         {/*    style={{*/}
         {/*        textAlign: 'center',*/}

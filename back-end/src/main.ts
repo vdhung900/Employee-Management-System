@@ -10,17 +10,12 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   //app.setGlobalPrefix('api');
   app.enableCors({
-    // Development
-    // origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-
-    // Production
     origin: 'http://localhost:3123',
     method: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     credentials: true
   })
   app.use(helmet());
 
-  // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Employee Management System API')
     .setDescription('The Employee Management System API description')

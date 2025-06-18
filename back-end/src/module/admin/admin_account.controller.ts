@@ -1,8 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards} from '@nestjs/common';
 import { AdminAccountService } from './admin_account.service';
 import { CreateAccount, ResetPassword, UpdateAccount } from './dto/admin_account.dto';
 import { BaseReq } from '../../interfaces/request/baseReq.interface';
+import {Roles} from "../../common/decorators/roles.decorator";
+import {JwtAuthGuard} from "../../common/guards/jwt-auth.guard";
+import {RolesGuard} from "../../common/guards/roles.guard";
+import {USER_ROLE} from "../../enum/role.enum";
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin-accounts')
 export class AdminAccountController {
   constructor(private readonly adminAccountService: AdminAccountService) {}
@@ -18,11 +23,13 @@ export class AdminAccountController {
   }
 
   @Get('departments')
+  @Roles(USER_ROLE.ADMIN, USER_ROLE.HR)
   getAllDepartments() {
     return this.adminAccountService.getDepartments();
   }
 
   @Get('positions')
+  @Roles(USER_ROLE.ADMIN, USER_ROLE.HR)
   getAllPositions() {
     return this.adminAccountService.getPositions();
   }

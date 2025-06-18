@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import {
     Card,
     Typography,
@@ -41,6 +41,7 @@ import {
     CloseOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import requestService from "../../services/RequestService";
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
@@ -59,80 +60,38 @@ const departments = [
     'Customer Support',
 ];
 
-// Sample request data
-const requestData = [
-    {
-        id: 1,
-        employeeName: 'John Doe',
-        email: 'john.doe@company.com',
-        department: 'Engineering',
-        position: 'Software Engineer',
-        requestedBy: 'Sarah Wilson',
-        requestedDate: '2024-03-15',
-        status: 'pending',
-        notes: 'New hire for backend team'
-    },
-    {
-        id: 2,
-        employeeName: 'Jane Smith',
-        email: 'jane.smith@company.com',
-        department: 'Marketing',
-        position: 'Marketing Specialist',
-        requestedBy: 'Michael Brown',
-        requestedDate: '2024-03-14',
-        status: 'pending',
-        notes: 'Replacement for resigned employee'
-    },
-    {
-        id: 3,
-        employeeName: 'David Wilson',
-        email: 'david.wilson@company.com',
-        department: 'Sales',
-        position: 'Sales Representative',
-        requestedBy: 'Emily Johnson',
-        requestedDate: '2024-03-13',
-        status: 'approved',
-        notes: 'New position in sales team'
-    },
-    {
-        id: 4,
-        employeeName: 'Lisa Anderson',
-        email: 'lisa.anderson@company.com',
-        department: 'HR',
-        position: 'HR Assistant',
-        requestedBy: 'Robert Taylor',
-        requestedDate: '2024-03-12',
-        status: 'rejected',
-        notes: 'Position already filled'
-    },
-    {
-        id: 5,
-        employeeName: 'Mike Johnson',
-        email: 'mike.johnson@company.com',
-        department: 'Customer Support',
-        position: 'Support Specialist',
-        requestedBy: 'Jennifer Lee',
-        requestedDate: '2024-03-11',
-        status: 'pending',
-        notes: 'New hire for customer support team'
-    }
-];
-
 const AdminAccountRequests = () => {
     const [dateRange, setDateRange] = useState([dayjs().startOf('month'), dayjs()]);
     const [department, setDepartment] = useState('All');
     const [status, setStatus] = useState('All');
+    const [dataTable, setDataTable] = useState([]);
+
+    useEffect(() => {
+        loadDataTable();
+    }, []);
+
+    const loadDataTable = async () => {
+        try{
+            const code = 'ACCOUNT_CREATE_REQUEST';
+            const response = await requestService.getByTypeCode(code);
+            if(response.success){
+                setDataTable(response.data);
+            }
+        }catch (e) {
+            console.log(e)
+        }
+    }
 
     const handleApprove = (record) => {
         Modal.confirm({
             title: 'Approve Account Request',
-            content: `Are you sure you want to approve the account request for ${record.employeeName}?`,
+            content: `Are you sure you want to approve the account request for ${record.employeeId.fullName}?`,
             okText: 'Yes, Approve',
             okType: 'primary',
             cancelText: 'No',
             onOk: () => {
                 // Here you would typically make an API call to approve the request
-                message.success(`Account request for ${record.employeeName} has been approved`);
+                message.success(`Account request for ${record.employeeId.fullName} has been approved`);
             }
         });
     };
@@ -140,55 +99,55 @@ const AdminAccountRequests = () => {
     const handleReject = (record) => {
         Modal.confirm({
             title: 'Reject Account Request',
-            content: `Are you sure you want to reject the account request for ${record.employeeName}?`,
+            content: `Are you sure you want to reject the account request for ${record.employeeId.fullName}?`,
             okText: 'Yes, Reject',
             okType: 'danger',
             cancelText: 'No',
             onOk: () => {
                 // Here you would typically make an API call to reject the request
-                message.error(`Account request for ${record.employeeName} has been rejected`);
+                message.error(`Account request for ${record.employeeId.fullName} has been rejected`);
             }
         });
     };
 
     const columns = [
         {
-            title: 'Employee Name',
-            dataIndex: 'employeeName',
-            key: 'employeeName',
-            sorter: (a, b) => a.employeeName.localeCompare(b.employeeName),
+            title: 'Tên nhân viên',
+            dataIndex:['dataReq', 'fullName'],
+            key: 'fullName',
+            sorter: (a, b) => a.dataReq.fullName.localeCompare(b.dataReq.fullName),
         },
         {
             title: 'Email',
-            dataIndex: 'email',
+            dataIndex: ['dataReq', 'email'],
             key: 'email',
         },
         {
-            title: 'Department',
-            dataIndex: 'department',
-            key: 'department',
+            title: 'Phòng ban',
+            dataIndex: ['dataReq', 'departmentName'],
+            key: 'departmentName',
             filters: departments.map(dept => ({
                 text: dept,
                 value: dept,
             })),
-            onFilter: (value, record) => record.department === value,
+            onFilter: (value, record) => record.dataReq.departmentName === value,
         },
         {
-            title: 'Position',
-            dataIndex: 'position',
-            key: 'position',
+            title: 'Chức vụ',
+            dataIndex: ['dataReq', 'positionName'],
+            key: 'positionName',
         },
         {
-            title: 'Requested By',
-            dataIndex: 'requestedBy',
-            key: 'requestedBy',
+            title: 'Người gửi yêu cầu',
+            dataIndex: ['employeeId', 'fullName'],
+            key: 'fullNameReq',
         },
         {
-            title: 'Requested Date',
-            dataIndex: 'requestedDate',
-            key: 'requestedDate',
+            title: 'Ngày gửi yêu cầu',
+            dataIndex: 'createdAt',
+            key: 'createdAt',
             render: (text) => dayjs(text).format('DD/MM/YYYY'),
-            sorter: (a, b) => dayjs(a.requestedDate).unix() - dayjs(b.requestedDate).unix(),
+            sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
         },
         {
             title: 'Status',
@@ -196,9 +155,9 @@ const AdminAccountRequests = () => {
             key: 'status',
             render: (text) => {
                 const colorMap = {
-                    pending: 'warning',
-                    approved: 'success',
-                    rejected: 'error',
+                    Pending: 'warning',
+                    Approved: 'success',
+                    Rejected: 'error',
                 };
                 return (
                     <Tag color={colorMap[text]}>
@@ -207,37 +166,35 @@ const AdminAccountRequests = () => {
                 );
             },
             filters: [
-                { text: 'Pending', value: 'pending' },
-                { text: 'Approved', value: 'approved' },
-                { text: 'Rejected', value: 'rejected' },
+                { text: 'Pending', value: 'Pending' },
+                { text: 'Approved', value: 'Approved' },
+                { text: 'Rejected', value: 'Rejected' },
             ],
             onFilter: (value, record) => record.status === value,
         },
         {
-            title: 'Notes',
-            dataIndex: 'notes',
-            key: 'notes',
+            title: 'Ghi chú',
+            dataIndex: 'note',
+            key: 'note',
         },
         {
-            title: 'Actions',
+            title: 'Hành động',
             key: 'actions',
             render: (_, record) => (
                 <Space>
-                    {record.status === 'pending' && (
+                    {record.status === 'Pending' && (
                         <>
                             <Button
                                 type="primary"
                                 icon={<CheckOutlined />}
                                 onClick={() => handleApprove(record)}
                             >
-                                Approve
                             </Button>
                             <Button
                                 danger
                                 icon={<CloseOutlined />}
                                 onClick={() => handleReject(record)}
                             >
-                                Reject
                             </Button>
                         </>
                     )}
@@ -257,10 +214,10 @@ const AdminAccountRequests = () => {
                 <div>
                     <Title level={3} style={{ margin: 0 }}>
                         <UserAddOutlined style={{ marginRight: '8px' }} />
-                        Employee Account Requests
+                        Yêu cầu tạo tài khoản nhân viên
                     </Title>
                     <Text type="secondary" style={{ fontSize: '14px' }}>
-                        Review and manage employee account creation requests from HR
+                        Hr yêu cầu tạo tài khoản nhân viên từ các phòng ban
                     </Text>
                 </div>
             </div>
@@ -319,7 +276,7 @@ const AdminAccountRequests = () => {
                     <Card variant="outlined">
                         <Statistic
                             title="Total Requests"
-                            value={requestData.length}
+                            value={dataTable.length}
                             valueStyle={{ color: '#1890ff' }}
                             prefix={<TeamOutlined />}
                         />
@@ -329,7 +286,7 @@ const AdminAccountRequests = () => {
                     <Card variant="outlined">
                         <Statistic
                             title="Pending Requests"
-                            value={requestData.filter(item => item.status === 'pending').length}
+                            value={dataTable.filter(item => item.status === 'Pending').length}
                             valueStyle={{ color: '#faad14' }}
                             prefix={<ClockCircleOutlined />}
                         />
@@ -339,7 +296,7 @@ const AdminAccountRequests = () => {
                     <Card variant="outlined">
                         <Statistic
                             title="Approved Requests"
-                            value={requestData.filter(item => item.status === 'approved').length}
+                            value={dataTable.filter(item => item.status === 'Approved').length}
                             valueStyle={{ color: '#52c41a' }}
                             prefix={<CheckCircleOutlined />}
                         />
@@ -356,7 +313,7 @@ const AdminAccountRequests = () => {
             >
                 <Table
                     columns={columns}
-                    dataSource={requestData}
+                    dataSource={dataTable}
                     rowKey="id"
                     pagination={{ 
                         pageSize: 10,

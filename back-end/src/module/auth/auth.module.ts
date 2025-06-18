@@ -5,9 +5,14 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Account, AccountSchema } from "src/schemas/account.schema";
 import { Employees, EmployeesSchema } from "src/schemas/employees.schema";
 import { JwtModule } from "@nestjs/jwt";
+import {JwtStrategy} from "../../common/strategies/jwt.strategy";
+import {ConfigModule} from "@nestjs/config";
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     MongooseModule.forFeature([
       { name: Account.name, schema: AccountSchema },
       { name: Employees.name, schema: EmployeesSchema },
@@ -17,7 +22,7 @@ import { JwtModule } from "@nestjs/jwt";
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
   exports: [],
 })
 export class AuthModule {}

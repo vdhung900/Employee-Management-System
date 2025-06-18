@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {InjectModel} from "@nestjs/mongoose";
 import {Requests, RequestsDocument} from "../../schemas/requests.schema";
-import {Model} from "mongoose";
+import {Model, Types} from "mongoose";
 import {typeRequest, typeRequestDocument} from "../../schemas/typeRequestCategory.schema";
 import {CreateRequestDto} from "./dto/createRequest.dto";
 
@@ -27,6 +27,10 @@ export class RequestService {
         return await this.requestModel.findById(id).populate('employeeId').populate('typeRequest').exec();
     }
 
+    async findByTypeCode(typeRequestId: Types.ObjectId) {
+        return await this.requestModel.find({typeRequest: typeRequestId}).populate('employeeId').populate('typeRequest').exec();
+    }
+
     async findByEmployeeId(employeeId: string) {
         return await this.requestModel.find({employeeId: employeeId}).populate('employeeId').populate('typeRequest').exec();
     }
@@ -36,7 +40,19 @@ export class RequestService {
         if (!data) {
             throw new Error('Request not found');
         }
-        Object.assign(data, updateData);
+        data.priority = updateData.priority;
+        data.note = updateData.note;
+        data.updatedAt = new Date();
+        if(updateData.typeCode === 'ACCOUNT_CREATE_REQUEST'){
+            data.dataReq = {
+                fullName: updateData.dataReq.fullName,
+                email: updateData.dataReq.email,
+                phone: updateData.dataReq.phone,
+                position: updateData.dataReq.position,
+                department: updateData.dataReq.department,
+                startDate: updateData.dataReq.startDate,
+            }
+        }
         return await data.save();
     }
 
@@ -53,24 +69,32 @@ export class RequestService {
         if(!data){
             throw new Error('Request not found');
         }
-
-        if(status === 'approved'){
-            if(data.status !== 'pending'){
+        if(status === 'Approved'){
+            if(data.status !== 'Pending'){
                 throw new Error('Request is not pending');
             }
-            data.status = 'approved';
+            data.status = 'Approved';
             data.timeResolve = 1;
             await data.save();
             return data;
-        }else if(status === 'rejected'){
-            if(data.status !== 'pending'){
+        }else if(status === 'Rejected'){
+            if(data.status !== 'Pending'){
                 throw new Error('Request is not pending');
             }
-            data.status = 'rejected';
+            data.status = 'Rejected';
             data.timeResolve = 1;
             await data.save();
             return data;
-        }else if (data.timeResolve > 0){
+        }else if (status === "Cancelled") {
+            if(data.status !== 'Pending'){
+                throw new Error('Request is not pending');
+            }
+            data.status = 'Cancelled';
+            data.timeResolve = 1;
+            await data.save();
+            return data;
+        }
+        else if (data.timeResolve > 0){
             throw new Error('Request is already resolved');
         }
     }
