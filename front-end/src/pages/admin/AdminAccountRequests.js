@@ -18,7 +18,8 @@ import {
     Progress,
     Tag,
     Modal,
-    message
+    message,
+    Input
 } from 'antd';
 import {
     FileExcelOutlined,
@@ -42,6 +43,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import requestService from "../../services/RequestService";
+import RequestService from "../../services/RequestService";
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
@@ -65,6 +67,9 @@ const AdminAccountRequests = () => {
     const [department, setDepartment] = useState('All');
     const [status, setStatus] = useState('All');
     const [dataTable, setDataTable] = useState([]);
+    const [rejectModalVisible, setRejectModalVisible] = useState(false);
+    const [rejectReason, setRejectReason] = useState('');
+    const [currentRejectRecord, setCurrentRejectRecord] = useState(null);
 
     useEffect(() => {
         loadDataTable();
@@ -89,25 +94,55 @@ const AdminAccountRequests = () => {
             okText: 'Yes, Approve',
             okType: 'primary',
             cancelText: 'No',
-            onOk: () => {
-                // Here you would typically make an API call to approve the request
-                message.success(`Account request for ${record.employeeId.fullName} has been approved`);
+            onOk: async () => {
+                try{
+                    let body = {
+                        requestId: record._id,
+                        status: 'Approved',
+                    }
+                    const response = await RequestService.approveRequest(body);
+                    if(response.success){
+                        message.success(`Account request for ${record.employeeId.fullName} has been approved`);
+                    }
+                }catch (e) {
+                    message.error(e.message);
+                }finally {
+                    loadDataTable();
+                }
             }
         });
     };
 
     const handleReject = (record) => {
-        Modal.confirm({
-            title: 'Reject Account Request',
-            content: `Are you sure you want to reject the account request for ${record.employeeId.fullName}?`,
-            okText: 'Yes, Reject',
-            okType: 'danger',
-            cancelText: 'No',
-            onOk: () => {
-                // Here you would typically make an API call to reject the request
-                message.error(`Account request for ${record.employeeId.fullName} has been rejected`);
+        setCurrentRejectRecord(record);
+        setRejectReason('');
+        setRejectModalVisible(true);
+    };
+
+    const handleConfirmReject = async () => {
+        if (!rejectReason.trim()) {
+            message.warning('Vui lòng nhập lý do từ chối!');
+            return;
+        }
+        try {
+            let body = {
+                requestId: currentRejectRecord._id,
+                status: 'Rejected',
+                reason: rejectReason,
+            };
+            console.log(body)
+            const response = await RequestService.approveRequest(body);
+            if (response.success) {
+                message.success(`Đã từ chối yêu cầu của ${currentRejectRecord.employeeId.fullName}`);
             }
-        });
+        } catch (e) {
+            message.error(e.message);
+        } finally {
+            setRejectModalVisible(false);
+            setCurrentRejectRecord(null);
+            setRejectReason('');
+            loadDataTable();
+        }
     };
 
     const columns = [
@@ -171,6 +206,11 @@ const AdminAccountRequests = () => {
                 { text: 'Rejected', value: 'Rejected' },
             ],
             onFilter: (value, record) => record.status === value,
+        },
+        {
+            title: 'Lý do',
+            dataIndex: 'reason',
+            key: 'reason',
         },
         {
             title: 'Ghi chú',
@@ -323,6 +363,25 @@ const AdminAccountRequests = () => {
                     scroll={{ x: 'max-content' }}
                 />
             </Card>
+            <Modal
+                title="Nhập lý do từ chối"
+                visible={rejectModalVisible}
+                onOk={handleConfirmReject}
+                onCancel={() => setRejectModalVisible(false)}
+                okText="Xác nhận từ chối"
+                cancelText="Hủy"
+            >
+                <Form layout="vertical">
+                    <Form.Item label="Lý do từ chối" required>
+                        <Input.TextArea
+                            rows={4}
+                            value={rejectReason}
+                            onChange={e => setRejectReason(e.target.value)}
+                            placeholder="Nhập lý do từ chối..."
+                        />
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div>
     );
 };

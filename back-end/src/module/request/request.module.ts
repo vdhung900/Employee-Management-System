@@ -7,6 +7,8 @@ import { HrRequestController } from './hr-request/hr-request.controller';
 import { HrRequestService } from './hr-request/hr-request.service';
 import {Departments, DepartmentsSchema} from "../../schemas/departments.schema";
 import {Position, PositionSchema} from "../../schemas/position.schema";
+import {AdminAccountModule} from "../admin/admin_account.module";
+import {MailModule} from "../mail/mail.module";
 
 @Module({
   imports: [
@@ -14,7 +16,9 @@ import {Position, PositionSchema} from "../../schemas/position.schema";
         {name: Requests.name, schema: RequestsSchema},
         {name: typeRequest.name, schema: typeRequestSchema},
           { name: Departments.name, schema: DepartmentsSchema }, { name: Position.name, schema: PositionSchema }
-      ])
+      ]),
+      AdminAccountModule,
+      MailModule
   ],
   providers: [RequestService, HrRequestService],
   controllers: [HrRequestController]

@@ -7,6 +7,9 @@ import {RequestService} from "../request.service";
 import {CreateRequestDto} from "../dto/createRequest.dto";
 import {Departments, DepartmentsDocument} from "../../../schemas/departments.schema";
 import {Position, PositionDocument} from "../../../schemas/position.schema";
+import {AdminAccountService} from "../../admin/admin_account.service";
+import {STATUS} from "../../../enum/status.enum";
+import {MailService} from "../../mail/mail.service";
 
 @Injectable()
 export class HrRequestService {
@@ -16,6 +19,8 @@ export class HrRequestService {
         @InjectModel(Departments.name) private departmentModel: Model<DepartmentsDocument>,
         @InjectModel(Position.name) private positionModel: Model<PositionDocument>,
         private readonly requestService: RequestService,
+        private readonly adminAccountService: AdminAccountService,
+        private readonly mailService: MailService,
     ) {
     }
 
@@ -33,7 +38,7 @@ export class HrRequestService {
             if (code === 'ACCOUNT_CREATE_REQUEST') {
                 response = await Promise.all(
                     data
-                        .filter(item => item.status !== 'Canceled')
+                        .filter(item => item.status !== 'Cancelled')
                         .map(async (item) => {
                         const department = await this.departmentModel.findById(new Types.ObjectId(item.dataReq.department)).exec();
                         const position = await this.positionModel.findById(new Types.ObjectId(item.dataReq.position)).exec();
@@ -94,9 +99,36 @@ export class HrRequestService {
 
     async approveRequest(req: CreateRequestDto){
         try{
-            return await this.requestService.approve(req.requestId, req.status);
+            await this.requestService.approve(req.requestId, req.status, req.reason);
+            const data = await this.requestService.findById(req.requestId);
+            const typeRequest = await this.typeRequestModel.findById(data?.typeRequest);
+            if(typeRequest && data?.status === STATUS.APPROVED){
+                switch(typeRequest?.code){
+                    case 'ACCOUNT_CREATE_REQUEST':
+                        const account = await this.adminAccountService.createByInfo(data?.dataReq);
+                        if(!account){
+                            throw new Error("Failed to create account");
+                        }
+                        console.log(account)
+                        await this.mailService.sendMail(
+                            account.newEmployee?.email,
+                            account.newEmployee?.fullName,
+                            account.newAccount?.username,
+                            account.newAccount?.password,
+                        )
+                        break;
+                    default:
+                        return data;
+                }
+            }
+            return data;
         }catch(error){
-            throw new Error(error);
+            try{
+                await this.requestService.approve(req.requestId, STATUS.REJECTED, error.message);
+            }catch (e) {
+                console.log(e)
+            }
+            throw error;
         }
     }
 }
