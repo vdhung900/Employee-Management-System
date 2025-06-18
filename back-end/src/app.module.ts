@@ -14,8 +14,9 @@ import { CategoryModule } from './module/category/category.module';
 import { AdminAccountModule } from './module/admin/admin_account.module';
 import { BadRequestException } from '@nestjs/common';
 import { DepartmentModule } from './module/department/department.module';
-import {RolesGuard} from "./common/guards/roles.guard";
-import {JwtAuthGuard} from "./common/guards/jwt-auth.guard";
+import { RolesGuard } from "./common/guards/roles.guard";
+import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
+import { BenefitsModule } from './module/benefits/benefits.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import {JwtAuthGuard} from "./common/guards/jwt-auth.guard";
     RequestModule,
     CategoryModule,
     AdminAccountModule,
-    DepartmentModule
+    DepartmentModule,
+    BenefitsModule
   ],
   controllers: [],
   providers: [

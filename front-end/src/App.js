@@ -31,7 +31,8 @@ import TeamManagement from "./pages/employee/TeamManagement";
 import TeamPerformance from "./pages/employee/TeamPerformance";
 import NotFound from "./pages/NotFound";
 import Category from "./pages/admin/Category";
-import {LoadingProvider} from "./contexts/LoadingContext";
+import { LoadingProvider } from "./contexts/LoadingContext";
+import Benefits from './pages/employee/Benefits';
 
 const router = createBrowserRouter(
   [
@@ -84,12 +85,12 @@ const router = createBrowserRouter(
             { path: "overtime", element: <Overtime /> },
             { path: "payroll", element: <Payroll /> },
             { path: "payroll-management", element: <PayrollManagement /> },
-            { path: "payroll-management", element: <PayrollManagement /> },
             { path: "reports", element: <Reports /> },
             { path: "requests", element: <Requests /> },
             { path: "staff-management", element: <StaffManagement /> },
             { path: "team-management", element: <TeamManagement /> },
             { path: "team-performance", element: <TeamPerformance /> },
+            { path: "benefits", element: <Benefits /> },
           ],
         },
       ],
@@ -113,9 +114,9 @@ const router = createBrowserRouter(
 
 function App() {
   return (
-      <LoadingProvider>
-        <RouterProvider router={router} />
-      </LoadingProvider>
+    <LoadingProvider>
+      <RouterProvider router={router} />
+    </LoadingProvider>
   );
 
 }
