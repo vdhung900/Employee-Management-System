@@ -64,7 +64,7 @@ export class RequestService {
         return data;
     }
 
-    async approve(id: string, status: string){
+    async approve(id: string, status: string, reason?: string){
         const data = await this.findById(id);
         if(!data){
             throw new Error('Request not found');
@@ -76,15 +76,14 @@ export class RequestService {
             data.status = 'Approved';
             data.timeResolve = 1;
             await data.save();
-            return data;
         }else if(status === 'Rejected'){
-            if(data.status !== 'Pending'){
-                throw new Error('Request is not pending');
+            if(data.status !== 'Pending' && data.status !== 'Approved'){
+                throw new Error('Request is not pending or approved');
             }
             data.status = 'Rejected';
+            data.reason = reason || 'No reason provided';
             data.timeResolve = 1;
             await data.save();
-            return data;
         }else if (status === "Cancelled") {
             if(data.status !== 'Pending'){
                 throw new Error('Request is not pending');
@@ -92,7 +91,6 @@ export class RequestService {
             data.status = 'Cancelled';
             data.timeResolve = 1;
             await data.save();
-            return data;
         }
         else if (data.timeResolve > 0){
             throw new Error('Request is already resolved');

@@ -547,6 +547,12 @@ const Requests = () => {
             ellipsis: true,
         },
         {
+            title: 'Lý do',
+            dataIndex: 'reason',
+            key: 'reason',
+            ellipsis: true,
+        },
+        {
             title: 'Trạng thái',
             key: 'status',
             dataIndex: 'status',
