@@ -34,8 +34,8 @@ const Benefits = () => {
         fetchBenefits();
         fetchDepartments();
         fetchEmployees();
-        const user = JSON.parse(localStorage.getItem('user'));
-        setUserRole(user?.role || '');
+        const role = localStorage.getItem('role');
+        setUserRole(role || '');
     }, []);
 
     const fetchBenefits = async () => {
