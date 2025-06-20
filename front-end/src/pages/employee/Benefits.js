@@ -3,7 +3,7 @@ import { Card, Typography, Row, Col, Button, Table, Modal, Form, Input, InputNum
 import { PlusOutlined, EditOutlined, DeleteOutlined, GiftOutlined, EyeOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import APIConfig from '../../services/APIConfig';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
 const { Search } = AntInput;
 
@@ -24,7 +24,6 @@ const Benefits = () => {
     const [editing, setEditing] = useState(null);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [userRole, setUserRole] = useState('');
     const [searchText, setSearchText] = useState('');
     const [filterDepartment, setFilterDepartment] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -34,8 +33,6 @@ const Benefits = () => {
         fetchBenefits();
         fetchDepartments();
         fetchEmployees();
-        const role = localStorage.getItem('role');
-        setUserRole(role || '');
     }, []);
 
     const fetchBenefits = async () => {
@@ -91,6 +88,8 @@ const Benefits = () => {
             effective: record.effective || [],
             employees: record.employees?.map(e => typeof e === 'object' ? e._id : e),
             departments: record.departments?.map(d => typeof d === 'object' ? d._id : d),
+            applyAll: !!record.applyAll,
+            status: record.status || 'auto',
         });
         setModalVisible(true);
     };
@@ -112,9 +111,11 @@ const Benefits = () => {
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
-            console.log('Form values:', values);
             if (values.status === 'auto') {
                 values.effective = ALL_MONTHS;
+            }
+            if (values.applyAll) {
+                values.departments = [];
             }
             const token = localStorage.getItem('accessToken');
             let url = `${APIConfig.baseUrl}/benefits`;
@@ -135,7 +136,7 @@ const Benefits = () => {
             setModalVisible(false);
             fetchBenefits();
         } catch (err) {
-            console.log('Validate error:', err);
+            // Nếu validate lỗi sẽ không vào đây
         }
     };
 
@@ -157,7 +158,8 @@ const Benefits = () => {
         { title: 'Phòng ban', dataIndex: 'departments', key: 'departments', render: (arr, record) => record.applyAll ? <Tag color="geekblue">Tất cả phòng ban</Tag> : <Space wrap>{arr?.map(d => <Tag key={typeof d === 'object' ? d._id : d}>{typeof d === 'object' ? d.name : d}</Tag>)}</Space> },
         { title: 'Nhân viên', dataIndex: 'employees', key: 'employees', render: (arr) => <Space wrap>{arr?.map(e => <Tag key={typeof e === 'object' ? e._id : e}>{typeof e === 'object' ? e.username : e}</Tag>)}</Space> },
     ];
-    if (userRole === 'hr') {
+    const role = localStorage.getItem('role');
+    if (role === 'hr') {
         columns.push({
             title: 'Hành động',
             key: 'action',
@@ -189,7 +191,7 @@ const Benefits = () => {
                         <Title level={4} style={{ margin: 0 }}>Quản lý benefits</Title>
                     </Space>
                 }
-                extra={userRole === 'hr' && (
+                extra={role === 'hr' && (
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} style={{ borderRadius: 8, fontWeight: 600 }}>
                         Thêm phúc lợi
                     </Button>
@@ -270,37 +272,74 @@ const Benefits = () => {
                     <Form form={form} layout="vertical">
                         <Row gutter={16}>
                             <Col span={12}>
-                                <Form.Item name="name" label="Tên" rules={[{ required: true, message: 'Nhập tên phúc lợi' }]}> <Input placeholder="Nhập tên phúc lợi" /> </Form.Item>
+                                <Form.Item name="name" label="Tên" rules={[{ required: true, message: 'Nhập tên phúc lợi' }]}>
+                                    <Input placeholder="Nhập tên phúc lợi" />
+                                </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item name="amount" label="Số tiền (VND)" rules={[{ required: true, message: 'Nhập số tiền' }]}> <InputNumber min={0} style={{ width: '100%' }} placeholder="Nhập số tiền" /> </Form.Item>
+                                <Form.Item name="amount" label="Số tiền (VND)" rules={[{ required: true, message: 'Nhập số tiền' }]}>
+                                    <InputNumber min={0} style={{ width: '100%' }} placeholder="Nhập số tiền" />
+                                </Form.Item>
                             </Col>
                         </Row>
                         <Row gutter={16}>
                             <Col span={24}>
-                                <Form.Item name="description" label="Mô tả"> <Input.TextArea rows={2} /> </Form.Item>
+                                <Form.Item name="description" label="Mô tả">
+                                    <Input.TextArea rows={2} />
+                                </Form.Item>
                             </Col>
                         </Row>
                         <Divider style={{ margin: '12px 0' }} />
                         <Row gutter={16}>
                             <Col span={12}>
-                                <Form.Item name="status" label="Trạng thái" rules={[{ required: true, message: 'Chọn trạng thái' }]}> <Select><Option value="auto">Tự động</Option><Option value="manual">Thủ công</Option></Select> </Form.Item>
+                                <Form.Item name="status" label="Trạng thái" rules={[{ required: true, message: 'Chọn trạng thái' }]}>
+                                    <Select>
+                                        <Option value="auto">Tự động</Option>
+                                        <Option value="manual">Thủ công</Option>
+                                    </Select>
+                                </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item name="applyAll" valuePropName="checked" style={{ marginTop: 32 }}> <Checkbox>Áp dụng cho tất cả phòng ban</Checkbox> </Form.Item>
+                                <Form.Item name="applyAll" valuePropName="checked" style={{ marginTop: 32 }}>
+                                    <Checkbox>Áp dụng cho tất cả phòng ban</Checkbox>
+                                </Form.Item>
                             </Col>
                         </Row>
                         <Row gutter={16}>
                             <Col span={12}>
-                                <Form.Item name="departments" label="Phòng ban" dependencies={["applyAll"]}> <Select mode="multiple" placeholder="Chọn phòng ban" disabled={form.getFieldValue('applyAll')}>{departments.map(d => <Option key={d._id} value={d._id}>{d.name}</Option>)}</Select> </Form.Item>
+                                <Form.Item shouldUpdate={(prev, cur) => prev.applyAll !== cur.applyAll} noStyle>
+                                    {({ getFieldValue }) => (
+                                        <Form.Item name="departments" label="Phòng ban">
+                                            <Select mode="multiple" placeholder="Chọn phòng ban" disabled={getFieldValue('applyAll')}>
+                                                {departments.map(d => <Option key={d._id} value={d._id}>{d.name}</Option>)}
+                                            </Select>
+                                        </Form.Item>
+                                    )}
+                                </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Form.Item name="employees" label="Nhân viên"> <Select mode="multiple" placeholder="Chọn nhân viên">{employees.map(e => <Option key={e._id} value={e._id}>{e.username}</Option>)}</Select> </Form.Item>
+                                <Form.Item name="employees" label="Nhân viên">
+                                    <Select mode="multiple" placeholder="Chọn nhân viên">
+                                        {employees.map(e => <Option key={e._id} value={e._id}>{e.username}</Option>)}
+                                    </Select>
+                                </Form.Item>
                             </Col>
                         </Row>
                         <Row gutter={16}>
                             <Col span={24}>
-                                <Form.Item name="effective" label="Tháng hiệu lực" rules={[{ required: form.getFieldValue('status') === 'manual', message: 'Chọn tháng hiệu lực' }]}> <Select mode="multiple" placeholder="Chọn tháng">{months.map(m => <Option key={m.value} value={m.value}>{m.label}</Option>)}</Select> </Form.Item>
+                                <Form.Item shouldUpdate={(prev, cur) => prev.status !== cur.status} noStyle>
+                                    {({ getFieldValue }) => (
+                                        <Form.Item
+                                            name="effective"
+                                            label="Tháng hiệu lực"
+                                            rules={[{ required: getFieldValue('status') === 'manual', message: 'Chọn tháng hiệu lực' }]}
+                                        >
+                                            <Select mode="multiple" placeholder="Chọn tháng">
+                                                {months.map(m => <Option key={m.value} value={m.value}>{m.label}</Option>)}
+                                            </Select>
+                                        </Form.Item>
+                                    )}
+                                </Form.Item>
                             </Col>
                         </Row>
                     </Form>

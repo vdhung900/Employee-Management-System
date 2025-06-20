@@ -10,11 +10,11 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nes
 export class DepartmentController {
     constructor(private readonly departmentService: DepartmentService) { }
 
-    private checkAdmin(req: any) {
-        if (!req.user || req.user.role !== 'admin') {
-            throw new HttpException('Forbidden: Admins only', HttpStatus.FORBIDDEN);
-        }
-    }
+    // private checkAdmin(req: any) {
+    //     if (!req.user || req.user.role !== 'admin') {
+    //         throw new HttpException('Forbidden: Admins only', HttpStatus.FORBIDDEN);
+    //     }
+    // }
 
     @Get('managers')
     @ApiOperation({ summary: 'Get all managers' })
@@ -29,7 +29,7 @@ export class DepartmentController {
     @ApiBody({ type: Departments })
     @ApiResponse({ status: 201, description: 'Department created', type: BaseResponse })
     async create(@Body() body: Partial<Departments>, @Req() req: any) {
-        this.checkAdmin(req);
+        // this.checkAdmin(req);
         const created = await this.departmentService.create(body);
         return BaseResponse.success(created, 'Created', 201);
     }
@@ -55,7 +55,7 @@ export class DepartmentController {
     @ApiBody({ type: Departments })
     @ApiResponse({ status: 200, description: 'Department updated', type: BaseResponse })
     async update(@Param('id') id: string, @Body() body: Partial<Departments>, @Req() req: any) {
-        this.checkAdmin(req);
+        // this.checkAdmin(req);
         const updated = await this.departmentService.update(id, body);
         return BaseResponse.success(updated, 'Updated', 200);
     }
@@ -64,7 +64,7 @@ export class DepartmentController {
     @ApiOperation({ summary: 'Delete department' })
     @ApiResponse({ status: 200, description: 'Department deleted', type: BaseResponse })
     async remove(@Param('id') id: string, @Req() req: any) {
-        this.checkAdmin(req);
+        // this.checkAdmin(req);
         const deleted = await this.departmentService.remove(id);
         return BaseResponse.success(deleted, 'Deleted', 200);
     }

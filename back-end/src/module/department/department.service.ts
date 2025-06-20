@@ -12,10 +12,13 @@ export class DepartmentService {
     ) { }
 
     async findAllManagers() {
-        return this.accountModel.find({ role: 'manager' })
-            .select('username employeeId')
+        // Populate role, filter theo code 'manager'
+        const managers = await this.accountModel.find()
+            .select('username employeeId role')
             .populate('employeeId', 'fullName')
+            .populate('role', 'code name')
             .exec();
+        return managers.filter(acc => acc.role && typeof acc.role === 'object' && 'code' in acc.role && acc.role.code === 'manager');
     }
 
     async create(data: Partial<Departments>) {
