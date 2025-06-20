@@ -35,6 +35,7 @@ import {LoadingProvider} from "./contexts/LoadingContext";
 import Roles from "./pages/admin/Roles";
 import Permission from "./pages/admin/Permission";
 import Error403Page from "./pages/Forbidden";
+import Benefits from './pages/employee/Benefits';
 
 const router = createBrowserRouter(
   [
@@ -93,12 +94,12 @@ const router = createBrowserRouter(
             { path: "overtime", element: <Overtime /> },
             { path: "payroll", element: <Payroll /> },
             { path: "payroll-management", element: <PayrollManagement /> },
-            { path: "payroll-management", element: <PayrollManagement /> },
             { path: "reports", element: <Reports /> },
             { path: "requests", element: <Requests /> },
             { path: "staff-management", element: <StaffManagement /> },
             { path: "team-management", element: <TeamManagement /> },
             { path: "team-performance", element: <TeamPerformance /> },
+            { path: "benefits", element: <Benefits /> },
           ],
         },
       ],
@@ -122,9 +123,9 @@ const router = createBrowserRouter(
 
 function App() {
   return (
-      <LoadingProvider>
-        <RouterProvider router={router} />
-      </LoadingProvider>
+    <LoadingProvider>
+      <RouterProvider router={router} />
+    </LoadingProvider>
   );
 
 }

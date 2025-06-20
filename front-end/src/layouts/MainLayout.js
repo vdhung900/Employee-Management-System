@@ -27,7 +27,7 @@ import {
     LogoutOutlined,
     BulbOutlined,
     BellOutlined,
-    ClockCircleOutlined, PullRequestOutlined, TeamOutlined, AuditOutlined, UnorderedListOutlined
+    ClockCircleOutlined, PullRequestOutlined, TeamOutlined, AuditOutlined, UnorderedListOutlined, GiftOutlined
 } from '@ant-design/icons';
 import { logout, getCurrentUser } from '../utils/auth';
 import ThreeDButton from '../components/3d/ThreeDButton';
@@ -236,6 +236,12 @@ const MainLayout = () => {
       label: "Trợ giúp",
       permission: "EMPLOYEE_HELP",
     },
+      {
+          key: "/employee/benefits",
+          icon: <GiftOutlined />,
+          label: "Benefits",
+          permission: "BENEFITS",
+      },
   ];
 
   const getMenuItems = () => {

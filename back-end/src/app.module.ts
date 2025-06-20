@@ -17,6 +17,7 @@ import { DepartmentModule } from './module/department/department.module';
 import {RolesGuard} from "./common/guards/roles.guard";
 import {JwtAuthGuard} from "./common/guards/jwt-auth.guard";
 import {RolePermissionModule} from "./module/auth/role_permission/role_permission.module";
+import { BenefitsModule } from './module/benefits/benefits.module';
 
 @Module({
   imports: [
@@ -37,7 +38,8 @@ import {RolePermissionModule} from "./module/auth/role_permission/role_permissio
     CategoryModule,
     AdminAccountModule,
     DepartmentModule,
-    RolePermissionModule
+    RolePermissionModule,
+    BenefitsModule
   ],
   controllers: [],
   providers: [
