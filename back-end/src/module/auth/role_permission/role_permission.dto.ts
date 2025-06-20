@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsOptional, IsString, IsMongoId, IsArray, ArrayNotEmpty, ArrayUnique } from 'class-validator';
+import {BaseReq} from "../../../interfaces/request/baseReq.interface";
 
-export class CreateRoleDto {
+export class CreateRoleDto extends BaseReq{
     @IsNotEmpty()
     @IsString()
     name: string;
@@ -36,7 +37,7 @@ export class UpdateRoleDto {
     status?: string;
 }
 
-export class CreatePermissionDto {
+export class CreatePermissionDto extends BaseReq {
     @IsNotEmpty()
     @IsString()
     name: string;
@@ -72,7 +73,7 @@ export class UpdatePermissionDto {
     code?: string;
 }
 
-export class UpdateRolePermissionsDto {
+export class UpdateRolePermissionsDto extends BaseReq {
     @IsNotEmpty()
     @IsMongoId()
     roleId: string;

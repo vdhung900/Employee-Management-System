@@ -27,7 +27,7 @@ import {
     LogoutOutlined,
     BulbOutlined,
     BellOutlined,
-    ClockCircleOutlined, PullRequestOutlined, TeamOutlined
+    ClockCircleOutlined, PullRequestOutlined, TeamOutlined, AuditOutlined, UnorderedListOutlined
 } from '@ant-design/icons';
 import { logout, getCurrentUser } from '../utils/auth';
 import ThreeDButton from '../components/3d/ThreeDButton';
@@ -61,6 +61,7 @@ const MainLayout = () => {
     const [currentUser, setCurrentUser] = useState('');
     const location = useLocation();
     const navigate = useNavigate();
+    const [permissions, setPermissions] = useState([]);
 
   const {
     token: { colorBgContainer },
@@ -69,6 +70,8 @@ const MainLayout = () => {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     setCurrentUser(user);
+    const perms = JSON.parse(localStorage.getItem("permissions")) || [];
+    setPermissions(perms);
     setColor(colorTheme.siderBg);
   }, []);
 
@@ -109,112 +112,137 @@ const MainLayout = () => {
     },
   ];
 
+  const adminMenuItems = [
+    {
+      key: "/admin/dashboard",
+      icon: <DashboardOutlined />,
+      label: "Dashboard",
+      permission: "VIEW_DASHBOARD",
+    },
+    {
+      key: "/admin/request-manage",
+      icon: <PullRequestOutlined />,
+      label: "Thống kê requests",
+      permission: "VIEW_REQUEST_MANAGE",
+    },
+    {
+      key: "/admin/account-request",
+      icon: <UserOutlined />,
+      label: "Yêu cầu tài khoản",
+      permission: "VIEW_ACCOUNT_REQUEST",
+    },
+    {
+      key: "/admin/setting",
+      icon: <BulbOutlined />,
+      label: "Cài đặt hệ thống",
+      permission: "VIEW_SETTING",
+    },
+    {
+      key: "/admin/category",
+      icon: <TeamOutlined />,
+      label: "Danh mục",
+      permission: "VIEW_CATEGORY",
+    },
+    {
+      key: "/admin/admin-account",
+      icon: <UserOutlined />,
+      label: "Quản lý tài khoản",
+      permission: "MANAGE_ADMIN_ACCOUNT",
+    },
+    {
+      key: "/admin/roles",
+      icon: <AuditOutlined />,
+      label: "Quản lý vai trò",
+      permission: "MANAGE_ROLES",
+    },
+    {
+      key: "/admin/permissions",
+      icon: <UnorderedListOutlined />,
+      label: "Quản lý quyền hạn",
+      permission: "MANAGE_PERMISSIONS",
+    },
+  ];
+
+  const employeeMenuItems = [
+    {
+      key: "/employee/dashboard",
+      icon: <DashboardOutlined />,
+      label: "Dashboard",
+      permission: "EMPLOYEE_DASHBOARD",
+    },
+    {
+      key: "/employee/attendance-review",
+      icon: <ClockCircleOutlined />,
+      label: "Chấm công",
+      permission: "EMPLOYEE_ATTENDANCE_REVIEW",
+    },
+    {
+      key: "/employee/calender",
+      icon: <CalendarOutlined />,
+      label: "Lịch",
+      permission: "EMPLOYEE_CALENDAR",
+    },
+    {
+      key: "/employee/overtime",
+      icon: <ClockCircleOutlined />,
+      label: "Làm thêm giờ",
+      permission: "EMPLOYEE_OVERTIME",
+    },
+    {
+      key: "/employee/requests",
+      icon: <PullRequestOutlined />,
+      label: "Yêu cầu",
+      permission: "EMPLOYEE_REQUESTS",
+    },
+    {
+      key: "/employee/payroll",
+      icon: <FileTextOutlined />,
+      label: "Bảng lương",
+      permission: "EMPLOYEE_PAYROLL",
+    },
+    {
+      key: "/employee/payroll-management",
+      icon: <FileTextOutlined />,
+      label: "Quản lý lương",
+      permission: "EMPLOYEE_PAYROLL_MANAGEMENT",
+    },
+    {
+      key: "/employee/reports",
+      icon: <FileTextOutlined />,
+      label: "Báo cáo",
+      permission: "EMPLOYEE_REPORTS",
+    },
+    {
+      key: "/employee/staff-management",
+      icon: <UserOutlined />,
+      label: "Quản lý nhân viên",
+      permission: "EMPLOYEE_STAFF_MANAGEMENT",
+    },
+    {
+      key: "/employee/team-management",
+      icon: <UserOutlined />,
+      label: "Quản lý nhóm",
+      permission: "EMPLOYEE_TEAM_MANAGEMENT",
+    },
+    {
+      key: "/employee/team-performance",
+      icon: <DashboardOutlined />,
+      label: "Hiệu suất nhóm",
+      permission: "EMPLOYEE_TEAM_PERFORMANCE",
+    },
+    {
+      key: "/employee/help",
+      icon: <QuestionCircleOutlined />,
+      label: "Trợ giúp",
+      permission: "EMPLOYEE_HELP",
+    },
+  ];
+
   const getMenuItems = () => {
-    const adminMenuItems = [
-      {
-        key: "/admin/dashboard",
-        icon: <DashboardOutlined />,
-        label: "Dashboard",
-      },
-      {
-        key: "/admin/request-manage",
-        icon: <PullRequestOutlined />,
-        label: "Thống kê requests",
-      },
-      {
-        key: "/admin/account-request",
-        icon: <UserOutlined />,
-        label: "Yêu cầu tài khoản",
-      },
-      {
-        key: "/admin/setting",
-        icon: <BulbOutlined />,
-        label: "Cài đặt hệ thống",
-      },
-      {
-        key: "/admin/category",
-        icon: <TeamOutlined />,
-        label: "Danh mục",
-      },
-      {
-        key: "/admin/admin-account",
-        icon: <UserOutlined />,
-        label: "Quản lý tài khoản",
-      },
-    ];
-
-    const employeeMenuItems = [
-      {
-        key: "/employee/dashboard",
-        icon: <DashboardOutlined />,
-        label: "Dashboard",
-      },
-      {
-        key: "/employee/attendance-review",
-        icon: <ClockCircleOutlined />,
-        label: "Chấm công",
-      },
-      {
-        key: "/employee/calender",
-        icon: <CalendarOutlined />,
-        label: "Lịch",
-      },
-      {
-        key: "/employee/overtime",
-        icon: <ClockCircleOutlined />,
-        label: "Làm thêm giờ",
-      },
-      {
-        key: "/employee/requests",
-        icon: <PullRequestOutlined />,
-        label: "Yêu cầu",
-      },
-      {
-        key: "/employee/payroll",
-        icon: <FileTextOutlined />,
-        label: "Bảng lương",
-      },
-      {
-        key: "/employee/payroll-management",
-        icon: <FileTextOutlined />,
-        label: "Quản lý lương",
-      },
-      {
-        key: "/employee/reports",
-        icon: <FileTextOutlined />,
-        label: "Báo cáo",
-      },
-      {
-        key: "/employee/staff-management",
-        icon: <UserOutlined />,
-        label: "Quản lý nhân viên",
-      },
-      {
-        key: "/employee/team-management",
-        icon: <UserOutlined />,
-        label: "Quản lý nhóm",
-      },
-      {
-        key: "/employee/team-performance",
-        icon: <DashboardOutlined />,
-        label: "Hiệu suất nhóm",
-      },
-      {
-        key: "/employee/help",
-        icon: <QuestionCircleOutlined />,
-        label: "Trợ giúp",
-      },
-    ];
-
-    // Return menu items based on user role
-    if (currentUser?.role === "admin") {
-      return adminMenuItems;
-    } else {
-      return employeeMenuItems;
-    }
+    const allMenuItems = [...adminMenuItems, ...employeeMenuItems];
+    return allMenuItems.filter(item => !item.permission || permissions.includes(item.key));
   };
 
-  // Page title based on current route
   const getPageTitle = () => {
     if (location.pathname.includes("/dashboard")) return "Dashboard";
     if (location.pathname.includes("/profile")) return "Thông tin cá nhân";
