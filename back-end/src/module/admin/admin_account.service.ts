@@ -10,6 +10,7 @@ import { Position, PositionDocument } from '../../schemas/position.schema';
 import {AccountInfoDto} from "./dto/accountInfo.dto";
 import {USER_ROLE} from "../../enum/role.enum";
 import {STATUS} from "../../enum/status.enum";
+import {RolePermissionService} from "../auth/role_permission/role_permission.service";
 
 @Injectable()
 export class AdminAccountService {
@@ -18,6 +19,7 @@ export class AdminAccountService {
     @InjectModel(Employees.name) private employeeModel: Model<EmployeesDocument>,
     @InjectModel(Departments.name) private departmentModel: Model<DepartmentsDocument>,
     @InjectModel(Position.name) private positionModel: Model<PositionDocument>,
+    private readonly rolePermissionService: RolePermissionService,
   ) { }
 
   async create(createAccount: CreateAccount) {
@@ -227,6 +229,10 @@ export class AdminAccountService {
       if(isValidEmail) {
         throw new Error('Email đã tồn tại');
       }
+      const role = await this.rolePermissionService.getRoleByCode(USER_ROLE.EMPLOYEE);
+        if(!role) {
+            throw new Error('Role không tồn tại');
+        }
       const newEmployee = await this.employeeModel.create({
         fullName: info.fullName,
         email: info.email,
@@ -241,7 +247,7 @@ export class AdminAccountService {
       const newAccount = await this.userModel.create({
         username: username,
         password: password,
-        role: USER_ROLE.EMPLOYEE,
+        role: role._id,
         employeeId: newEmployee._id,
         status: STATUS.ACTIVE,
       })

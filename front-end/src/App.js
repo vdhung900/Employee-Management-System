@@ -31,7 +31,10 @@ import TeamManagement from "./pages/employee/TeamManagement";
 import TeamPerformance from "./pages/employee/TeamPerformance";
 import NotFound from "./pages/NotFound";
 import Category from "./pages/admin/Category";
-import { LoadingProvider } from "./contexts/LoadingContext";
+import {LoadingProvider} from "./contexts/LoadingContext";
+import Roles from "./pages/admin/Roles";
+import Permission from "./pages/admin/Permission";
+import Error403Page from "./pages/Forbidden";
 import Benefits from './pages/employee/Benefits';
 
 const router = createBrowserRouter(
@@ -47,14 +50,18 @@ const router = createBrowserRouter(
     {
       path: "/404",
       element: (
-        <PublicRoute>
           <NotFound />
-        </PublicRoute>
+      ),
+    },
+    {
+      path: "/403",
+      element: (
+          <Error403Page />
       ),
     },
     {
       path: "/admin",
-      element: <PrivateRoute roles={["admin"]} />,
+      element: <PrivateRoute />,
       children: [
         {
           element: <MainLayout />,
@@ -66,13 +73,15 @@ const router = createBrowserRouter(
             { path: "account-request", element: <AdminAccountRequests /> },
             { path: "admin-account", element: <AdminAccount /> },
             { path: "category", element: <Category /> },
+            { path: "roles", element: <Roles /> },
+            { path: "permissions", element: <Permission /> },
           ],
         },
       ],
     },
     {
       path: "/employee",
-      element: <PrivateRoute roles={["employee", "manager", "hr"]} />,
+      element: <PrivateRoute />,
       children: [
         {
           element: <MainLayout />,
