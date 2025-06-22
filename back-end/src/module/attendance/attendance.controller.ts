@@ -26,10 +26,6 @@ export class AttendanceController {
       const createAttendanceDto = new CreateAttendanceRecordDto();
 
       //Authorization (temporary)
-      const role = req.user.role;
-      if (!["employee", "manager"].includes(role)) {
-        throw new BadRequestException(`Role ${role} is not allowed to check-in`);
-      }
 
       // Check if attendance record already exists for today
       // const employee =
@@ -60,11 +56,6 @@ export class AttendanceController {
   async checkOut(@Req() req: any): Promise<BaseResponse> {
     try {
       const updateDto = new UpdateAttendanceRecordDto();
-      //Authorization (temporary)
-      const role = req.user.role;
-      if (!["employee", "manager"].includes(role)) {
-        throw new BadRequestException(`Role ${role} is not allowed to check-out`);
-      }
 
       // Check if the employee has an existing attendance record for today
       const existingRecord = await this.attendanceRecordService.findByEmployeeIdToday(
@@ -87,6 +78,25 @@ export class AttendanceController {
     } catch (error) {
       console.error("Error creating attendance record:", error);
       throw error; // Re-throw the error to be handled by NestJS
+    }
+  }
+
+  @Get("today")
+  async getTodayAttendance(@Req() req: any): Promise<BaseResponse> {
+    try {
+
+      const todayRecord = await this.attendanceRecordService.findByEmployeeIdToday(
+        req.user.userId
+      );
+
+      if (!todayRecord) {
+        return BaseResponse.success(null, "No attendance record found for today", 200);
+      }
+
+      return BaseResponse.success(todayRecord, "Today attendance record retrieved successfully", 200);
+    } catch (error) {
+      console.error("Error retrieving today attendance record:", error);
+      throw error;
     }
   }
 
