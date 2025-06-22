@@ -3,7 +3,7 @@ import { Card, Typography, Row, Col, Button, Table, Modal, Form, Input, InputNum
 import { PlusOutlined, EditOutlined, DeleteOutlined, GiftOutlined, EyeOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import APIConfig from '../../services/APIConfig';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
 const { Search } = AntInput;
 
@@ -24,7 +24,6 @@ const Benefits = () => {
     const [editing, setEditing] = useState(null);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [userRole, setUserRole] = useState('');
     const [searchText, setSearchText] = useState('');
     const [filterDepartment, setFilterDepartment] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -34,8 +33,6 @@ const Benefits = () => {
         fetchBenefits();
         fetchDepartments();
         fetchEmployees();
-        const role = localStorage.getItem('role');
-        setUserRole(role || '');
     }, []);
 
     const fetchBenefits = async () => {
@@ -91,6 +88,8 @@ const Benefits = () => {
             effective: record.effective || [],
             employees: record.employees?.map(e => typeof e === 'object' ? e._id : e),
             departments: record.departments?.map(d => typeof d === 'object' ? d._id : d),
+            applyAll: !!record.applyAll,
+            status: record.status || 'auto',
         });
         setModalVisible(true);
     };
@@ -112,9 +111,11 @@ const Benefits = () => {
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
-            console.log('Form values:', values);
             if (values.status === 'auto') {
                 values.effective = ALL_MONTHS;
+            }
+            if (values.applyAll) {
+                values.departments = [];
             }
             const token = localStorage.getItem('accessToken');
             let url = `${APIConfig.baseUrl}/benefits`;
@@ -135,7 +136,7 @@ const Benefits = () => {
             setModalVisible(false);
             fetchBenefits();
         } catch (err) {
-            console.log('Validate error:', err);
+            // Nếu validate lỗi sẽ không vào đây
         }
     };
 
@@ -157,7 +158,8 @@ const Benefits = () => {
         { title: 'Phòng ban', dataIndex: 'departments', key: 'departments', render: (arr, record) => record.applyAll ? <Tag color="geekblue">Tất cả phòng ban</Tag> : <Space wrap>{arr?.map(d => <Tag key={typeof d === 'object' ? d._id : d}>{typeof d === 'object' ? d.name : d}</Tag>)}</Space> },
         { title: 'Nhân viên', dataIndex: 'employees', key: 'employees', render: (arr) => <Space wrap>{arr?.map(e => <Tag key={typeof e === 'object' ? e._id : e}>{typeof e === 'object' ? e.username : e}</Tag>)}</Space> },
     ];
-    if (userRole === 'hr') {
+    const role = localStorage.getItem('role');
+    if (role === 'hr') {
         columns.push({
             title: 'Hành động',
             key: 'action',
