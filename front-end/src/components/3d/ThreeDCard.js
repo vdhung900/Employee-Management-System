@@ -33,18 +33,20 @@ const ThreeDCard = ({
       title={title}
       extra={extra}
       loading={loading}
-      bordered={bordered}
       hoverable={false}
       cover={cover}
       actions={actions}
-      headStyle={{
-        borderBottom: '1px solid rgba(82, 196, 26, 0.1)',
-        ...headStyle
+      styles={{
+        header: {
+          borderBottom: '1px solid rgba(82, 196, 26, 0.1)',
+          ...headStyle
+        },
+        body: {
+          padding: '16px',
+          ...bodyStyle
+        }
       }}
-      bodyStyle={{
-        padding: '16px',
-        ...bodyStyle
-      }}
+      variant={bordered ? 'outlined' : 'plain'}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       {...props}

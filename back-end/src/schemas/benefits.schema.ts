@@ -3,6 +3,7 @@ import { BaseSchema } from "./base.schema";
 import { Document, Types } from "mongoose";
 import { Departments } from "./departments.schema";
 import { Employees } from "./employees.schema";
+import { Account } from "./account.schema";
 
 export type BenefitDocument = Benefits & Document;
 
@@ -15,22 +16,22 @@ export class Benefits extends BaseSchema {
     description: string;
 
     @Prop()
-    amount: number;
+    amount: number; // VND
 
-    @Prop()
-    amountType: string;
+    @Prop({ type: [{ type: Types.ObjectId, ref: Account.name }] })
+    employees: Types.ObjectId[];
 
-    @Prop({type: Types.ObjectId, ref: Departments.name})
-    departmentId: Types.ObjectId;
+    @Prop({ type: [{ type: Types.ObjectId, ref: Departments.name }] })
+    departments: Types.ObjectId[];
 
-    @Prop({type: Types.ObjectId, ref: Employees.name})
-    employeeId: Types.ObjectId;
+    @Prop({ enum: ['auto', 'manual'], default: 'auto' })
+    status: string;
 
-    @Prop()
-    effectiveFrom: Date;
+    @Prop({ type: [Number] })
+    effective: number[]; // tháng trong năm (1-12)
 
-    @Prop()
-    effectiveTo: Date;
+    @Prop({ default: false })
+    applyAll?: boolean;
 }
 
 export const BenefitSchema = SchemaFactory.createForClass(Benefits);

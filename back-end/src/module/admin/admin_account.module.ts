@@ -6,9 +6,13 @@ import { Account, AccountSchema } from '../../schemas/account.schema';
 import { Employees, EmployeesSchema } from '../../schemas/employees.schema';
 import { Departments, DepartmentsSchema } from '../../schemas/departments.schema';
 import { Position, PositionSchema } from '../../schemas/position.schema';
+import {RolePermissionModule} from "../auth/role_permission/role_permission.module";
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }, { name: Employees.name, schema: EmployeesSchema }, { name: Departments.name, schema: DepartmentsSchema }, { name: Position.name, schema: PositionSchema } ])],
+  imports: [
+      MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }, { name: Employees.name, schema: EmployeesSchema }, { name: Departments.name, schema: DepartmentsSchema }, { name: Position.name, schema: PositionSchema } ]),
+      RolePermissionModule
+  ],
   controllers: [AdminAccountController],
   providers: [AdminAccountService],
   exports: [AdminAccountService],

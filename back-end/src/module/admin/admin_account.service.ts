@@ -7,6 +7,10 @@ import { CreateAccount, ResetPassword, UpdateAccount } from './dto/admin_account
 import * as bcrypt from 'bcryptjs';
 import { Departments, DepartmentsDocument } from '../../schemas/departments.schema';
 import { Position, PositionDocument } from '../../schemas/position.schema';
+import {AccountInfoDto} from "./dto/accountInfo.dto";
+import {USER_ROLE} from "../../enum/role.enum";
+import {STATUS} from "../../enum/status.enum";
+import {RolePermissionService} from "../auth/role_permission/role_permission.service";
 
 @Injectable()
 export class AdminAccountService {
@@ -15,6 +19,7 @@ export class AdminAccountService {
     @InjectModel(Employees.name) private employeeModel: Model<EmployeesDocument>,
     @InjectModel(Departments.name) private departmentModel: Model<DepartmentsDocument>,
     @InjectModel(Position.name) private positionModel: Model<PositionDocument>,
+    private readonly rolePermissionService: RolePermissionService,
   ) { }
 
   async create(createAccount: CreateAccount) {
@@ -211,4 +216,79 @@ export class AdminAccountService {
       throw new BadRequestException('Lỗi khi lấy danh sách chức vụ');
     }
   }
+
+  async createByInfo(info: any){
+    try{
+      if(!info.fullName || !info.email || !info.department || !info.position) {
+        throw new Error('Thông tin không đầy đủ');
+      }
+      const username = await this.generateUserName(info.fullName);
+      const password = this.generateRandomPassword(8);
+      // const hashPassword = await bcrypt.hash(password, 10);
+      const isValidEmail = await this.employeeModel.findOne({ email: info.email }).exec();
+      if(isValidEmail) {
+        throw new Error('Email đã tồn tại');
+      }
+      const role = await this.rolePermissionService.getRoleByCode(USER_ROLE.EMPLOYEE);
+        if(!role) {
+            throw new Error('Role không tồn tại');
+        }
+      const newEmployee = await this.employeeModel.create({
+        fullName: info.fullName,
+        email: info.email,
+        phone: info.phone || null,
+        departmentId: new Types.ObjectId(info.department),
+        positionId: new Types.ObjectId(info.position),
+        joinDate: new Date(info.startDate) || new Date(),
+      });
+      if (!newEmployee) {
+        throw new Error('Không thể tạo thông tin nhân viên');
+      }
+      const newAccount = await this.userModel.create({
+        username: username,
+        password: password,
+        role: role._id,
+        employeeId: newEmployee._id,
+        status: STATUS.ACTIVE,
+      })
+      return {newAccount, newEmployee};
+    }catch (e) {
+      throw e;
+    }
+  }
+
+  async generateUserName(fullName: string): Promise<string> {
+    const parts = fullName.trim().toLowerCase().split(/\s+/);
+    if (parts.length < 2) throw new Error("Tên không hợp lệ. Cần ít nhất họ và tên.");
+    const lastName = parts[parts.length - 1];
+    const middleAndFirst = parts.slice(0, parts.length - 1);
+    const initials = middleAndFirst.map(word => word[0]).join("");
+    const baseUserName = lastName + initials;
+    const existingUsers: { username: string }[] = await this.userModel
+        .find({ username: new RegExp(`^${baseUserName}\\d*$`, 'i') })
+        .select('username')
+        .lean();
+    const suffixes = existingUsers.map(user => {
+      const match = user.username.match(new RegExp(`^${baseUserName}(\\d*)$`, 'i'));
+      return match ? parseInt(match[1] || '0', 10) : 0;
+    });
+    const isBaseTaken = existingUsers.some(user => user.username.toLowerCase() === baseUserName.toLowerCase());
+    const maxSuffix = suffixes.length > 0 ? Math.max(...suffixes) : 0;
+    const newUserName = isBaseTaken ? `${baseUserName}${maxSuffix + 1}` : baseUserName;
+    return newUserName;
+  }
+
+   generateRandomPassword(length: number = 8): string {
+    const upperChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowerChars = 'abcdefghijklmnopqrstuvwxyz';
+    const numberChars = '0123456789';
+    const allChars = upperChars + lowerChars + numberChars;
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * allChars.length);
+      password += allChars[randomIndex];
+    }
+    return password;
+  }
+
 }

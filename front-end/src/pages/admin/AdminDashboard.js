@@ -191,7 +191,7 @@ const AdminDashboard = () => {
                 alignItems: 'center',
                 flexWrap: 'wrap',
                 gap: '16px',
-                background: 'linear-gradient(135deg, rgba(82, 196, 26, 0.1), rgba(82, 196, 26, 0.05))',
+                background: 'linear-gradient(135deg, #e3f2fd, rgba(82, 196, 26, 0.05))',
                 backdropFilter: 'blur(8px)',
                 border: '1px solid rgba(82, 196, 26, 0.2)',
                 width: '100%',
