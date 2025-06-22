@@ -12,13 +12,13 @@ export class AuthService {
   constructor(
     @InjectModel(Account.name) private accountModel: Model<AccountDocument>,
     @InjectModel(Employees.name) private employeesModel: Model<EmployeesDocument>,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private readonly rolePermissionService: RolePermissionService
   ) {}
 
   async findUserByUsername(username: string): Promise<Account | null> {
     try {
       const user = await this.accountModel.findOne({ username }).populate("employeeId").exec();
-      console.log("User found:", user);
       return user;
     } catch (error) {
       console.error("Error finding user by username:", error);
@@ -38,13 +38,11 @@ export class AuthService {
 
   async login(req: LoginReq) {
     try {
-      const user = await this.findUserByUsername(req.username);
-      console.log("user found:", user);
+      const account = await this.findUserByUsername(req.username);
 
-      //Edit later when password is hashed
       const isPasswordValid = account && account.password === req.password;
 
-      if (!user || !isPasswordValid) {
+      if (!account || !isPasswordValid) {
         throw new Error("Invalid username or password");
       }
 
@@ -54,7 +52,8 @@ export class AuthService {
       }
       const payload = {
         userId: account._id,
-        role: account.role,
+        role: rolePermission?.role,
+        permissions: rolePermission?.permissions,
         employeeId: account.employeeId ? account.employeeId._id : null,
       };
 
@@ -63,7 +62,6 @@ export class AuthService {
       return {
         user: {
           username: account.username,
-          role: account.role,
           employeeId: account.employeeId ? account.employeeId._id : null,
         },
         accessToken: this.jwtService.sign(payload, { secret: jwtSecret, expiresIn: "1h" }),
