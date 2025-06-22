@@ -58,42 +58,42 @@ import admin_account from "../../services/Admin_account";
 import {formatDate} from "../../utils/format";
 import moment from 'moment';
 
-const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
-const { TabPane } = Tabs;
-const { RangePicker } = DatePicker;
+const {Title, Text, Paragraph} = Typography;
+const {Option} = Select;
+const {TabPane} = Tabs;
+const {RangePicker} = DatePicker;
 
-const RequestTypeForm = ({ form, requestType, departments = [], positions = [] }) => {
+const RequestTypeForm = ({form, requestType, departments = [], positions = []}) => {
     const formFields = {
-        LEAVE: {
+        LEAVE_REQUEST: {
             fields: (
                 <>
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
-                                name={['requestData', 'startDate']}
+                                name={['dataReq', 'startDate']}
                                 label="Ngày bắt đầu nghỉ"
-                                rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+                                rules={[{required: true, message: 'Vui lòng chọn ngày bắt đầu'}]}
                             >
-                                <DatePicker style={{ width: '100%' }} />
+                                <DatePicker style={{width: '100%'}}/>
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item
-                                name={['requestData', 'endDate']}
+                                name={['dataReq', 'endDate']}
                                 label="Ngày kết thúc nghỉ"
-                                rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
+                                rules={[{required: true, message: 'Vui lòng chọn ngày kết thúc'}]}
                             >
-                                <DatePicker style={{ width: '100%' }} />
+                                <DatePicker style={{width: '100%'}}/>
                             </Form.Item>
                         </Col>
                     </Row>
                     <Form.Item
-                        name={['requestData', 'reason']}
+                        name={['dataReq', 'reason']}
                         label="Lý do nghỉ phép"
-                        rules={[{ required: true, message: 'Vui lòng nhập lý do nghỉ phép' }]}
+                        rules={[{required: true, message: 'Vui lòng nhập lý do nghỉ phép'}]}
                     >
-                        <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép" />
+                        <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép"/>
                     </Form.Item>
                 </>
             ),
@@ -113,27 +113,27 @@ const RequestTypeForm = ({ form, requestType, departments = [], positions = [] }
                             <Form.Item
                                 name={['dataReq', 'startDate']}
                                 label="Ngày tăng ca"
-                                rules={[{ required: true, message: 'Vui lòng chọn ngày tăng ca' }]}
+                                rules={[{required: true, message: 'Vui lòng chọn ngày tăng ca'}]}
                             >
-                                <DatePicker style={{ width: '100%' }} />
+                                <DatePicker style={{width: '100%'}}/>
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'hours']}
                                 label="Số giờ tăng ca"
-                                rules={[{ required: true, message: 'Vui lòng nhập số giờ tăng ca' }]}
+                                rules={[{required: true, message: 'Vui lòng nhập số giờ tăng ca'}]}
                             >
-                                <Input type="number" min={1} max={24} />
+                                <Input type="number" min={1} max={24}/>
                             </Form.Item>
                         </Col>
                     </Row>
                     <Form.Item
                         name={['dataReq', 'reason']}
                         label="Lý do tăng ca"
-                        rules={[{ required: true, message: 'Vui lòng nhập lý do tăng ca' }]}
+                        rules={[{required: true, message: 'Vui lòng nhập lý do tăng ca'}]}
                     >
-                        <Input.TextArea rows={4} placeholder="Nhập lý do tăng ca" />
+                        <Input.TextArea rows={4} placeholder="Nhập lý do tăng ca"/>
                     </Form.Item>
                 </>
             ),
@@ -154,20 +154,20 @@ const RequestTypeForm = ({ form, requestType, departments = [], positions = [] }
                                 name={['dataReq', 'fullName']}
                                 label="Họ và tên nhân viên"
                                 rules={[
-                                    { required: true, message: 'Vui lòng nhập họ và tên' },
-                                    { min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự' }
+                                    {required: true, message: 'Vui lòng nhập họ và tên'},
+                                    {min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự'}
                                 ]}
                             >
-                                <Input placeholder="Nhập họ và tên nhân viên" />
+                                <Input placeholder="Nhập họ và tên nhân viên"/>
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'startDate']}
                                 label="Ngày bắt đầu làm việc"
-                                rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+                                rules={[{required: true, message: 'Vui lòng chọn ngày bắt đầu'}]}
                             >
-                                <DatePicker style={{ width: '100%' }} />
+                                <DatePicker style={{width: '100%'}}/>
                             </Form.Item>
                         </Col>
                     </Row>
@@ -177,11 +177,11 @@ const RequestTypeForm = ({ form, requestType, departments = [], positions = [] }
                                 name={['dataReq', 'email']}
                                 label="Email"
                                 rules={[
-                                    { required: true, message: 'Vui lòng nhập email' },
-                                    { type: 'email', message: 'Email không hợp lệ' }
+                                    {required: true, message: 'Vui lòng nhập email'},
+                                    {type: 'email', message: 'Email không hợp lệ'}
                                 ]}
                             >
-                                <Input placeholder="Nhập email" />
+                                <Input placeholder="Nhập email"/>
                             </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -189,11 +189,11 @@ const RequestTypeForm = ({ form, requestType, departments = [], positions = [] }
                                 name={['dataReq', 'phone']}
                                 label="Số điện thoại"
                                 rules={[
-                                    { required: true, message: 'Vui lòng nhập số điện thoại' },
-                                    { pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại không hợp lệ' }
+                                    {required: true, message: 'Vui lòng nhập số điện thoại'},
+                                    {pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại không hợp lệ'}
                                 ]}
                             >
-                                <Input placeholder="Nhập số điện thoại" />
+                                <Input placeholder="Nhập số điện thoại"/>
                             </Form.Item>
                         </Col>
                     </Row>
@@ -202,7 +202,7 @@ const RequestTypeForm = ({ form, requestType, departments = [], positions = [] }
                             <Form.Item
                                 name={['dataReq', 'department']}
                                 label="Phòng ban"
-                                rules={[{ required: true, message: 'Vui lòng chọn phòng ban' }]}
+                                rules={[{required: true, message: 'Vui lòng chọn phòng ban'}]}
                             >
                                 <Select placeholder="Chọn phòng ban">
                                     {departments.map(department => (
@@ -217,7 +217,7 @@ const RequestTypeForm = ({ form, requestType, departments = [], positions = [] }
                             <Form.Item
                                 name={['dataReq', 'position']}
                                 label="Chức vụ"
-                                rules={[{ required: true, message: 'Vui lòng chọn chức vụ' }]}
+                                rules={[{required: true, message: 'Vui lòng chọn chức vụ'}]}
                             >
                                 <Select placeholder="Chọn chức vụ">
                                     {positions.map(position => (
@@ -267,56 +267,56 @@ const Requests = () => {
     const [isEdit, setIsEdit] = useState(false);
 
     useEffect(() => {
-        try{
+        try {
             loadTypeReq();
             loadDataReq();
             loadDepartments();
             loadPositions();
-        }catch (e) {
+        } catch (e) {
             console.log(e, 'test');
         }
     }, []);
 
     const loadDepartments = async () => {
-        try{
+        try {
             const response = await admin_account.getAllDepartments();
             setDepartments(response);
-        }catch (e) {
+        } catch (e) {
             console.log(e, 'test');
 
         }
     }
 
     const loadPositions = async () => {
-        try{
+        try {
             const response = await admin_account.getAllPositions();
             setPositions(response);
-        }catch (e) {
+        } catch (e) {
             console.log(e, 'test');
 
         }
     }
 
     const loadDataReq = async () => {
-        try{
+        try {
             const user = JSON.parse(localStorage.getItem("user"));
-            if(!user) throw new Error("Bạn chưa đăng nhập !!!");
+            if (!user) throw new Error("Bạn chưa đăng nhập !!!");
             let body = {
                 employeeId: user.employeeId,
             }
             const response = await requestService.getByAccountId(body);
-            if(response.success){
+            if (response.success) {
                 setRequests(response.data);
             }
-        }catch (e) {
+        } catch (e) {
             console.log(e, 'Error loading data requests');
         }
     }
 
     const loadTypeReq = async () => {
-        try{
+        try {
             const response = await CategoryService.getTypeReqByRole();
-            if(response.success){
+            if (response.success) {
                 const data = response.data;
                 data.map(item => ({
                     code: item.code,
@@ -324,46 +324,64 @@ const Requests = () => {
                 }))
                 setRequestCategories(data)
             }
-        }catch(e){
+        } catch (e) {
             console.log(e)
         }
     }
 
     const getStatusColor = (status) => {
-        switch(status) {
-            case 'approved': return 'success';
-            case 'rejected': return 'error';
-            case 'pending': return 'processing';
-            case 'cancelled': return 'default';
-            default: return 'default';
+        switch (status) {
+            case 'approved':
+                return 'success';
+            case 'rejected':
+                return 'error';
+            case 'pending':
+                return 'processing';
+            case 'cancelled':
+                return 'default';
+            default:
+                return 'default';
         }
     };
 
     const getStatusLabel = (status) => {
-        switch(status) {
-            case 'Approved': return 'Đã phê duyệt';
-            case 'Rejected': return 'Từ chối';
-            case 'Pending': return 'Đang chờ duyệt';
-            case 'Cancelled': return 'Đã hủy';
-            default: return 'Không xác định';
+        switch (status) {
+            case 'Approved':
+                return 'Đã phê duyệt';
+            case 'Rejected':
+                return 'Từ chối';
+            case 'Pending':
+                return 'Đang chờ duyệt';
+            case 'Cancelled':
+                return 'Đã hủy';
+            default:
+                return 'Không xác định';
         }
     };
 
     const getPriorityColor = (priority) => {
-        switch(priority) {
-            case 'high': return 'red';
-            case 'normal': return 'blue';
-            case 'low': return 'green';
-            default: return 'default';
+        switch (priority) {
+            case 'high':
+                return 'red';
+            case 'normal':
+                return 'blue';
+            case 'low':
+                return 'green';
+            default:
+                return 'default';
         }
     };
 
     const getPriorityLabel = (priority) => {
-        switch(priority) {
-            case 'high': return 'Cao';
-            case 'normal': return 'Bình thường';
-            case 'low': return 'Thấp';
-            default: return 'Không xác định';
+        switch (priority) {
+            case 'high':
+                return 'Cao';
+            case 'normal':
+                return 'Bình thường';
+            case 'low':
+                return 'Thấp';
+            default:
+                return 'Không xác định';
         }
     };
 
@@ -381,7 +399,7 @@ const Requests = () => {
                 priority: request.priority,
                 note: request.note,
             });
-            if(request.typeRequest.code === "ACCOUNT_CREATE_REQUEST"){
+            if (request.typeRequest.code === "ACCOUNT_CREATE_REQUEST") {
                 form.setFieldsValue({
                     dataReq: {
                         fullName: request.dataReq.fullName || '',
@@ -391,6 +409,14 @@ const Requests = () => {
                         department: request.dataReq.department || '',
                         position: request.dataReq.position || '',
                         note: request.dataReq.note || ''
+                    }
+                })
+            } else if (request.typeRequest.code === "LEAVE_REQUEST") {
+                form.setFieldsValue({
+                    dataReq: {
+                        startDate: request.dataReq.startDate ? moment(request.dataReq.startDate) : undefined,
+                        endDate: request.dataReq.endDate ? moment(request.dataReq.endDate) : undefined,
+                        reason: request.dataReq.reason || ''
                     }
                 })
             }
@@ -406,11 +432,11 @@ const Requests = () => {
     };
 
     const handleFormSubmit = async (values) => {
-        try{
+        try {
             let body = values;
-            if(body.requestId){
+            if (body.requestId) {
                 await requestService.updateRequest(body);
-            }else{
+            } else {
                 const user = JSON.parse(localStorage.getItem("user"));
                 body.employeeId = user.employeeId;
                 await requestService.createRequest(body);
@@ -419,7 +445,7 @@ const Requests = () => {
             setIsModalVisible(false);
             form.resetFields();
             setSelectedDataType(null);
-        }catch (e) {
+        } catch (e) {
 
         }
     };
@@ -427,7 +453,7 @@ const Requests = () => {
     const handleRequestTypeChange = (value) => {
         setSelectedRequestType(value);
         const formFields = {
-            LEAVE: {
+            LEAVE_REQUEST: {
                 dataReq: {
                     startDate: undefined,
                     endDate: undefined,
@@ -456,7 +482,8 @@ const Requests = () => {
     };
 
     const renderRequestTypeFields = () => {
-        return <RequestTypeForm form={form} requestType={selectedRequestType} departments={departments} positions={positions} />;
+        return <RequestTypeForm form={form} requestType={selectedRequestType} departments={departments}
+                                positions={positions}/>;
     };
 
     const showDrawer = (request) => {
@@ -480,7 +507,7 @@ const Requests = () => {
                 body.requestId = request._id;
                 body.status = "Cancelled";
                 const response = await requestService.approveRequest(body);
-                if(response.success){
+                if (response.success) {
                     loadDataReq();
                     Modal.success({
                         title: 'Yêu cầu đã được hủy',
@@ -498,9 +525,9 @@ const Requests = () => {
             key: 'employeeName',
             render: (text, record) => (
                 <Space>
-                    <Avatar style={{ backgroundColor: '#722ed1' }}>{text.charAt(0)}</Avatar>
+                    <Avatar style={{backgroundColor: '#722ed1'}}>{text.charAt(0)}</Avatar>
                     <div>
-                        <div style={{ fontWeight: 'bold' }}>{text}</div>
+                        <div style={{fontWeight: 'bold'}}>{text}</div>
                         <Text type="secondary">{record.employeeId.email}</Text>
                     </div>
                 </Space>
@@ -538,19 +565,18 @@ const Requests = () => {
             title: 'Thời gian giải quyết',
             dataIndex: 'timeResolve',
             key: 'timeResolve',
-            ellipsis: true,
         },
         {
             title: 'Ghi chú',
             dataIndex: 'note',
             key: 'note',
-            ellipsis: true,
         },
         {
             title: 'Lý do',
-            dataIndex: 'reason',
-            key: 'reason',
-            ellipsis: true,
+            key: 'dataReq',
+            render: status => (
+                <div>{status.dataReq !== null ? status.dataReq.reason : ""}</div>
+            ),
         },
         {
             title: 'Trạng thái',
@@ -567,10 +593,10 @@ const Requests = () => {
                 />
             ),
             filters: [
-                { text: 'Đã phê duyệt', value: 'Approved' },
-                { text: 'Từ chối', value: 'Rejected' },
-                { text: 'Đang chờ duyệt', value: 'Pending' },
-                { text: 'Đã hủy', value: 'Cancelled' },
+                {text: 'Đã phê duyệt', value: 'Approved'},
+                {text: 'Từ chối', value: 'Rejected'},
+                {text: 'Đang chờ duyệt', value: 'Pending'},
+                {text: 'Đã hủy', value: 'Cancelled'},
             ],
             onFilter: (value, record) => record.status === value,
         },
@@ -582,7 +608,7 @@ const Requests = () => {
                     <Tooltip title="Xem chi tiết">
                         <Button
                             type="text"
-                            icon={<EyeOutlined />}
+                            icon={<EyeOutlined/>}
                             onClick={() => showDrawer(record)}
                         />
                     </Tooltip>
@@ -591,14 +617,14 @@ const Requests = () => {
                             <Tooltip title="Chỉnh sửa">
                                 <Button
                                     type="text"
-                                    icon={<EditOutlined />}
+                                    icon={<EditOutlined/>}
                                     onClick={() => showModal(record)}
                                 />
                             </Tooltip>
                             <Tooltip title="Hủy yêu cầu">
                                 <Button
                                     type="text"
-                                    icon={<CloseOutlined />}
+                                    icon={<CloseOutlined/>}
                                     onClick={() => confirmDelete(record)}
                                 />
                             </Tooltip>
@@ -616,9 +642,9 @@ const Requests = () => {
 
     return (
         <div style={{padding: '10px'}}>
-            <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
+            <Row gutter={[16, 16]} style={{marginBottom: '20px'}}>
                 <Col span={24}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                         <div>
                             <Title level={2}>Quản lý yêu cầu</Title>
                             <Text type="secondary">Gửi và theo dõi các yêu cầu của nhân viên</Text>
@@ -626,24 +652,24 @@ const Requests = () => {
                         <div>
                             <Button
                                 type="primary"
-                                icon={<PlusOutlined />}
+                                icon={<PlusOutlined/>}
                                 onClick={() => showModal()}
-                                style={{ marginRight: '8px' }}
+                                style={{marginRight: '8px'}}
                             >
                                 Tạo yêu cầu mới
                             </Button>
                             <Dropdown
                                 menu={{
                                     items: [
-                                        { key: '1', label: 'Export danh sách', icon: <ExportOutlined /> },
-                                        { key: '2', label: 'Xem hướng dẫn', icon: <QuestionCircleOutlined /> },
+                                        {key: '1', label: 'Export danh sách', icon: <ExportOutlined/>},
+                                        {key: '2', label: 'Xem hướng dẫn', icon: <QuestionCircleOutlined/>},
                                     ]
                                 }}
                             >
                                 <Button>
                                     <Space>
                                         Thao tác
-                                        <DownOutlined />
+                                        <DownOutlined/>
                                     </Space>
                                 </Button>
                             </Dropdown>
@@ -652,18 +678,19 @@ const Requests = () => {
                 </Col>
             </Row>
 
-            <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
+            <Row gutter={[16, 16]} style={{marginBottom: '16px'}}>
                 <Col xs={24} sm={12} lg={6}>
                     <ThreeDContainer>
                         <Card>
                             <Statistic
                                 title="Đang chờ duyệt"
                                 value={pendingRequests}
-                                valueStyle={{ color: '#1890ff' }}
-                                prefix={<ClockCircleOutlined />}
+                                valueStyle={{color: '#1890ff'}}
+                                prefix={<ClockCircleOutlined/>}
                             />
-                            <div style={{ marginTop: 8 }}>
-                                <Progress percent={Math.round((pendingRequests / requests.length) * 100)} size="small" strokeColor="#1890ff" />
+                            <div style={{marginTop: 8}}>
+                                <Progress percent={Math.round((pendingRequests / requests.length) * 100)} size="small"
+                                          strokeColor="#1890ff"/>
                             </div>
                         </Card>
                     </ThreeDContainer>
@@ -675,11 +702,12 @@ const Requests = () => {
                             <Statistic
                                 title="Đã phê duyệt"
                                 value={approvedRequests}
-                                valueStyle={{ color: '#52c41a' }}
-                                prefix={<CheckCircleOutlined />}
+                                valueStyle={{color: '#52c41a'}}
+                                prefix={<CheckCircleOutlined/>}
                             />
-                            <div style={{ marginTop: 8 }}>
-                                <Progress percent={Math.round((approvedRequests / requests.length) * 100)} size="small" strokeColor="#52c41a" />
+                            <div style={{marginTop: 8}}>
+                                <Progress percent={Math.round((approvedRequests / requests.length) * 100)} size="small"
+                                          strokeColor="#52c41a"/>
                             </div>
                         </Card>
                     </ThreeDContainer>
@@ -691,11 +719,12 @@ const Requests = () => {
                             <Statistic
                                 title="Từ chối"
                                 value={rejectedRequests}
-                                valueStyle={{ color: '#ff4d4f' }}
-                                prefix={<CloseCircleOutlined />}
+                                valueStyle={{color: '#ff4d4f'}}
+                                prefix={<CloseCircleOutlined/>}
                             />
-                            <div style={{ marginTop: 8 }}>
-                                <Progress percent={Math.round((rejectedRequests / requests.length) * 100)} size="small" strokeColor="#ff4d4f" />
+                            <div style={{marginTop: 8}}>
+                                <Progress percent={Math.round((rejectedRequests / requests.length) * 100)} size="small"
+                                          strokeColor="#ff4d4f"/>
                             </div>
                         </Card>
                     </ThreeDContainer>
@@ -707,11 +736,12 @@ const Requests = () => {
                             <Statistic
                                 title="Đã hủy"
                                 value={cancelledRequests}
-                                valueStyle={{ color: '#d9d9d9' }}
-                                prefix={<CloseOutlined />}
+                                valueStyle={{color: '#d9d9d9'}}
+                                prefix={<CloseOutlined/>}
                             />
-                            <div style={{ marginTop: 8 }}>
-                                <Progress percent={Math.round((cancelledRequests / requests.length) * 100)} size="small" strokeColor="#d9d9d9" />
+                            <div style={{marginTop: 8}}>
+                                <Progress percent={Math.round((cancelledRequests / requests.length) * 100)} size="small"
+                                          strokeColor="#d9d9d9"/>
                             </div>
                         </Card>
                     </ThreeDContainer>
@@ -721,40 +751,25 @@ const Requests = () => {
             <ThreeDContainer>
                 <Tabs defaultActiveKey="1">
                     <TabPane
-                        tab={<span><FileTextOutlined /> Tất cả yêu cầu</span>}
+                        tab={<span><FileTextOutlined/> Tất cả yêu cầu</span>}
                         key="1"
                     >
                         <Card>
-                            {pendingRequests > 0 && (
-                                <Alert
-                                    message={`Có ${pendingRequests} yêu cầu đang chờ duyệt!`}
-                                    type="info"
-                                    showIcon
-                                    icon={<BellOutlined />}
-                                    action={
-                                        <Button size="small" type="link">
-                                            Xem tất cả
-                                        </Button>
-                                    }
-                                    style={{ marginBottom: 16 }}
-                                />
-                            )}
-
-                            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+                            <div style={{marginBottom: 16, display: 'flex', justifyContent: 'space-between'}}>
                                 <Input
                                     placeholder="Tìm kiếm theo tên, ID, số yêu cầu..."
-                                    prefix={<SearchOutlined />}
-                                    style={{ width: 300 }}
+                                    prefix={<SearchOutlined/>}
+                                    style={{width: 300}}
                                     value={searchText}
                                     onChange={e => setSearchText(e.target.value)}
                                     allowClear
                                 />
                                 <Space>
-                                    <RangePicker placeholder={['Từ ngày', 'Đến ngày']} style={{ marginRight: 8 }} />
-                                    <Button icon={<FilterOutlined />} style={{ marginRight: 8 }}>
+                                    <RangePicker placeholder={['Từ ngày', 'Đến ngày']} style={{marginRight: 8}}/>
+                                    <Button icon={<FilterOutlined/>} style={{marginRight: 8}}>
                                         Lọc
                                     </Button>
-                                    <Button icon={<ExportOutlined />}>
+                                    <Button icon={<ExportOutlined/>}>
                                         Export
                                     </Button>
                                 </Space>
@@ -774,19 +789,79 @@ const Requests = () => {
                         </Card>
                     </TabPane>
                     <TabPane
-                        tab={<span><ClockCircleOutlined /> Đang chờ duyệt</span>}
+                        tab={<span><ClockCircleOutlined/> Đang chờ duyệt</span>}
                         key="2"
                     >
                         <Card>
-                            <Text>Danh sách yêu cầu đang chờ duyệt</Text>
+                            <div style={{marginBottom: 16, display: 'flex', justifyContent: 'space-between'}}>
+                                <Input
+                                    placeholder="Tìm kiếm theo tên, ID, số yêu cầu..."
+                                    prefix={<SearchOutlined/>}
+                                    style={{width: 300}}
+                                    value={searchText}
+                                    onChange={e => setSearchText(e.target.value)}
+                                    allowClear
+                                />
+                                <Space>
+                                    <RangePicker placeholder={['Từ ngày', 'Đến ngày']} style={{marginRight: 8}}/>
+                                    <Button icon={<FilterOutlined/>} style={{marginRight: 8}}>
+                                        Lọc
+                                    </Button>
+                                    <Button icon={<ExportOutlined/>}>
+                                        Export
+                                    </Button>
+                                </Space>
+                            </div>
+
+                            <Table
+                                dataSource={requests.filter(item => item.status === "Pending")}
+                                columns={columns}
+                                rowKey="id"
+                                pagination={{
+                                    defaultPageSize: 10,
+                                    showSizeChanger: true,
+                                    pageSizeOptions: ['10', '20', '50', '100'],
+                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} yêu cầu`,
+                                }}
+                            />
                         </Card>
                     </TabPane>
                     <TabPane
-                        tab={<span><CheckCircleOutlined /> Đã phê duyệt</span>}
+                        tab={<span><CheckCircleOutlined/> Đã phê duyệt</span>}
                         key="3"
                     >
                         <Card>
-                            <Text>Danh sách yêu cầu đã được phê duyệt</Text>
+                            <div style={{marginBottom: 16, display: 'flex', justifyContent: 'space-between'}}>
+                                <Input
+                                    placeholder="Tìm kiếm theo tên, ID, số yêu cầu..."
+                                    prefix={<SearchOutlined/>}
+                                    style={{width: 300}}
+                                    value={searchText}
+                                    onChange={e => setSearchText(e.target.value)}
+                                    allowClear
+                                />
+                                <Space>
+                                    <RangePicker placeholder={['Từ ngày', 'Đến ngày']} style={{marginRight: 8}}/>
+                                    <Button icon={<FilterOutlined/>} style={{marginRight: 8}}>
+                                        Lọc
+                                    </Button>
+                                    <Button icon={<ExportOutlined/>}>
+                                        Export
+                                    </Button>
+                                </Space>
+                            </div>
+
+                            <Table
+                                dataSource={requests.filter(item => item.status === "Approved")}
+                                columns={columns}
+                                rowKey="id"
+                                pagination={{
+                                    defaultPageSize: 10,
+                                    showSizeChanger: true,
+                                    pageSizeOptions: ['10', '20', '50', '100'],
+                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} yêu cầu`,
+                                }}
+                            />
                         </Card>
                     </TabPane>
                 </Tabs>
@@ -828,9 +903,9 @@ const Requests = () => {
                     <Form.Item
                         name="typeCode"
                         label="Loại yêu cầu"
-                        rules={[{ required: true, message: 'Vui lòng chọn loại yêu cầu' }]}
+                        rules={[{required: true, message: 'Vui lòng chọn loại yêu cầu'}]}
                     >
-                        <Select 
+                        <Select
                             placeholder="Chọn loại yêu cầu"
                             onChange={handleRequestTypeChange}
                             disabled={isEdit}
@@ -843,7 +918,7 @@ const Requests = () => {
                     <Form.Item
                         name="priority"
                         label="Mức độ ưu tiên"
-                        rules={[{ required: true, message: 'Vui lòng chọn mức độ ưu tiên' }]}
+                        rules={[{required: true, message: 'Vui lòng chọn mức độ ưu tiên'}]}
                     >
                         <Select placeholder="Chọn mức độ ưu tiên">
                             <Option value="high">Cao</Option>
@@ -855,7 +930,7 @@ const Requests = () => {
                         name="note"
                         label="Ghi chú"
                     >
-                        <Input.TextArea rows={4} placeholder="Nhập ghi chú (nếu có)" />
+                        <Input.TextArea rows={4} placeholder="Nhập ghi chú (nếu có)"/>
                     </Form.Item>
 
                     <Form.Item
@@ -863,7 +938,7 @@ const Requests = () => {
                         label="Tài liệu đính kèm"
                     >
                         <Upload listType="picture" multiple>
-                            <Button icon={<UploadOutlined />}>Tải lên tập tin</Button>
+                            <Button icon={<UploadOutlined/>}>Tải lên tập tin</Button>
                         </Upload>
                     </Form.Item>
                     {selectedRequestType && (
@@ -893,9 +968,14 @@ const Requests = () => {
             >
                 {selectedRequest && (
                     <>
-                        <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{
+                            marginBottom: 24,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start'
+                        }}>
                             <div>
-                                <Title level={4} style={{ marginBottom: 4 }}>
+                                <Title level={4} style={{marginBottom: 4}}>
                                     Yêu cầu {selectedRequest.typeRequest.name}
                                 </Title>
                                 <Tag color={getStatusColor(selectedRequest.status)}>
@@ -907,8 +987,8 @@ const Requests = () => {
                             </div>
                             <div>
                                 <Space>
-                                    <Button icon={<PrinterOutlined />}>In yêu cầu</Button>
-                                    <Button icon={<MailOutlined />}>Gửi email</Button>
+                                    <Button icon={<PrinterOutlined/>}>In yêu cầu</Button>
+                                    <Button icon={<MailOutlined/>}>Gửi email</Button>
                                 </Space>
                             </div>
                         </div>
@@ -917,14 +997,15 @@ const Requests = () => {
                         <Row gutter={[16, 16]}>
                             <Col span={24}>
                                 <Card size="small">
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <div style={{display: 'flex', alignItems: 'center'}}>
                                         <Avatar
                                             size={64}
-                                            icon={<UserOutlined />}
-                                            style={{ backgroundColor: '#722ed1', marginRight: 16 }}
+                                            icon={<UserOutlined/>}
+                                            style={{backgroundColor: '#722ed1', marginRight: 16}}
                                         />
                                         <div>
-                                            <Title level={5} style={{ marginBottom: 4 }}>{selectedRequest.employeeId.fullName}</Title>
+                                            <Title level={5}
+                                                   style={{marginBottom: 4}}>{selectedRequest.employeeId.fullName}</Title>
                                             <div>Email: {selectedRequest.employeeId.email}</div>
                                         </div>
                                     </div>
@@ -938,21 +1019,21 @@ const Requests = () => {
                                 <Statistic
                                     title="Loại yêu cầu"
                                     value={selectedRequest.typeRequest.name}
-                                    valueStyle={{ fontSize: '16px' }}
+                                    valueStyle={{fontSize: '16px'}}
                                 />
                             </Col>
                             <Col span={12}>
                                 <Statistic
                                     title="Mức độ ưu tiên"
                                     value={getPriorityLabel(selectedRequest.priority)}
-                                    valueStyle={{ fontSize: '16px', color: getPriorityColor(selectedRequest.priority) }}
+                                    valueStyle={{fontSize: '16px', color: getPriorityColor(selectedRequest.priority)}}
                                 />
                             </Col>
                             <Col span={12}>
                                 <Statistic
                                     title="Ngày gửi"
                                     value={formatDate(selectedRequest.createdAt)}
-                                    valueStyle={{ fontSize: '16px' }}
+                                    valueStyle={{fontSize: '16px'}}
                                 />
                             </Col>
                             {/*<Col span={12}>*/}
