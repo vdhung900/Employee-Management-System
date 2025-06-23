@@ -36,6 +36,9 @@ import Roles from "./pages/admin/Roles";
 import Permission from "./pages/admin/Permission";
 import Error403Page from "./pages/Forbidden";
 import Benefits from './pages/employee/Benefits';
+import ApproveRequest from "./pages/employee/ApproveRequest";
+import EmployeeReviewResult from "./pages/employee/EmployeeReviewResult";
+import DocumentManagement from "./pages/employee/DocumentManagement";
 
 const router = createBrowserRouter(
   [
@@ -100,6 +103,9 @@ const router = createBrowserRouter(
             { path: "team-management", element: <TeamManagement /> },
             { path: "team-performance", element: <TeamPerformance /> },
             { path: "benefits", element: <Benefits /> },
+            { path: "approve-request", element: <ApproveRequest /> },
+            { path: "review", element: <EmployeeReviewResult /> },
+            { path: "documents", element: <DocumentManagement /> },
           ],
         },
       ],
