@@ -10,6 +10,7 @@ import {Position, PositionDocument} from "../../../schemas/position.schema";
 import {AdminAccountService} from "../../admin/admin_account.service";
 import {STATUS} from "../../../enum/status.enum";
 import {MailService} from "../../mail/mail.service";
+import {UploadService} from "../../minio/minio.service";
 
 @Injectable()
 export class HrRequestService {
@@ -21,6 +22,7 @@ export class HrRequestService {
         private readonly requestService: RequestService,
         private readonly adminAccountService: AdminAccountService,
         private readonly mailService: MailService,
+        private readonly uploadService: UploadService,
     ) {
     }
 
@@ -79,6 +81,10 @@ export class HrRequestService {
             const typeRequest = await this.typeRequestModel.findOne({code: req.typeCode});
             if(!typeRequest){
                 throw new Error("Type Request not found");
+            }
+            if(req.attachments.length > 0){
+                const dataRes = await this.uploadService.createNewDocument(req.attachments);
+                req.attachments = dataRes;
             }
             req.typeRequest = new Types.ObjectId(typeRequest?.id);
             req.status = "Pending";

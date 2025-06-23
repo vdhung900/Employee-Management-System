@@ -18,6 +18,7 @@ import {RolesGuard} from "./common/guards/roles.guard";
 import {JwtAuthGuard} from "./common/guards/jwt-auth.guard";
 import {RolePermissionModule} from "./module/auth/role_permission/role_permission.module";
 import { BenefitsModule } from './module/benefits/benefits.module';
+import { UploadModule } from './module/minio/minio.module';
 
 @Module({
   imports: [
@@ -39,7 +40,8 @@ import { BenefitsModule } from './module/benefits/benefits.module';
     AdminAccountModule,
     DepartmentModule,
     RolePermissionModule,
-    BenefitsModule
+    BenefitsModule,
+    UploadModule
   ],
   controllers: [],
   providers: [

@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import {FileRequestDto} from "../../minio/dto/file-request.dto";
 
 export class CreateRequestDto {
     requestId: string;
@@ -10,5 +11,6 @@ export class CreateRequestDto {
     status: string;
     priority: string;
     note: string;
+    attachments: any;
     approverId: Types.ObjectId;
 }
