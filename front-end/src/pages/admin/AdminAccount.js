@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Table, 
-  Button, 
-  Input, 
-  Space, 
-  Card, 
-  Tag, 
-  Dropdown, 
-  Menu, 
-  Typography, 
-  Breadcrumb, 
-  Row, 
+import {
+  Table,
+  Button,
+  Input,
+  Space,
+  Card,
+  Tag,
+  Dropdown,
+  Menu,
+  Typography,
+  Breadcrumb,
+  Row,
   Col,
   Modal,
   message,
@@ -19,12 +19,12 @@ import {
   Divider,
   DatePicker
 } from 'antd';
-import { 
-  UserOutlined, 
-  SearchOutlined, 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  UserOutlined,
+  SearchOutlined,
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   EllipsisOutlined,
   ExportOutlined,
   ImportOutlined,
@@ -37,6 +37,7 @@ import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Admin_account from '../../services/Admin_account';
+import RolePermissionService from '../../services/RolePermissionService';
 import moment from 'moment';
 
 const { Title, Text } = Typography;
@@ -58,6 +59,15 @@ const AdminAccount = () => {
   const [addForm] = Form.useForm();
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [roles, setRoles] = useState([]);
+
+  const rolesList = async () => {
+    const role = await Admin_account.getAllRoles();
+    setRoles(role.data);
+  }
+  useEffect(() => {
+    rolesList();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,16 +76,16 @@ const AdminAccount = () => {
         const [accounts, departmentsData, positionsData] = await Promise.all([
           Admin_account.getAllAcount(),
           Admin_account.getAllDepartments(),
-          Admin_account.getAllPositions()
+          Admin_account.getAllPositions(),
         ]);
-        
+
         // Map dữ liệu trả về từ API sang format cho table
         const users = (accounts || []).map((user, idx) => ({
           key: user._id || idx,
           id: idx + 1,
           name: user.employeeId?.fullName || '',
           username: user.username,
-          role: user.role,
+          role: user.role?._id || '',
           status: user.status,
         }));
         setData(users);
@@ -142,28 +152,28 @@ const AdminAccount = () => {
       render: role => {
         let color = '';
         let text = '';
-        
+
         switch (role) {
-          case 'admin':
+          case '685442fcf95cad5e7842df55':
             color = 'red';
             text = 'Quản trị viên';
             break;
-          case 'manager':
+          case '685445592f1f5bf10e7a4168':
             color = 'blue';
             text = 'Quản lý';
+            break;
+          case '685445892f1f5bf10e7a417b':
+            color = 'purple';
+            text = 'Quản lý nhân sự';
             break;
           default:
             color = 'green';
             text = 'Nhân viên';
         }
-        
+
         return <Tag color={color}>{text}</Tag>;
       },
-      filters: [
-        { text: 'Quản trị viên', value: 'admin' },
-        { text: 'Quản lý', value: 'manager' },
-        { text: 'Nhân viên', value: 'employee' },
-      ],
+      filters: roles.map(role => ({ text: role.name, value: role._id })),
       onFilter: (value, record) => record.role === value,
     },
     {
@@ -200,13 +210,13 @@ const AdminAccount = () => {
                 label: 'Reset password',
                 onClick: () => showResetPasswordModal(record)
               },
-              {
-                key: 'delete',
-                icon: <DeleteOutlined />,
-                label: 'Xóa',
-                danger: true,
-                onClick: () => showDeleteConfirm(record)
-              }
+              // {
+              //   key: 'delete',
+              //   icon: <DeleteOutlined />,
+              //   label: 'Xóa',
+              //   danger: true,
+              //   onClick: () => showDeleteConfirm(record)
+              // }
             ]
           }}
           trigger={['click']}
@@ -235,7 +245,7 @@ const AdminAccount = () => {
         id: idx + 1,
         name: user.employeeId?.fullName || '',
         username: user.username,
-        role: user.role,
+        role: user.role?.name || '',
         status: user.status,
       }));
       setData(users);
@@ -256,7 +266,7 @@ const AdminAccount = () => {
         const formData = {
           _id: accountDetail._id,
           username: accountDetail.username,
-          role: accountDetail.role,
+          role: accountDetail.role?.name,
           status: accountDetail.status,
           // Thông tin nhân viên
           fullName: accountDetail.employeeId?.fullName,
@@ -283,25 +293,36 @@ const AdminAccount = () => {
     form.validateFields().then(async (values) => {
       setLoading(true);
       try {
-        // Chuyển đổi dữ liệu trước khi gửi lên server
-        const accountData = {
+        // Ensure required fields are present
+        if (!values.status || !values.role || !values.fullName || !values.email) {
+          alert('Vui lòng không để trống thông tin bắt buộc.');
+          return;
+        }
+
+        // Prepare data for update
+        const accountData = { 
           ...values,
           departmentId: values.departmentId ? values.departmentId : null,
           positionId: values.positionId ? values.positionId : null
         };
 
-        // Gọi API cập nhật tài khoản
+        // Log the data to be sent
+        console.log('Updating account with data:', accountData);
+
+        // Call API to update account
         await Admin_account.updateAccount(userToEdit.key, accountData);
+        console.log(accountData.status);
         message.success('Đã cập nhật người dùng thành công!');
         setEditModalVisible(false);
-        // Reload lại danh sách tài khoản
+
+        // Reload account list
         const accounts = await Admin_account.getAllAcount();
         const users = (accounts || []).map((user, idx) => ({
           key: user._id || idx,
           id: idx + 1,
           name: user.employeeId?.fullName || '',
           username: user.username,
-          role: user.role,
+          role: user.role?._id || '',
           status: user.status,
         }));
         setData(users);
@@ -364,9 +385,9 @@ const AdminAccount = () => {
           id: data.length + idx + 1,
           name: row[0] || '',
           username: row[1] || '',
-        //   email: row[2] || '',
-        //   department: row[3] || '',
-        //   position: row[4] || '',
+          //   email: row[2] || '',
+          //   department: row[3] || '',
+          //   position: row[4] || '',
           role: row[5] || 'employee',
           status: row[6] || 'active',
         }));
@@ -384,9 +405,16 @@ const AdminAccount = () => {
       user.name,
       user.username,
       user.email,
-    //   user.department,
-    //   user.position,
-      user.role,
+      user.phone,
+      user.dob,
+      user.gender,
+      user.department,
+      user.position,
+      user.bankAccount,
+      user.bankName,
+      //   user.department,
+      //   user.position,
+      user.role.name,
       user.status
     ]));
     const ws = XLSX.utils.aoa_to_sheet([
@@ -411,8 +439,8 @@ const AdminAccount = () => {
       try {
         const response = await Admin_account.resetPassword(userToReset.key, { password: values.password });
         if (response) {
-        message.success('Đặt lại mật khẩu thành công!');
-        setResetPasswordModalVisible(false);
+          message.success('Đặt lại mật khẩu thành công!');
+          setResetPasswordModalVisible(false);
         }
       } catch (error) {
         console.error('Reset password error:', error);
@@ -425,6 +453,8 @@ const AdminAccount = () => {
       message.error('Vui lòng kiểm tra lại thông tin!');
     });
   };
+
+  
 
   // Thay đổi: Lọc dữ liệu trực tiếp khi searchText thay đổi
   const filteredData = data.filter(record => {
@@ -444,6 +474,10 @@ const AdminAccount = () => {
     addForm.validateFields().then(async (values) => {
       setLoading(true);
       try {
+        if (!values.status || !values.role || !values.fullName || !values.email) {
+          alert('Vui lòng nhập đầy đủ thông tin bắt buộc.');
+          return;
+        }
         // Chuyển đổi dữ liệu trước khi gửi lên server
         const accountData = {
           ...values,
@@ -461,7 +495,7 @@ const AdminAccount = () => {
           id: idx + 1,
           name: user.employeeId?.fullName || '',
           username: user.username,
-          role: user.role,
+          role: user.role?.name || '',
           status: user.status,
         }));
         setData(users);
@@ -475,9 +509,9 @@ const AdminAccount = () => {
 
   return (
     <div className="admin-users-page">
-     
 
-      <Card 
+
+      <Card
         title={
           <Title level={4} className="green-gradient-text" style={{ margin: 0 }}>
             <UserOutlined style={{ marginRight: 8 }} />
@@ -501,29 +535,29 @@ const AdminAccount = () => {
           </Col>
           <Col xs={24} md={16}>
             <Space style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button 
-                icon={<FilterOutlined />} 
+              <Button
+                icon={<FilterOutlined />}
                 style={{ borderRadius: '8px' }}
               >
                 Lọc
               </Button>
-              <Button 
-                icon={<ImportOutlined />} 
+              <Button
+                icon={<ImportOutlined />}
                 style={{ borderRadius: '8px' }}
                 onClick={() => fileInputRef.current && fileInputRef.current.click()}
               >
                 Nhập từ Excel
               </Button>
-              <Button 
-                icon={<ExportOutlined />} 
+              <Button
+                icon={<ExportOutlined />}
                 style={{ borderRadius: '8px' }}
                 onClick={handleExportExcel}
               >
                 Xuất ra Excel
               </Button>
-              <Button 
-                type="primary" 
-                icon={<PlusOutlined />} 
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
                 className="btn-green-theme"
                 style={{ borderRadius: '8px' }}
                 onClick={showAddModal}
@@ -596,13 +630,17 @@ const AdminAccount = () => {
               <Title level={5}>Thông tin tài khoản</Title>
             </Col>
             <Col span={12}>
-          <Form.Item
-            name="username"
-            label="Tên đăng nhập"
-            rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
-          >
-                <Input prefix={<UserOutlined />} placeholder="Nhập tên đăng nhập" />
-          </Form.Item>
+              <Form.Item
+                name="status"
+                label="Trạng thái"
+                rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
+              >
+                <Select placeholder="Chọn trạng thái">
+                  <Select.Option value="active">Đang hoạt động</Select.Option>
+                  <Select.Option value="inactive">Vô hiệu hóa</Select.Option>
+                </Select>
+              </Form.Item>
+
             </Col>
             <Col span={12}>
               <Form.Item
@@ -611,9 +649,11 @@ const AdminAccount = () => {
                 rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
               >
                 <Select placeholder="Chọn vai trò">
-                  <Select.Option value="admin">Quản trị viên</Select.Option>
-                  <Select.Option value="manager">Quản lý</Select.Option>
-                  <Select.Option value="staff">Nhân viên</Select.Option>
+                  {roles.map(role => (
+                    <Select.Option key={role._id} value={role._id}>
+                      {role.name}
+                    </Select.Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>
@@ -636,8 +676,8 @@ const AdminAccount = () => {
             </Col>
             <Col span={12}>
               <Form.Item
-            name="email"
-            label="Email"
+                name="email"
+                label="Email"
                 rules={[
                   { required: true, message: 'Vui lòng nhập email!' },
                   { type: 'email', message: 'Email không hợp lệ!' }
@@ -662,8 +702,8 @@ const AdminAccount = () => {
                 name="dob"
                 label="Ngày sinh"
               >
-                <DatePicker 
-                  style={{ width: '100%' }} 
+                <DatePicker
+                  style={{ width: '100%' }}
                   placeholder="Chọn ngày sinh"
                   format="DD/MM/YYYY"
                 />
@@ -692,9 +732,9 @@ const AdminAccount = () => {
             <Col span={12}>
               <Form.Item
                 name="departmentId"
-            label="Phòng ban"
+                label="Phòng ban"
               >
-                <Select 
+                <Select
                   placeholder="Chọn phòng ban"
                   allowClear
                   showSearch
@@ -705,15 +745,15 @@ const AdminAccount = () => {
                       {dept.name}
                     </Select.Option>
                   ))}
-            </Select>
+                </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="positionId"
-            label="Chức vụ"
+                label="Chức vụ"
               >
-                <Select 
+                <Select
                   placeholder="Chọn chức vụ"
                   allowClear
                   showSearch
@@ -724,33 +764,22 @@ const AdminAccount = () => {
                       {pos.name}
                     </Select.Option>
                   ))}
-            </Select>
+                </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-          <Form.Item
+              <Form.Item
                 name="joinDate"
                 label="Ngày vào làm"
               >
-                <DatePicker 
-                  style={{ width: '100%' }} 
+                <DatePicker
+                  style={{ width: '100%' }}
                   placeholder="Chọn ngày vào làm"
                   format="DD/MM/YYYY"
                 />
-          </Form.Item>
+              </Form.Item>
             </Col>
-            <Col span={12}>
-          <Form.Item
-            name="status"
-            label="Trạng thái"
-            rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
-          >
-            <Select placeholder="Chọn trạng thái">
-              <Select.Option value="active">Đang hoạt động</Select.Option>
-              <Select.Option value="inactive">Vô hiệu hóa</Select.Option>
-            </Select>
-          </Form.Item>
-            </Col>
+
           </Row>
 
           <Divider />
@@ -834,25 +863,31 @@ const AdminAccount = () => {
               <Title level={5}>Thông tin tài khoản</Title>
             </Col>
             <Col span={12}>
-          <Form.Item
-            name="username"
-            label="Tên đăng nhập"
-            rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
-          >
-                <Input prefix={<UserOutlined />} placeholder="Nhập tên đăng nhập" />
-          </Form.Item>
+              <Form.Item
+                name="role"
+                label="Vai trò"
+                rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
+              >
+                <Select placeholder="Chọn vai trò">
+                  {roles.map(role => (
+                    <Select.Option key={role._id} value={role._id}>
+                      {role.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
             </Col>
             <Col span={12}>
-          <Form.Item
-            name="password"
-            label="Mật khẩu"
-                rules={[
-                  { required: true, message: 'Vui lòng nhập mật khẩu!' }, 
-                  { min: 8, message: 'Mật khẩu phải có ít nhất 8 ký tự!' }
-                ]}
-          >
-                <Input.Password prefix={<LockOutlined />} placeholder="Nhập mật khẩu" />
-          </Form.Item>
+              <Form.Item
+                name="status"
+                label="Trạng thái"
+                rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
+              >
+                <Select placeholder="Chọn trạng thái">
+                  <Select.Option value="active">Đang hoạt động</Select.Option>
+                  <Select.Option value="inactive">Vô hiệu hóa</Select.Option>
+                </Select>
+              </Form.Item>
             </Col>
           </Row>
 
@@ -863,7 +898,7 @@ const AdminAccount = () => {
               <Title level={5}>Thông tin cá nhân</Title>
             </Col>
             <Col span={12}>
-          <Form.Item
+              <Form.Item
                 name="fullName"
                 label="Họ và tên"
                 rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
@@ -899,8 +934,8 @@ const AdminAccount = () => {
                 name="dob"
                 label="Ngày sinh"
               >
-                <DatePicker 
-                  style={{ width: '100%' }} 
+                <DatePicker
+                  style={{ width: '100%' }}
                   placeholder="Chọn ngày sinh"
                   format="DD/MM/YYYY"
                 />
@@ -930,27 +965,27 @@ const AdminAccount = () => {
               <Form.Item
                 name="departmentId"
                 label="Phòng ban"
-          >
-            <Select
+              >
+                <Select
                   placeholder="Chọn phòng ban"
                   allowClear
-              showSearch
-              optionFilterProp="children"
+                  showSearch
+                  optionFilterProp="children"
                 >
                   {departments.map(dept => (
                     <Select.Option key={dept._id} value={dept._id}>
                       {dept.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="positionId"
                 label="Chức vụ"
               >
-                <Select 
+                <Select
                   placeholder="Chọn chức vụ"
                   allowClear
                   showSearch
@@ -969,37 +1004,12 @@ const AdminAccount = () => {
                 name="joinDate"
                 label="Ngày vào làm"
               >
-                <DatePicker 
-                  style={{ width: '100%' }} 
+                <DatePicker
+                  style={{ width: '100%' }}
                   placeholder="Chọn ngày vào làm"
                   format="DD/MM/YYYY"
                 />
               </Form.Item>
-            </Col>
-            <Col span={12}>
-          <Form.Item
-            name="role"
-            label="Vai trò"
-            rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
-          >
-            <Select placeholder="Chọn vai trò">
-              <Select.Option value="admin">Quản trị viên</Select.Option>
-              <Select.Option value="manager">Quản lý</Select.Option>
-              <Select.Option value="staff">Nhân viên</Select.Option>
-            </Select>
-          </Form.Item>
-            </Col>
-            <Col span={12}>
-          <Form.Item
-            name="status"
-            label="Trạng thái"
-            rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
-          >
-            <Select placeholder="Chọn trạng thái">
-              <Select.Option value="active">Đang hoạt động</Select.Option>
-              <Select.Option value="inactive">Vô hiệu hóa</Select.Option>
-            </Select>
-          </Form.Item>
             </Col>
           </Row>
 
@@ -1026,6 +1036,8 @@ const AdminAccount = () => {
               </Form.Item>
             </Col>
           </Row>
+
+
         </Form>
       </Modal>
 

@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, Types } from 'mongoose';
 import { Account, AccountDocument } from '../../schemas/account.schema';
 import { Employees, EmployeesDocument } from '../../schemas/employees.schema';
-import { CreateAccount, ResetPassword, UpdateAccount } from './dto/admin_account.dto';
+import { CreateAccount, ResetPassword, UpdateAccount, UpdateStatus } from './dto/admin_account.dto';
 import * as bcrypt from 'bcryptjs';
 import { Departments, DepartmentsDocument } from '../../schemas/departments.schema';
 import { Position, PositionDocument } from '../../schemas/position.schema';
@@ -15,7 +15,7 @@ import {RolePermissionService} from "../auth/role_permission/role_permission.ser
 @Injectable()
 export class AdminAccountService {
   constructor(
-    @InjectModel(Account.name) private userModel: Model<AccountDocument>,
+    @InjectModel(Account.name) private accountModel: Model<AccountDocument>,
     @InjectModel(Employees.name) private employeeModel: Model<EmployeesDocument>,
     @InjectModel(Departments.name) private departmentModel: Model<DepartmentsDocument>,
     @InjectModel(Position.name) private positionModel: Model<PositionDocument>,
@@ -24,16 +24,17 @@ export class AdminAccountService {
 
   async create(createAccount: CreateAccount) {
     try {
-      const { username, password, role, status, ...employeeData } = createAccount;
+      const {role, status, ...employeeData } = createAccount;
 
       // Kiểm tra username đã tồn tại chưa    
-      const existed = await this.userModel.findOne({ username }).exec();
-      if (existed) throw new BadRequestException(`Username: ${username} đã tồn tại`);
 
       // Kiểm tra password hợp lệ
-      if (!password || typeof password !== 'string' || password.length < 8) {
-        throw new BadRequestException('Mật khẩu phải có ít nhất 8 ký tự');
-      }
+      // if (!password || typeof password !== 'string' || password.length < 8) {
+      //   throw new BadRequestException('Mật khẩu phải có ít nhất 8 ký tự');
+      // }
+      // if(!role || !status || !employeeData.fullName || !employeeData.email) {
+      //   throw new BadRequestException('Vui lòng nhập đầy đủ thông tin bắt buộc.');
+      // }
 
       // Kiểm tra email đã tồn tại chưa
       const existedEmail = await this.employeeModel.findOne({ email: employeeData.email }).exec();
@@ -42,6 +43,7 @@ export class AdminAccountService {
       // Chuyển đổi departmentId và positionId thành ObjectId nếu có
       const departmentId = employeeData.departmentId ? new Types.ObjectId(employeeData.departmentId) : null;
       const positionId = employeeData.positionId ? new Types.ObjectId(employeeData.positionId) : null;
+      const roleId = role ? new Types.ObjectId(role) : null;
 
       // Tạo thông tin nhân viên mới
       const newEmployee = await this.employeeModel.create({
@@ -54,7 +56,6 @@ export class AdminAccountService {
         positionId: positionId,
         joinDate: employeeData.joinDate || new Date(),
         resignDate: employeeData.resignDate || null,
-        status: 'active',
         bankAccount: employeeData.bankAccount || null,
         bankName: employeeData.bankName || null,
         document: employeeData.document || null,
@@ -65,19 +66,20 @@ export class AdminAccountService {
         throw new BadRequestException('Không thể tạo thông tin nhân viên');
       }
 
+      
       // Tạo tài khoản với thông tin nhân viên vừa tạo
-      const hash = await bcrypt.hash(password, 10);
-      const account = await this.userModel.create({
-        username,
+      const hash = await  this.generateRandomPassword(8);
+      const name = await this.generateUserName(employeeData.fullName);
+      const account = await this.accountModel.create({
+        username: name,
         password: hash,
-        role,
+        role: roleId,
         status,
         employeeId: newEmployee._id
       });
 
       if (!account) {
         // Nếu tạo account thất bại, xóa employee đã tạo
-        await this.employeeModel.findByIdAndDelete(newEmployee._id);
         throw new BadRequestException('Không thể tạo tài khoản');
       }
 
@@ -92,19 +94,27 @@ export class AdminAccountService {
   }
 
   async findAll(query?: any) {
-    return this.userModel.find()
+    return this.accountModel.find()
       .populate({
         path: 'employeeId',
         select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName'
+      })
+      .populate({
+        path: 'role',
+        select: 'name'
       })
       .exec();
   }
 
   async findOne(id: string) {
-    const admin = await this.userModel.findById(id)
+    const admin = await this.accountModel.findById(id)
       .populate({
         path: 'employeeId',
         select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName'
+      })
+      .populate({
+        path: 'role',
+        select: 'name'
       })
       .exec();
     if (!admin) throw new NotFoundException('Admin not found');
@@ -113,19 +123,13 @@ export class AdminAccountService {
 
   async update(id: string, updateAdminDto: UpdateAccount) {
     try {
-      const { username, role, status, ...employeeData } = updateAdminDto;
+      const { role, status, ...employeeData } = updateAdminDto;
 
       // Kiểm tra username đã tồn tại chưa (nếu có thay đổi username)
-      if (username) {
-        const existed = await this.userModel.findOne({ 
-          username, 
-          _id: { $ne: id } 
-        }).exec();
-        if (existed) throw new BadRequestException(`Username: ${username} đã tồn tại`);
-      }
+    
 
       // Lấy thông tin tài khoản hiện tại
-      const currentAccount = await this.userModel.findById(id).exec();
+      const currentAccount = await this.accountModel.findById(id).exec();
       if (!currentAccount) throw new NotFoundException('Không tìm thấy tài khoản');
 
       // Cập nhật thông tin nhân viên
@@ -133,7 +137,7 @@ export class AdminAccountService {
         // Chuyển đổi departmentId và positionId thành ObjectId nếu có
         const departmentId = employeeData.departmentId ? new Types.ObjectId(employeeData.departmentId) : null;
         const positionId = employeeData.positionId ? new Types.ObjectId(employeeData.positionId) : null;
-
+       
         // Cập nhật thông tin nhân viên
         const updatedEmployee = await this.employeeModel.findByIdAndUpdate(
           currentAccount.employeeId,
@@ -148,6 +152,7 @@ export class AdminAccountService {
             joinDate: employeeData.joinDate || null,
             bankAccount: employeeData.bankAccount || null,
             bankName: employeeData.bankName || null,
+            document: employeeData.document || null,
           },
           { new: true }
         ).exec();
@@ -156,14 +161,18 @@ export class AdminAccountService {
           throw new BadRequestException('Không thể cập nhật thông tin nhân viên');
         }
       }
-
+      const roleId = role ? new Types.ObjectId(role) : null;
+      let name = currentAccount.username;
+      if(employeeData.fullName) {
+        name = await this.generateUserName(employeeData.fullName);
+      }
       // Cập nhật thông tin tài khoản
-      const updatedAccount = await this.userModel.findByIdAndUpdate(
+      const updatedAccount = await this.accountModel.findByIdAndUpdate(
         id,
         {
-          username: username || currentAccount.username,
-          role: role || currentAccount.role,
-          status: status || currentAccount.status,
+          username: name,
+          role: roleId || currentAccount.role,
+          status: status,
         },
         { new: true }
       ).populate('employeeId').exec();
@@ -179,11 +188,11 @@ export class AdminAccountService {
   }
 
   async resetPassword(id: string, updateAdminDto: ResetPassword) {
-    if (updateAdminDto.password) {
-      updateAdminDto.password = await bcrypt.hash(updateAdminDto.password, 10);
-    }
+    // if (updateAdminDto.password) {
+    //   updateAdminDto.password = await bcrypt.hash(updateAdminDto.password, 10);
+    // }
 
-    const admin = await this.userModel.findOneAndUpdate(
+    const admin = await this.accountModel.findOneAndUpdate(
       { _id: id },
       updateAdminDto,
       { new: true },
@@ -192,9 +201,18 @@ export class AdminAccountService {
     return admin;
   }
 
+  async updateStatus(id: string, updateAdminDto: UpdateStatus) {
+    const admin = await this.accountModel.findOneAndUpdate(
+      { _id: id },
+      updateAdminDto,
+      { new: true },
+    ).exec();
+    if (!admin) throw new NotFoundException('Admin not found');
+    return admin;
+  }
   async remove(id: string) {
     if (mongoose.isValidObjectId(id)) {
-      const admin = await this.userModel.findOneAndDelete({ _id: id }).exec();
+      const admin = await this.accountModel.findOneAndDelete({ _id: id }).exec();
       if (!admin) throw new NotFoundException('Admin not found');
       return admin;
     }
@@ -244,7 +262,7 @@ export class AdminAccountService {
       if (!newEmployee) {
         throw new Error('Không thể tạo thông tin nhân viên');
       }
-      const newAccount = await this.userModel.create({
+      const newAccount = await this.accountModel.create({
         username: username,
         password: password,
         role: role._id,
@@ -264,7 +282,7 @@ export class AdminAccountService {
     const middleAndFirst = parts.slice(0, parts.length - 1);
     const initials = middleAndFirst.map(word => word[0]).join("");
     const baseUserName = lastName + initials;
-    const existingUsers: { username: string }[] = await this.userModel
+    const existingUsers: { username: string }[] = await this.accountModel
         .find({ username: new RegExp(`^${baseUserName}\\d*$`, 'i') })
         .select('username')
         .lean();
