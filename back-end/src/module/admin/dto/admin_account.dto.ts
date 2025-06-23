@@ -1,18 +1,17 @@
 import { IsEmpty, IsMongoId, IsNotEmpty, IsString, IsEmail, IsOptional, IsDate, IsEnum } from "class-validator";
+import e from "express";
 import { ObjectId, Types } from "mongoose";
 
 export class CreateAccount {
-    @IsNotEmpty({message: 'Tên người dùng không được để trống'})
-    @IsString()
-    username: string;
+    // @IsString()
+    // username: string;
 
-    @IsNotEmpty({message: 'Mật khẩu người dùng không được để trống'})
-    @IsString()
-    password: string;
+    // @IsString()
+    // password: string;
 
-    @IsNotEmpty({message: 'Vai trò không được để trống'})
-    @IsString()
-    role: string;
+    @IsOptional()
+    @IsMongoId({message: 'ID phòng ban không hợp lệ'})
+    role?: Types.ObjectId;
 
     @IsNotEmpty({message: 'Trạng thái không được để trống'})
     @IsString()
@@ -81,14 +80,17 @@ export class UpdateAccount {
     @IsString()
     username?: string;
 
+    
+    
     @IsOptional()
-    @IsString()
-    @IsEnum(['admin', 'manager', 'staff'])
-    role?: string;
+    @IsEnum(['admin', 'manager', 'employee'])
+    @IsMongoId({message: 'ID phòng ban không hợp lệ'})
+    role?: Types.ObjectId;
 
+   
     @IsOptional()
-    @IsString()
     @IsEnum(['active', 'inactive'])
+    @IsString()
     status?: string;
 
     // Employee fields
@@ -132,10 +134,19 @@ export class UpdateAccount {
     @IsOptional()
     @IsString()
     bankName?: string;
+
+    @IsOptional()
+    @IsString()
+    document?: string;
 }
 
 export class ResetPassword {
     @IsNotEmpty({message: 'Mật khẩu không được để trống'})
     @IsString()
     password: string;
+}
+export class UpdateStatus {
+    @IsNotEmpty({message: 'Trạng thái không được để trống'})
+    @IsString()
+    status: string;
 }
