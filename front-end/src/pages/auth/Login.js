@@ -16,6 +16,7 @@ import Loading from "../../components/loading/Loading";
 import { MESSAGE } from "../../constants/Message";
 import { API_URL } from "../../config";
 import AuthService from "../../services/AuthService";
+import {jwtDecode} from "jwt-decode";
 const { Title, Text } = Typography;
 
 const Login = () => {
@@ -26,10 +27,10 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if already logged in on mount and redirect if needed
   useEffect(() => {
     if (isAuthenticated()) {
       const role = localStorage.getItem("role");
+
       let redirectTo = "/employee/dashboard";
       if (role === "admin") redirectTo = "/admin/dashboard";
       else if (role === "hr") redirectTo = "/employee/dashboard";
@@ -40,37 +41,31 @@ const Login = () => {
   }, [navigate]);
 
   const handleLogin = async (values) => {
-    console.log("FORM : ", formData);
     setLoading(true);
     setError("");
-
     try {
       const response = await AuthService.login(formData);
-      console.log("Login response:", response);
       const data = response.data;
-
       if (response.status == 200 && data) {
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("token", data.accessToken); // Store access token too
-      localStorage.setItem("refreshToken", data.refreshToken);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("role", data.user.role);
+        login(data);
         message.success(MESSAGE.LOGIN_SUCCESS);
-        const role = data.user.role;
+        const role = localStorage.getItem("role");
+        if( !role) {
+            message.error("Không tìm thấy vai trò người dùng. Vui lòng đăng nhập lại.");
+            return;
+        }
         let redirectTo = "/employee/dashboard";
         if (role === "admin") redirectTo = "/admin/dashboard";
         else if (role === "hr") redirectTo = "/employee/dashboard";
         else if (role === "manager") redirectTo = "/employee/dashboard";
 
         setTimeout(() => {
-          console.log("User role before nagvifate: ", role);
           navigate(redirectTo, { replace: true });
         }, 100);
       } else {
         setError(response.message || "Đăng nhập thất bại");
       }
     } catch (err) {
-      console.error("Login error:", err);
       setError("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
     } finally {
       setLoading(false);

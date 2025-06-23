@@ -1,3 +1,5 @@
+import {jwtDecode} from "jwt-decode";
+
 export const getCurrentUser = () => {
   try {
     const user = localStorage.getItem("user");
@@ -9,16 +11,17 @@ export const getCurrentUser = () => {
 };
 
 export const logout = () => {
-  localStorage.removeItem("user");
-  localStorage.removeItem("token");
-  localStorage.removeItem("role");
-  localStorage.removeItem("refreshToken");
+  localStorage.clear();
 };
 
-export const login = (userData) => {
-  localStorage.setItem("user", JSON.stringify(userData));
-  localStorage.setItem("token", userData.accessToken || "");
-  localStorage.setItem("role", userData.user?.role || "");
+export const login = (loginData) => {
+  const decode = jwtDecode(loginData.accessToken);
+  const permissionList = decode?.permissions.map(item => item.path);
+  localStorage.setItem("user", JSON.stringify(loginData.user));
+  localStorage.setItem("accessToken", loginData.accessToken || "");
+  localStorage.setItem("refreshToken", loginData.refreshToken || "");
+  localStorage.setItem("role", decode?.role.code);
+  localStorage.setItem("permissions", JSON.stringify(permissionList));
 };
 
 export const isAuthenticated = () => {

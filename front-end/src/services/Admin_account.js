@@ -1,4 +1,3 @@
-import apiConfig from "./APIConfig.js";
 import {fetchWithAuth, handleApiError} from "../utils/FetchWithAuth";
 
 const Admin_account = {
@@ -21,7 +20,7 @@ const Admin_account = {
 
   async createAccount(Data) {
     try {
-      return await fetchWithAuth("/admin-accounts", 'POST', Data);
+      return await fetchWithAuth('/admin-accounts', 'POST', Data);
     } catch (e) {
       throw handleApiError(e);
     }
@@ -29,14 +28,14 @@ const Admin_account = {
 
   async updateAccount(id, Data) {
     try {
-      return await fetchWithAuth(`/admin-accounts/${id}`, 'PATCH', Data);
+      return await fetchWithAuth(`/admin-accounts/${id}`, 'PUT', Data);
     } catch (e) {
       throw handleApiError(e);
     }
   },
   async resetPassword(id, Data) {
     try {
-      return await fetchWithAuth(`/admin-accounts/${id}/reset-password`, 'PATCH', Data);
+      return await fetchWithAuth(`/admin-accounts/${id}/reset-password`, 'PUT', Data);
     } catch (e) {
       throw handleApiError(e);
     }
@@ -61,6 +60,13 @@ const Admin_account = {
   async getAllPositions() {
     try {
       return await fetchWithAuth(`/admin-accounts/positions`, 'GET');
+    } catch (e) {
+      throw handleApiError(e);
+    }
+  },
+  async getAllRoles() {
+    try {
+      return await fetchWithAuth('/role-permission/role', 'GET');
     } catch (e) {
       throw handleApiError(e);
     }

@@ -12,7 +12,7 @@ export class TypeRequestService {
 
     async getTypeReqByRole(role: string){
         try{
-            if(role !== 'hr' && role !== 'staff' && role !== 'manager' && role !== 'admin'){
+            if(role !== 'hr' && role !== 'employee' && role !== 'manager' && role !== 'admin'){
                 throw new Error("Invalid role");
             }
             const data = await this.typeRequestModel.find({role: role}).exec();
