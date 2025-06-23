@@ -15,6 +15,7 @@ export class RequestService {
 
     async create(requestData: CreateRequestDto) {
         const newRequest = new this.requestModel(requestData);
+        newRequest.attachments = requestData.attachments ? requestData.attachments.map(item => item._id) : [];
         await newRequest.save()
         return this.findById(newRequest._id);
     }
@@ -28,11 +29,11 @@ export class RequestService {
     }
 
     async findByTypeCode(typeRequestId: Types.ObjectId) {
-        return await this.requestModel.find({typeRequest: typeRequestId}).populate('employeeId').populate('typeRequest').exec();
+        return await this.requestModel.find({typeRequest: typeRequestId}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
     }
 
     async findByEmployeeId(employeeId: string) {
-        return await this.requestModel.find({employeeId: employeeId}).populate('employeeId').populate('typeRequest').exec();
+        return await this.requestModel.find({employeeId: employeeId}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
     }
 
     async update(id: string, updateData: CreateRequestDto) {

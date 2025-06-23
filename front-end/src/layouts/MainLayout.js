@@ -294,7 +294,7 @@ const MainLayout = () => {
     const getUserRole = (role) => {
         if (role === "employee") return "Nhân viên";
         if (role === "hr") return "Hành chính - nhân sự";
-        if (role === "manage") return "Quản lý";
+        if (role === "manager") return "Quản lý";
         if (role === "admin") return "Quản trị";
     }
 
@@ -341,6 +341,7 @@ const MainLayout = () => {
                                 marginRight: "16px",
                             }}
                         >
+                            <UserOutlined />
                             {/*{getUserRole(role) !== null ? getUserRole(role).slice(0, 1) : "E"}*/}
                         </div>
                         <div>

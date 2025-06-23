@@ -57,6 +57,7 @@ import requestService from "../../services/RequestService";
 import admin_account from "../../services/Admin_account";
 import {formatDate} from "../../utils/format";
 import moment from 'moment';
+import UploadFileComponent from "../../components/file-list/FileList";
 
 const {Title, Text, Paragraph} = Typography;
 const {Option} = Select;
@@ -228,6 +229,14 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = []}) 
                                 </Select>
                             </Form.Item>
                         </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'reason']}
+                                label="Chức vụ"
+                                hidden={true}
+                            >
+                            </Form.Item>
+                        </Col>
                     </Row>
 
                 </>
@@ -240,7 +249,8 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = []}) 
                     phone: '',
                     department: undefined,
                     position: undefined,
-                    note: ''
+                    note: '',
+                    reason: ''
                 }
             }
         }
@@ -265,6 +275,8 @@ const Requests = () => {
     const [departments, setDepartments] = useState([]);
     const [positions, setPositions] = useState([]);
     const [isEdit, setIsEdit] = useState(false);
+    const [fileResponse, setFileResponse] = useState([]);
+
 
     useEffect(() => {
         try {
@@ -408,7 +420,8 @@ const Requests = () => {
                         phone: request.dataReq.phone || '',
                         department: request.dataReq.department || '',
                         position: request.dataReq.position || '',
-                        note: request.dataReq.note || ''
+                        note: request.dataReq.note || '',
+                        reason: request.dataReq.reason || ''
                     }
                 })
             } else if (request.typeRequest.code === "LEAVE_REQUEST") {
@@ -434,6 +447,12 @@ const Requests = () => {
     const handleFormSubmit = async (values) => {
         try {
             let body = values;
+            console.log(fileResponse)
+            if(fileResponse.length > 0){
+                body.attachments = fileResponse;
+            }else{
+                body.attachments = [];
+            }
             if (body.requestId) {
                 await requestService.updateRequest(body);
             } else {
@@ -475,6 +494,7 @@ const Requests = () => {
                     phone: undefined,
                     department: undefined,
                     position: undefined,
+                    reason: undefined
                 }
             }
         };
@@ -935,11 +955,8 @@ const Requests = () => {
 
                     <Form.Item
                         name="attachments"
-                        label="Tài liệu đính kèm"
                     >
-                        <Upload listType="picture" multiple>
-                            <Button icon={<UploadOutlined/>}>Tải lên tập tin</Button>
-                        </Upload>
+                        <UploadFileComponent uploadFileSuccess={setFileResponse}/>
                     </Form.Item>
                     {selectedRequestType && (
                         <>
