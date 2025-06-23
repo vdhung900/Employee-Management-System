@@ -100,3 +100,4 @@ export const fetchFileWithAuth = async (
   const fullEndpoint = `/files${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
   return fetchWithAuth(fullEndpoint, method, body, includeUserId, customHeaders);
 };
+

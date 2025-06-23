@@ -17,7 +17,7 @@ export class Account extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: Roles.name })
   role: Types.ObjectId;
 
-  @Prop({ default: "00" })
+  @Prop({ default: "active" })
   status: string;
 
   @Prop({ type: Types.ObjectId, ref: Employees.name })
