@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, List, Button, Spin, message, Typography, Popconfirm, Space } from 'antd';
-import { UploadOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons';
+import {UploadOutlined, DeleteOutlined, DownloadOutlined, FileOutlined} from '@ant-design/icons';
 import FileService from "../../services/FileService";
 
 const { Text } = Typography;
-const API_BASE = 'http://localhost:9123/files';
 
-export default function UploadFileComponent({files = [], uploadFileSuccess}) {
+export default function UploadFileComponent({files = [], uploadFileSuccess, isSingle = false}) {
     const [fileList, setFileList] = useState([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchFileList();
-    }, []);
+    }, [files]);
 
     const fetchFileList = () => {
         setLoading(true);
@@ -33,11 +32,10 @@ export default function UploadFileComponent({files = [], uploadFileSuccess}) {
             const response = await FileService.uploadFile(formData)
             if (response.success) {
                 message.success('Tải file lên thành công!');
-                let file = fileList;
-                file.push(response.data)
-                setFileList(file);
+                const newFileList = [...fileList, response.data];
+                setFileList(newFileList);
                 if(uploadFileSuccess){
-                    uploadFileSuccess(fileList);
+                    uploadFileSuccess(newFileList);
                 }
             }
         } catch (error) {
@@ -47,19 +45,43 @@ export default function UploadFileComponent({files = [], uploadFileSuccess}) {
         }
     };
 
-    const handleDownload = (key) => {
-        window.open(`${API_BASE}/${key}`, '_blank');
+    const handleDownload = async (key) => {
+        setLoading(true);
+        try {
+            const blob = await FileService.getFile(key)
+            if(blob){
+                const url = window.URL.createObjectURL(blob)
+                const link = document.createElement('a');
+                link.href = url;
+                const fileItem = fileList.find(item => item.key === key);
+                link.download = fileItem ? fileItem.originalName : 'downloadFile';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+                message.success('Tải file thành công')
+            }else{
+                message.error('Tải file thất bại')
+            }
+        } catch (error) {
+            message.error('Tải file thất bại');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDelete = async (key) => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE}/${key}`, {
-                method: 'DELETE',
-            });
-            if (!response.ok) throw new Error('Delete failed');
-            message.success('Xóa file thành công!');
-            await fetchFileList();
+            const response = await FileService.deleteFile(key)
+            if(response.success){
+                message.success('Xóa file thành công!');
+                const newFileList = fileList.filter(item => item.key !== key);
+                setFileList(newFileList);
+                if(uploadFileSuccess){
+                    uploadFileSuccess(newFileList);
+                }
+            }
         } catch (error) {
             message.error('Lỗi xóa file');
         } finally {
@@ -75,9 +97,9 @@ export default function UploadFileComponent({files = [], uploadFileSuccess}) {
                     handleUpload(file);
                     setTimeout(() => onSuccess && onSuccess('ok'), 0);
                 }}
-                disabled={loading}
+                disabled={loading || (isSingle && fileList.length > 0)}
             >
-                <Button icon={<UploadOutlined />} size="small" style={{ fontSize: 13, marginBottom: 8 }} loading={loading}>
+                <Button icon={<UploadOutlined />} size="small" style={{ fontSize: 13, marginBottom: 8 }} loading={loading} disabled={loading || (isSingle && fileList.length > 0)} >
                     Chọn file
                 </Button>
             </Upload>
@@ -108,7 +130,7 @@ export default function UploadFileComponent({files = [], uploadFileSuccess}) {
                                 </Popconfirm>
                             ]}
                         >
-                            <Text style={{ fontSize: 13 }}>{key.originalName}</Text>
+                            <Text style={{ fontSize: 13 }}><FileOutlined/> {key.originalName}</Text>
                         </List.Item>
                     )}
                 />

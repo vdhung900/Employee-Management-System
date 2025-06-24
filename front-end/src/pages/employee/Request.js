@@ -26,7 +26,7 @@ import {
     Drawer,
     Timeline,
     List,
-    Radio
+    Radio, message
 } from 'antd';
 import {
     SearchOutlined,
@@ -441,6 +441,7 @@ const Requests = () => {
     const handleCancel = () => {
         setIsModalVisible(false);
         setSelectedRequestType(null);
+        setFileResponse([])
         setIsEdit(false);
     };
 
@@ -454,18 +455,26 @@ const Requests = () => {
                 body.attachments = [];
             }
             if (body.requestId) {
-                await requestService.updateRequest(body);
+                const response = await requestService.updateRequest(body);
+                if(response.success) {
+                    message.success(response.message);
+                }
             } else {
                 const user = JSON.parse(localStorage.getItem("user"));
                 body.employeeId = user.employeeId;
-                await requestService.createRequest(body);
+                const response = await requestService.createRequest(body);
+                if(response.success) {
+                    message.success(response.message);
+                }
             }
+        } catch (e) {
+            message.error("Lỗi khi lưu thông tin")
+        }finally {
             loadDataReq();
             setIsModalVisible(false);
+            setFileResponse([])
             form.resetFields();
             setSelectedDataType(null);
-        } catch (e) {
-
         }
     };
 
@@ -956,7 +965,7 @@ const Requests = () => {
                     <Form.Item
                         name="attachments"
                     >
-                        <UploadFileComponent uploadFileSuccess={setFileResponse}/>
+                        <UploadFileComponent uploadFileSuccess={setFileResponse} isSingle={true} files={fileResponse}/>
                     </Form.Item>
                     {selectedRequestType && (
                         <>
