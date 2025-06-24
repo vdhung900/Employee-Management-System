@@ -410,7 +410,9 @@ const Requests = () => {
                 typeCode: request.typeRequest.code,
                 priority: request.priority,
                 note: request.note,
+                attachments: request.attachments
             });
+            setFileResponse(request.attachments)
             if (request.typeRequest.code === "ACCOUNT_CREATE_REQUEST") {
                 form.setFieldsValue({
                     dataReq: {

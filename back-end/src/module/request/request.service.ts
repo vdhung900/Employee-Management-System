@@ -4,12 +4,14 @@ import {Requests, RequestsDocument} from "../../schemas/requests.schema";
 import {Model, Types} from "mongoose";
 import {typeRequest, typeRequestDocument} from "../../schemas/typeRequestCategory.schema";
 import {CreateRequestDto} from "./dto/createRequest.dto";
+import {UploadService} from "../minio/minio.service";
 
 @Injectable()
 export class RequestService {
     constructor(
         @InjectModel(Requests.name) private readonly requestModel: Model<RequestsDocument>,
         @InjectModel(typeRequest.name) private readonly typeRequestModel: Model<typeRequestDocument>,
+        private readonly uploadService: UploadService
     ) {
     }
 
@@ -40,6 +42,17 @@ export class RequestService {
         const data = await this.requestModel.findById(id).populate('employeeId').populate('typeRequest').exec();
         if (!data) {
             throw new Error('Request not found');
+        }
+        if(updateData.attachments.length > 0){
+            const dataRes = await this.uploadService.saveAndReplace(updateData.attachments);
+            data.attachments = Array.isArray(dataRes)
+                ? dataRes
+                    .filter(item => item && item._id)
+                    .map(item => new Types.ObjectId(item._id as string)
+                    )
+                : [];
+        }else{
+            data.attachments = [];
         }
         data.priority = updateData.priority;
         data.note = updateData.note;
