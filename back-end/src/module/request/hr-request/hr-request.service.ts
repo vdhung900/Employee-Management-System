@@ -83,8 +83,10 @@ export class HrRequestService {
                 throw new Error("Type Request not found");
             }
             if(req.attachments.length > 0){
-                const dataRes = await this.uploadService.createNewDocument(req.attachments);
+                const dataRes = await this.uploadService.saveAndReplace(req.attachments);
                 req.attachments = dataRes;
+            }else{
+                req.attachments = [];
             }
             req.typeRequest = new Types.ObjectId(typeRequest?.id);
             req.status = "Pending";
