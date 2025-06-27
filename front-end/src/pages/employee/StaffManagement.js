@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Card,
     Typography,
@@ -55,10 +55,11 @@ import {
     InfoCircleOutlined
 } from '@ant-design/icons';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
+import Hr_Employee from '../../services/Hr_Employee';
+import Admin_account from '../../services/Admin_account';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 const StaffManagement = () => {
     const isHR = true;
@@ -75,104 +76,54 @@ const StaffManagement = () => {
     const [timeRange, setTimeRange] = useState(['', '']);
     const [activityModalVisible, setActivityModalVisible] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [coefficient, setCoefficient] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [positions, setPositions] = useState([]);
+    const [employees, setEmployees] = useState([]);
 
-    // Sample data
-    const employees = [
-        {
-            id: 1,
-            name: 'Nguyễn Văn A',
-            employeeId: 'EMP001',
-            email: 'nguyenvana@example.com',
-            phone: '0912345678',
-            position: 'Frontend Developer',
-            department: 'Engineering',
-            joinDate: '2021-05-01',
-            status: 'active',
-            contractType: 'Full-time',
-            contractEnd: '2024-05-01',
-        },
-        {
-            id: 2,
-            name: 'Trần Thị B',
-            employeeId: 'EMP002',
-            email: 'tranthib@example.com',
-            phone: '0923456789',
-            position: 'UI/UX Designer',
-            department: 'Design',
-            joinDate: '2021-06-15',
-            status: 'active',
-            contractType: 'Full-time',
-            contractEnd: '2023-06-15',
-        },
-        {
-            id: 3,
-            name: 'Lê Văn C',
-            employeeId: 'EMP003',
-            email: 'levanc@example.com',
-            phone: '0934567890',
-            position: 'Project Manager',
-            department: 'Management',
-            joinDate: '2020-10-01',
-            status: 'active',
-            contractType: 'Full-time',
-            contractEnd: '2023-10-01',
-        },
-        {
-            id: 4,
-            name: 'Phạm Thị D',
-            employeeId: 'EMP004',
-            email: 'phamthid@example.com',
-            phone: '0945678901',
-            position: 'Accountant',
-            department: 'Finance',
-            joinDate: '2022-01-15',
-            status: 'leave',
-            contractType: 'Part-time',
-            contractEnd: '2023-01-15',
-        },
-        {
-            id: 5,
-            name: 'Hoàng Văn E',
-            employeeId: 'EMP005',
-            email: 'hoangvane@example.com',
-            phone: '0956789012',
-            position: 'Receptionist',
-            department: 'Admin',
-            joinDate: '2022-03-01',
-            status: 'inactive',
-            contractType: 'Contract',
-            contractEnd: '2023-06-01',
-        },
-    ];
+    // // Sample data
 
-    const departments = [
-        'Engineering',
-        'Design',
-        'Sales',
-        'Marketing',
-        'Finance',
-        'HR',
-        'Management',
-        'Admin',
-        'Customer Support'
-    ];
 
-    const positions = [
-        'Frontend Developer',
-        'Backend Developer',
-        'UI/UX Designer',
-        'Project Manager',
-        'Sales Representative',
-        'Marketing Specialist',
-        'Accountant',
-        'HR Specialist',
-        'Manager',
-        'Receptionist',
-        'Customer Support'
-    ];
+
+
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await Admin_account.getAllPositions();
+                const response1 = await Admin_account.getAllDepartments();
+                const response2 = await Hr_Employee.getAllEmployee();
+                const response3 = await Hr_Employee.getAllCoefficient();
+
+                const departmentsData = response1.data;
+                const positionsData = response.data;
+
+                // Map departmentId to department name for each employee
+                const employeesData = response2.data.map(employee => {
+                    return {
+                        ...employee,
+                        department: employee.departmentId.name,
+                        position: employee.positionId.name,
+                    };
+                });
+
+                setCoefficient(response3.data);
+                setEmployees(employeesData);
+                setDepartments(departmentsData);
+                setPositions(positionsData);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+
+        fetchData();
+    }, []);
+
+    
 
     const getStatusColor = (status) => {
-        switch(status) {
+        switch (status) {
             case 'active': return 'success';
             case 'inactive': return 'error';
             case 'leave': return 'warning';
@@ -181,7 +132,7 @@ const StaffManagement = () => {
     };
 
     const getStatusLabel = (status) => {
-        switch(status) {
+        switch (status) {
             case 'active': return 'Đang làm việc';
             case 'inactive': return 'Nghỉ việc';
             case 'leave': return 'Nghỉ phép';
@@ -223,28 +174,17 @@ const StaffManagement = () => {
         form.resetFields();
     };
 
-    const confirmDelete = (employee) => {
-        Modal.confirm({
-            title: 'Xác nhận xóa nhân viên',
-            content: `Bạn có chắc chắn muốn xóa nhân viên ${employee.name}?`,
-            okText: 'Xóa',
-            okType: 'danger',
-            cancelText: 'Hủy',
-            onOk() {
-                console.log('Deleted employee:', employee);
-                // Here you would handle deleting the employee
-            },
-        });
-    };
+
+    
 
     const columns = [
         {
             title: 'Nhân viên',
             dataIndex: 'name',
             key: 'name',
-            render: (text, record) => (
+            render: (text, record, index) => (
                 <Space>
-                    <Avatar style={{ backgroundColor: '#722ed1' }}>{text.charAt(0)}</Avatar>
+                    <Avatar style={{ backgroundColor: '#722ed1' }}>{index + 1}</Avatar>
                     <div>
                         <div style={{ fontWeight: 'bold' }}>{text}</div>
                         <Text type="secondary">{record.employeeId}</Text>
@@ -255,7 +195,6 @@ const StaffManagement = () => {
             filteredValue: searchText ? [searchText] : null,
             onFilter: (value, record) =>
                 record.name.toLowerCase().includes(value.toLowerCase()) ||
-                record.employeeId.toLowerCase().includes(value.toLowerCase()) ||
                 record.position.toLowerCase().includes(value.toLowerCase()) ||
                 record.department.toLowerCase().includes(value.toLowerCase()) ||
                 record.email.toLowerCase().includes(value.toLowerCase()),
@@ -274,13 +213,15 @@ const StaffManagement = () => {
             title: 'Phòng ban',
             dataIndex: 'department',
             key: 'department',
-            filters: departments.map(dept => ({ text: dept, value: dept })),
+            filters: departments.map(dept => ({ text: dept.name, value: dept.name })),
             onFilter: (value, record) => record.department === value,
         },
         {
             title: 'Vị trí',
             dataIndex: 'position',
             key: 'position',
+            filters: positions.map(pos => ({ text: pos.name, value: pos.name })),
+            onFilter: (value, record) => record.position === value,
         },
         {
             title: 'Trạng thái',
@@ -315,12 +256,7 @@ const StaffManagement = () => {
                                 icon={<EditOutlined />}
                                 onClick={() => showModal('edit', record)}
                             />
-                            <Button
-                                type="text"
-                                danger
-                                icon={<DeleteOutlined />}
-                                onClick={() => confirmDelete(record)}
-                            />
+                           
                         </>
                     )}
                     {isManager && (
@@ -362,111 +298,95 @@ const StaffManagement = () => {
             >
                 <Spin spinning={loading}>
                     <ThreeDContainer>
-                        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-                            <TabPane
-                                tab={<span><TeamOutlined /> Tất cả nhân viên</span>}
-                                key="1"
-                            >
-                                <Card>
-                                    <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-                                        <Space>
-                                            <Input
-                                                placeholder="Tìm kiếm nhân viên, ID, phòng ban..."
-                                                prefix={<SearchOutlined />}
-                                                style={{ width: 300 }}
-                                                value={searchText}
-                                                onChange={e => setSearchText(e.target.value)}
-                                                allowClear
-                                            />
-                                            <Select
-                                                style={{ width: 200 }}
-                                                placeholder="Phòng ban"
-                                                value={filterDepartment}
-                                                onChange={setFilterDepartment}
-                                            >
-                                                <Option value="all">Tất cả phòng ban</Option>
-                                                {departments.map(dept => (
-                                                    <Option key={dept} value={dept}>{dept}</Option>
-                                                ))}
-                                            </Select>
-                                            <Select
-                                                style={{ width: 200 }}
-                                                placeholder="Trạng thái"
-                                                value={filterStatus}
-                                                onChange={setFilterStatus}
-                                            >
-                                                <Option value="all">Tất cả trạng thái</Option>
-                                                <Option value="active">Đang làm việc</Option>
-                                                <Option value="inactive">Nghỉ việc</Option>
-                                                <Option value="leave">Nghỉ phép</Option>
-                                            </Select>
-                                        </Space>
-                                        <Space>
-                                            {isHR && (
-                                                <>
-                                                    <Button icon={<FilterOutlined />}>
-                                                        Lọc
-                                                    </Button>
-                                                    <Button icon={<ExportOutlined />}>
-                                                        Export
-                                                    </Button>
-                                                    <Button
-                                                        type="primary"
-                                                        icon={<UserAddOutlined />}
-                                                        onClick={() => showModal('add')}
+                        <Tabs
+                            activeKey={activeTab}
+                            onChange={setActiveTab}
+                            items={[
+                                {
+                                    key: '1',
+                                    label: <span><TeamOutlined /> Tất cả nhân viên</span>,
+                                    children: (
+                                        <Card>
+                                            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+                                                <Space>
+                                                    <Input
+                                                        placeholder="Tìm kiếm nhân viên, ID, phòng ban..."
+                                                        prefix={<SearchOutlined />}
+                                                        style={{ width: 300 }}
+                                                        value={searchText}
+                                                        onChange={e => setSearchText(e.target.value)}
+                                                        allowClear
+                                                    />
+                                                    <Select
+                                                        style={{ width: 200 }}
+                                                        placeholder="Phòng ban"
+                                                        value={filterDepartment}
+                                                        onChange={setFilterDepartment}
                                                     >
-                                                        Thêm nhân viên
-                                                    </Button>
-                                                </>
-                                            )}
-                                        </Space>
-                                    </div>
-                                    <Table
-                                        dataSource={employees}
-                                        columns={columns}
-                                        rowKey="id"
-                                        pagination={{
-                                            defaultPageSize: 10,
-                                            showSizeChanger: true,
-                                            pageSizeOptions: ['10', '20', '50', '100'],
-                                            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhân viên`,
-                                        }}
-                                    />
-                                </Card>
-                            </TabPane>
-
-                            {isHR && (
-                                <>
-                                    <TabPane
-                                        tab={<span><IdcardOutlined /> Hợp đồng</span>}
-                                        key="2"
-                                    >
-                                        <Card>
-                                            <Text>Quản lý hợp đồng lao động</Text>
+                                                        <Option value="all">Tất cả phòng ban</Option>
+                                                        {departments.map(dept => (
+                                                            <Option key={dept._id} value={dept._id}>{dept.name}</Option>
+                                                        ))}
+                                                    </Select>
+                                                    <Select
+                                                        style={{ width: 200 }}
+                                                        placeholder="Trạng thái"
+                                                        value={filterStatus}
+                                                        onChange={setFilterStatus}
+                                                    >
+                                                        <Option value="all">Tất cả trạng thái</Option>
+                                                        <Option value="active">Đang làm việc</Option>
+                                                        <Option value="inactive">Nghỉ việc</Option>
+                                                        <Option value="leave">Nghỉ phép</Option>
+                                                    </Select>
+                                                </Space>
+                                                <Space>
+                                                    {isHR && (
+                                                        <>
+                                                            <Button icon={<FilterOutlined />}>Lọc</Button>
+                                                            <Button icon={<ExportOutlined />}>Export</Button>
+                                                            <Button
+                                                                type="primary"
+                                                                icon={<UserAddOutlined />}
+                                                                onClick={() => showModal('add')}
+                                                            >
+                                                                Thêm nhân viên
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </Space>
+                                            </div>
+                                            <Table
+                                                dataSource={employees}
+                                                columns={columns}
+                                                rowKey="id"
+                                                pagination={{
+                                                    defaultPageSize: 10,
+                                                    showSizeChanger: true,
+                                                    pageSizeOptions: ['10', '20', '50', '100'],
+                                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhân viên`,
+                                                }}
+                                            />
                                         </Card>
-                                    </TabPane>
-                                    <TabPane
-                                        tab={<span><FileTextOutlined /> Báo cáo</span>}
-                                        key="3"
-                                    >
-                                        <Card>
-                                            <Text>Báo cáo nhân sự</Text>
-                                        </Card>
-                                    </TabPane>
-                                </>
-                            )}
-
-                            {isManager && (
-                                <TabPane
-                                    tab={<span><BarChartOutlined /> Hiệu suất</span>}
-                                    key="2"
-                                >
-                                    <Card>
-                                        <Text>Phân tích hiệu suất nhân viên</Text>
-                                    </Card>
-                                </TabPane>
-                            )}
-                        </Tabs>
+                                    ),
+                                },
+                                isHR && {
+                                    key: '2',
+                                    label: <span><IdcardOutlined /> Hợp đồng</span>,
+                                    children: <Card><Text>Quản lý hợp đồng lao động</Text></Card>,
+                                },
+                                isHR && {
+                                    key: '3',
+                                    label: <span><FileTextOutlined /> Báo cáo</span>,
+                                    children: <Card><Text>Báo cáo nhân sự</Text></Card>,
+                                },
+                                isManager && {
+                                    key: '4',
+                                    label: <span><BarChartOutlined /> Hiệu suất</span>,
+                                    children: <Card><Text>Phân tích hiệu suất nhân viên</Text></Card>,
+                                },
+                            ].filter(Boolean)}
+                        />
                     </ThreeDContainer>
 
                     {/* Employee Details Modal */}
@@ -602,7 +522,7 @@ const StaffManagement = () => {
                                         >
                                             <Select placeholder="Chọn phòng ban">
                                                 {departments.map(dept => (
-                                                    <Option key={dept} value={dept}>{dept}</Option>
+                                                    <Option key={dept._id} value={dept._id}>{dept.name}</Option>
                                                 ))}
                                             </Select>
                                         </Form.Item>
@@ -615,7 +535,7 @@ const StaffManagement = () => {
                                         >
                                             <Select placeholder="Chọn vị trí">
                                                 {positions.map(pos => (
-                                                    <Option key={pos} value={pos}>{pos}</Option>
+                                                    <Option key={pos._id} value={pos._id}>{pos.name}</Option>
                                                 ))}
                                             </Select>
                                         </Form.Item>

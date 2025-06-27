@@ -31,7 +31,8 @@ import {
   FilterOutlined,
   LockOutlined,
   MailOutlined,
-  PhoneOutlined
+  PhoneOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
@@ -46,9 +47,7 @@ const AdminAccount = () => {
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
   const [userToEdit, setUserToEdit] = useState(null);
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
@@ -57,9 +56,17 @@ const AdminAccount = () => {
   const [resetPasswordForm] = Form.useForm();
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [addForm] = Form.useForm();
-  const [departments, setDepartments] = useState([]);
-  const [positions, setPositions] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+    showSizeChanger: true,
+    pageSizeOptions: ['10', '20', '30', '40'],
+    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} bản ghi`
+  });
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [accountDetails, setAccountDetails] = useState(null);
 
   const rolesList = async () => {
     const role = await Admin_account.getAllRoles();
@@ -69,35 +76,39 @@ const AdminAccount = () => {
     rolesList();
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [accounts, departmentsData, positionsData] = await Promise.all([
-          Admin_account.getAllAcount(),
-          Admin_account.getAllDepartments(),
-          Admin_account.getAllPositions(),
-        ]);
 
-        // Map dữ liệu trả về từ API sang format cho table
-        const users = (accounts || []).map((user, idx) => ({
-          key: user._id || idx,
-          id: idx + 1,
-          name: user.employeeId?.fullName || '',
-          username: user.username,
-          role: user.role?._id || '',
-          status: user.status,
-        }));
-        setData(users);
-        setDepartments(departmentsData || []);
-        setPositions(positionsData || []);
-      } catch (error) {
-        message.error(error.message || 'Lỗi khi lấy dữ liệu!');
-        setData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async (page = 1, size = 10) => {
+    setLoading(true);
+    try {
+      const response = await Admin_account.getAllAcount({ page, size });
+      const users = (response.data || []).map((user, idx) => ({
+        key: user._id || idx,
+        id: idx + 1,
+        name: user.employeeId?.fullName || '',
+        username: user.username,
+        role: user.role?._id || '',
+        status: user.status,
+      }));
+      setData(users);
+      setPagination(prev => ({
+        ...prev,
+        current: page,
+        pageSize: size,
+        total: response.totalElements || 0
+      }));
+    } catch (error) {
+      message.error(error.message || 'Lỗi khi lấy dữ liệu!');
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTableChange = (pagination) => {
+    fetchData(pagination.current, pagination.pageSize);
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -106,45 +117,19 @@ const AdminAccount = () => {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
-      sorter: (a, b) => a.id - b.id,
-      render: (text, record) => record.id,
+      render: (text, record, index) => index + 1,
     },
     {
       title: 'Tên người dùng',
       dataIndex: 'name',
       key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (text, record) => (
-        <Link to={`/admin/users/${record.id}`}>{text}</Link>
-      ),
+
     },
     {
       title: 'Tên đăng nhập',
       dataIndex: 'username',
       key: 'username',
     },
-    // {
-    //   title: 'Email',
-    //   dataIndex: 'email',
-    //   key: 'email',
-    // },
-    // {
-    //   title: 'Phòng ban',
-    //   dataIndex: 'department',
-    //   key: 'department',
-    //   filters: [
-    //     { text: 'IT', value: 'IT' },
-    //     { text: 'HR', value: 'HR' },
-    //     { text: 'Finance', value: 'Finance' },
-    //     { text: 'Marketing', value: 'Marketing' },
-    //   ],
-    //   onFilter: (value, record) => record.department === value,
-    // },
-    // {
-    //   title: 'Chức vụ',
-    //   dataIndex: 'position',
-    //   key: 'position',
-    // },
     {
       title: 'Vai trò',
       dataIndex: 'role',
@@ -175,6 +160,7 @@ const AdminAccount = () => {
       },
       filters: roles.map(role => ({ text: role.name, value: role._id })),
       onFilter: (value, record) => record.role === value,
+
     },
     {
       title: 'Trạng thái',
@@ -206,17 +192,16 @@ const AdminAccount = () => {
               },
               {
                 key: 'reset',
-                icon: <EditOutlined />,
+                icon: <LockOutlined />,
                 label: 'Reset password',
                 onClick: () => showResetPasswordModal(record)
               },
-              // {
-              //   key: 'delete',
-              //   icon: <DeleteOutlined />,
-              //   label: 'Xóa',
-              //   danger: true,
-              //   onClick: () => showDeleteConfirm(record)
-              // }
+              {
+                key: 'view',
+                icon: <EyeOutlined />,
+                label: 'Xem chi tiết',
+                onClick: () => showDetailModal(record)
+              },
             ]
           }}
           trigger={['click']}
@@ -227,97 +212,41 @@ const AdminAccount = () => {
     },
   ];
 
-  const showDeleteConfirm = (user) => {
-    setUserToDelete(user);
-    setDeleteModalVisible(true);
-  };
-
-  const handleDeleteUser = async () => {
-    setLoading(true);
-    try {
-      await Admin_account.deleteAccount(userToDelete.key);
-      message.success(`Đã xóa người dùng: ${userToDelete.name}`);
-      setDeleteModalVisible(false);
-      // Reload lại danh sách tài khoản
-      const accounts = await Admin_account.getAllAcount();
-      const users = (accounts || []).map((user, idx) => ({
-        key: user._id || idx,
-        id: idx + 1,
-        name: user.employeeId?.fullName || '',
-        username: user.username,
-        role: user.role?.name || '',
-        status: user.status,
-      }));
-      setData(users);
-    } catch (error) {
-      message.error(error.message || 'Lỗi khi xóa người dùng!');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const showEditModal = async (user) => {
-    setUserToEdit(user);
-    try {
-      // Lấy thông tin chi tiết của tài khoản
-      const accountDetail = await Admin_account.getAccountById(user.key);
-      if (accountDetail) {
-        // Chuẩn bị dữ liệu cho form
-        const formData = {
-          _id: accountDetail._id,
-          username: accountDetail.username,
-          role: accountDetail.role?.name,
-          status: accountDetail.status,
-          // Thông tin nhân viên
-          fullName: accountDetail.employeeId?.fullName,
-          email: accountDetail.employeeId?.email,
-          phone: accountDetail.employeeId?.phone,
-          dob: accountDetail.employeeId?.dob ? moment(accountDetail.employeeId.dob) : null,
-          gender: accountDetail.employeeId?.gender,
-          departmentId: accountDetail.employeeId?.departmentId,
-          positionId: accountDetail.employeeId?.positionId,
-          joinDate: accountDetail.employeeId?.joinDate ? moment(accountDetail.employeeId.joinDate) : null,
-          bankAccount: accountDetail.employeeId?.bankAccount,
-          bankName: accountDetail.employeeId?.bankName
-        };
-        form.setFieldsValue(formData);
-      }
-    } catch (error) {
-      message.error('Không thể lấy thông tin chi tiết tài khoản!');
-      console.error('Error fetching account details:', error);
-    }
+    const accountDetail = await Admin_account.getAccountById(user.key);
+    setUserToEdit(accountDetail.data);
+    form.setFieldsValue({
+      status: accountDetail.data.status,
+      role: accountDetail.data.role?.name,
+      fullName: accountDetail.data.employeeId.fullName,
+      email: accountDetail.data.employeeId.email,
+      phone: accountDetail.data.employeeId.phone,
+      dob: accountDetail.data.employeeId.dob ? moment(accountDetail.data.employeeId.dob) : null,
+      gender: accountDetail.data.employeeId.gender,
+    });
     setEditModalVisible(true);
   };
 
-  const handleEditUser = () => {
-    form.validateFields().then(async (values) => {
+  const handleEditUser = async () => {
+    try {
+      const values = await form.validateFields();
       setLoading(true);
-      try {
-        // Ensure required fields are present
-        if (!values.status || !values.role || !values.fullName || !values.email) {
-          alert('Vui lòng không để trống thông tin bắt buộc.');
-          return;
-        }
-
-        // Prepare data for update
-        const accountData = { 
-          ...values,
-          departmentId: values.departmentId ? values.departmentId : null,
-          positionId: values.positionId ? values.positionId : null
-        };
-
-        // Log the data to be sent
-        console.log('Updating account with data:', accountData);
-
-        // Call API to update account
-        await Admin_account.updateAccount(userToEdit.key, accountData);
-        console.log(accountData.status);
+      // Prepare data for update
+      const accountData = {};
+      if (values.status !== userToEdit.status) accountData.status = values.status;
+      if (values.role !== userToEdit.role.name) accountData.role = values.role;
+      if (values.fullName !== userToEdit.employeeId.fullName) accountData.fullName = values.fullName;
+      if (values.email !== userToEdit.employeeId.email) accountData.email = values.email;
+      if (values.phone !== userToEdit.employeeId.phone) accountData.phone = values.phone;
+      if (values.dob !== userToEdit.employeeId.dob) accountData.dob = values.dob;
+      if (values.gender !== userToEdit.employeeId.gender) accountData.gender = values.gender;
+      // Call API to update account
+      const response = await Admin_account.updateAccount(userToEdit._id, accountData);
+      if (response.success) {
         message.success('Đã cập nhật người dùng thành công!');
-        setEditModalVisible(false);
-
-        // Reload account list
         const accounts = await Admin_account.getAllAcount();
-        const users = (accounts || []).map((user, idx) => ({
+        const users = (accounts.data || []).map((user, idx) => ({
           key: user._id || idx,
           id: idx + 1,
           name: user.employeeId?.fullName || '',
@@ -326,38 +255,19 @@ const AdminAccount = () => {
           status: user.status,
         }));
         setData(users);
-      } catch (error) {
-        message.error(error.message || 'Lỗi khi cập nhật người dùng!');
-      } finally {
-        setLoading(false);
+        setEditModalVisible(false);
       }
-    }).catch(info => {
-      console.log('Validate Failed:', info);
-    });
+    } catch (error) {
+      message.error(error.message || 'Lỗi khi cập nhật người dùng!');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSearch = (value) => {
     setSearchText(value);
   };
 
-  const handleBulkDelete = () => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một người dùng để xóa');
-      return;
-    }
-    Modal.confirm({
-      title: 'Xóa người dùng',
-      content: `Bạn có chắc chắn muốn xóa ${selectedRowKeys.length} người dùng đã chọn?`,
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      onOk() {
-        setData(prev => prev.filter(user => !selectedRowKeys.includes(user.key)));
-        message.success(`Đã xóa ${selectedRowKeys.length} người dùng`);
-        setSelectedRowKeys([]);
-      },
-    });
-  };
 
   const fileInputRef = React.useRef();
 
@@ -385,9 +295,7 @@ const AdminAccount = () => {
           id: data.length + idx + 1,
           name: row[0] || '',
           username: row[1] || '',
-          //   email: row[2] || '',
-          //   department: row[3] || '',
-          //   position: row[4] || '',
+
           role: row[5] || 'employee',
           status: row[6] || 'active',
         }));
@@ -408,12 +316,6 @@ const AdminAccount = () => {
       user.phone,
       user.dob,
       user.gender,
-      user.department,
-      user.position,
-      user.bankAccount,
-      user.bankName,
-      //   user.department,
-      //   user.position,
       user.role.name,
       user.status
     ]));
@@ -454,7 +356,7 @@ const AdminAccount = () => {
     });
   };
 
-  
+
 
   // Thay đổi: Lọc dữ liệu trực tiếp khi searchText thay đổi
   const filteredData = data.filter(record => {
@@ -470,41 +372,48 @@ const AdminAccount = () => {
     addForm.resetFields();
   };
 
-  const handleAddUser = () => {
-    addForm.validateFields().then(async (values) => {
-      setLoading(true);
-      try {
-        if (!values.status || !values.role || !values.fullName || !values.email) {
-          alert('Vui lòng nhập đầy đủ thông tin bắt buộc.');
-          return;
-        }
-        // Chuyển đổi dữ liệu trước khi gửi lên server
-        const accountData = {
-          ...values,
-          departmentId: values.departmentId ? values.departmentId : null,
-          positionId: values.positionId ? values.positionId : null
-        };
+  const handleAddUser = async () => {
 
-        await Admin_account.createAccount(accountData);
-        message.success('Thêm tài khoản thành công!');
+    try {
+      await addForm.validateFields().then(async (values) => {
+        setLoading(true);
+        // Chuyển đổi dữ liệu trước khi gửi lên server
+        const response = await Admin_account.createAccount(values);
+        if (response.success) {
+          message.success('Thêm tài khoản thành công!');
+        }
         setAddModalVisible(false);
         // Reload lại danh sách tài khoản
         const accounts = await Admin_account.getAllAcount();
-        const users = (accounts || []).map((user, idx) => ({
+        const users = (accounts.data || []).map((user, idx) => ({
           key: user._id || idx,
           id: idx + 1,
           name: user.employeeId?.fullName || '',
           username: user.username,
-          role: user.role?.name || '',
+          role: user.role?._id || '',
           status: user.status,
         }));
         setData(users);
-      } catch (error) {
-        message.error(error.message || 'Lỗi khi thêm tài khoản!');
-      } finally {
-        setLoading(false);
-      }
-    });
+      });
+    } catch (error) {
+      message.error(error.message || 'Lỗi khi thêm tài khoản!');
+    } finally {
+      setLoading(false);
+    }
+
+  };
+
+  const showDetailModal = async (user) => {
+    try {
+      const accountDetail = await Admin_account.getAccountById(user.key);
+      setAccountDetails(accountDetail.data);
+      setDetailModalVisible(true);
+    } catch (error) {
+      message.error('Không thể lấy thông tin chi tiết tài khoản!');
+    }
+    finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -576,40 +485,18 @@ const AdminAccount = () => {
               Table.SELECTION_ALL,
               Table.SELECTION_INVERT,
               Table.SELECTION_NONE,
-              {
-                key: 'delete-selected',
-                text: 'Xóa đã chọn',
-                onSelect: () => {
-                  if (selectedRowKeys.length > 0) {
-                    handleBulkDelete();
-                  } else {
-                    message.warning('Vui lòng chọn ít nhất một người dùng');
-                  }
-                }
-              }
+
             ]
           }}
           columns={columns}
           dataSource={filteredData}
-          pagination={{ pageSize: 10 }}
+          pagination={pagination}
           loading={loading}
+          onChange={handleTableChange}
           style={{ borderRadius: '8px', overflow: 'hidden' }}
           className="modern-table"
         />
       </Card>
-
-      <Modal
-        title="Xác nhận xóa người dùng"
-        open={deleteModalVisible}
-        onCancel={() => setDeleteModalVisible(false)}
-        onOk={handleDeleteUser}
-        okText="Xóa"
-        cancelText="Hủy"
-        okButtonProps={{ danger: true }}
-      >
-        <p>Bạn có chắc chắn muốn xóa người dùng {userToDelete?.name}?</p>
-        <p>Hành động này không thể hoàn tác.</p>
-      </Modal>
 
       <Modal
         title="Chỉnh sửa người dùng"
@@ -623,7 +510,6 @@ const AdminAccount = () => {
         <Form
           form={form}
           layout="vertical"
-          name="editUserForm"
         >
           <Row gutter={16}>
             <Col span={24}>
@@ -669,7 +555,6 @@ const AdminAccount = () => {
               <Form.Item
                 name="fullName"
                 label="Họ và tên"
-                rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
               >
                 <Input prefix={<UserOutlined />} placeholder="Nhập họ và tên" />
               </Form.Item>
@@ -725,86 +610,7 @@ const AdminAccount = () => {
 
           <Divider />
 
-          <Row gutter={16}>
-            <Col span={24}>
-              <Title level={5}>Thông tin công việc</Title>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="departmentId"
-                label="Phòng ban"
-              >
-                <Select
-                  placeholder="Chọn phòng ban"
-                  allowClear
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {departments.map(dept => (
-                    <Select.Option key={dept._id} value={dept._id}>
-                      {dept.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="positionId"
-                label="Chức vụ"
-              >
-                <Select
-                  placeholder="Chọn chức vụ"
-                  allowClear
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {positions.map(pos => (
-                    <Select.Option key={pos._id} value={pos._id}>
-                      {pos.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="joinDate"
-                label="Ngày vào làm"
-              >
-                <DatePicker
-                  style={{ width: '100%' }}
-                  placeholder="Chọn ngày vào làm"
-                  format="DD/MM/YYYY"
-                />
-              </Form.Item>
-            </Col>
 
-          </Row>
-
-          <Divider />
-
-          <Row gutter={16}>
-            <Col span={24}>
-              <Title level={5}>Thông tin ngân hàng</Title>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="bankAccount"
-                label="Số tài khoản"
-              >
-                <Input placeholder="Nhập số tài khoản" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="bankName"
-                label="Tên ngân hàng"
-              >
-                <Input placeholder="Nhập tên ngân hàng" />
-              </Form.Item>
-            </Col>
-          </Row>
         </Form>
       </Modal>
 
@@ -849,6 +655,58 @@ const AdminAccount = () => {
       </Modal>
 
       <Modal
+        title={<Title level={3} style={{ marginBottom: '0', letterSpacing: '0.5px' }}>Thông tin chi tiết tài khoản</Title>}
+        open={detailModalVisible}
+        onCancel={() => setDetailModalVisible(false)}
+        footer={null}
+        width={700}
+      >
+        {accountDetails && (
+          <Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', padding: '16px' }}>
+            <Row gutter={[16, 16]} align="middle" style={{ marginBottom: '16px' }}>
+              <Col span={4} style={{ textAlign: 'center' }}>
+                <UserOutlined style={{ fontSize: '48px', color: '#1890ff' }} />
+              </Col>
+              <Col span={20}>
+                <Title level={3} style={{ marginBottom: '0', letterSpacing: '0.5px' }}>{accountDetails.employeeId.fullName}</Title>
+                <Text type="secondary" style={{ letterSpacing: '0.5px' }}>{accountDetails.role.name}</Text>
+              </Col>
+            </Row>
+            <Divider style={{ margin: '16px 0' }} />
+            <Row gutter={[16, 16]}>
+              <Col span={12} style={{ backgroundColor: '#f9f9f9', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
+                  <MailOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+                  <strong style={{ marginRight: '8px' }}>Email:</strong> {accountDetails.employeeId.email}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
+                  <PhoneOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+                  <strong style={{ marginRight: '8px' }}>Số điện thoại:</strong> {accountDetails.employeeId.phone}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
+                  <strong style={{ marginRight: '8px' }}>Ngày sinh:</strong> {accountDetails.employeeId.dob ? moment(accountDetails.employeeId.dob).format('DD/MM/YYYY') : 'N/A'}
+                </div>
+              </Col>
+              <Col span={12} style={{ backgroundColor: '#f9f9f9', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
+                  <strong style={{ marginRight: '8px' }}>Giới tính:</strong> {accountDetails.employeeId.gender}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
+                  <strong style={{ marginRight: '8px' }}>Phòng ban:</strong> {accountDetails.employeeId.departmentId?.name || 'N/A'}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
+                  <strong style={{ marginRight: '8px' }}>Chức vụ:</strong> {accountDetails.employeeId.positionId?.name || 'N/A'}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
+                  <strong style={{ marginRight: '8px' }}>Trạng thái:</strong> {accountDetails.status === 'active' ? <Tag color="green">Đang hoạt động</Tag> : <Tag color="red">Vô hiệu hóa</Tag>}
+                </div>
+              </Col>
+            </Row>
+          </Card>
+        )}
+      </Modal>
+
+      <Modal
         title="Thêm tài khoản mới"
         open={addModalVisible}
         onCancel={() => setAddModalVisible(false)}
@@ -890,9 +748,7 @@ const AdminAccount = () => {
               </Form.Item>
             </Col>
           </Row>
-
           <Divider />
-
           <Row gutter={16}>
             <Col span={24}>
               <Title level={5}>Thông tin cá nhân</Title>
@@ -954,90 +810,7 @@ const AdminAccount = () => {
               </Form.Item>
             </Col>
           </Row>
-
           <Divider />
-
-          <Row gutter={16}>
-            <Col span={24}>
-              <Title level={5}>Thông tin công việc</Title>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="departmentId"
-                label="Phòng ban"
-              >
-                <Select
-                  placeholder="Chọn phòng ban"
-                  allowClear
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {departments.map(dept => (
-                    <Select.Option key={dept._id} value={dept._id}>
-                      {dept.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="positionId"
-                label="Chức vụ"
-              >
-                <Select
-                  placeholder="Chọn chức vụ"
-                  allowClear
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {positions.map(pos => (
-                    <Select.Option key={pos._id} value={pos._id}>
-                      {pos.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="joinDate"
-                label="Ngày vào làm"
-              >
-                <DatePicker
-                  style={{ width: '100%' }}
-                  placeholder="Chọn ngày vào làm"
-                  format="DD/MM/YYYY"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Divider />
-
-          <Row gutter={16}>
-            <Col span={24}>
-              <Title level={5}>Thông tin ngân hàng</Title>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="bankAccount"
-                label="Số tài khoản"
-              >
-                <Input placeholder="Nhập số tài khoản" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="bankName"
-                label="Tên ngân hàng"
-              >
-                <Input placeholder="Nhập tên ngân hàng" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-
         </Form>
       </Modal>
 

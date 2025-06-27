@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { BaseSchema } from "./base.schema";
 import { Document, Types } from "mongoose";
+import {  Departments } from "./departments.schema";
+import { Position } from "./position.schema";
+import { SalaryCoefficient } from "./salaryCoefficents.schema";
 
 export type EmployeesDocument = Employees & Document;
 
@@ -21,10 +24,10 @@ export class Employees extends BaseSchema{
     @Prop()
     email: string;
 
-    @Prop({type: Types.ObjectId, ref: 'Department'})
+    @Prop({type: Types.ObjectId, ref: Departments.name})
     departmentId: Types.ObjectId;
 
-    @Prop({type: Types.ObjectId, ref: 'Position'})
+    @Prop({type: Types.ObjectId, ref: Position.name})
     positionId: Types.ObjectId;
 
     @Prop()
@@ -37,7 +40,7 @@ export class Employees extends BaseSchema{
     status: string;
 
     @Prop()
-    bankAccount: string;
+    bankAccount: string;             
 
     @Prop()
     bankName: string;
@@ -47,6 +50,12 @@ export class Employees extends BaseSchema{
 
     @Prop({type: Types.ObjectId, ref: 'Contract'})
     contractId: Types.ObjectId;
+
+    @Prop({type: Types.ObjectId, ref: SalaryCoefficient.name})
+    salaryCoefficientId: Types.ObjectId;
+
+   
+
 }
 
 export const EmployeesSchema = SchemaFactory.createForClass(Employees);
