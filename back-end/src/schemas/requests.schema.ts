@@ -3,6 +3,7 @@ import { BaseSchema } from "./base.schema";
 import { Schema as MongooseSchema, Document, Types} from "mongoose";
 import { Employees } from "./employees.schema";
 import {typeRequest} from "./typeRequestCategory.schema";
+import {Documents} from "./documents.schema";
 
 export type RequestsDocument = Requests & Document;
 
@@ -31,6 +32,9 @@ export class Requests extends BaseSchema {
 
     @Prop()
     note: string;
+
+    @Prop({ type: [{ type: Types.ObjectId, ref: Documents.name }] })
+    attachments: Types.ObjectId[];
 
     @Prop({type: Types.ObjectId, ref: Employees.name})
     approverId: Types.ObjectId;

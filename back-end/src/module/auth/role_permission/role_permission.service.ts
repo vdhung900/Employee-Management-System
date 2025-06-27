@@ -127,7 +127,7 @@ export class RolePermissionService {
 
     async getRolePermissionByRole(roleId: Types.ObjectId) {
         try{
-            const data = await this.rolePermissionModel.findOne({role: roleId}).populate("role").populate("permissions").exec();
+            const data = await this.rolePermissionModel.findOne({role: roleId}).populate("role", "name code").populate("permissions", "name path code").exec();
             return data;
         }catch (e) {
             throw new Error(e.message);
