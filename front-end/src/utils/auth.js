@@ -11,17 +11,16 @@ export const getCurrentUser = () => {
 };
 
 export const logout = () => {
-  localStorage.clear();
+  localStorage.removeItem("user");
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
 };
 
-export const login = (loginData) => {
-  const decode = jwtDecode(loginData.accessToken);
-  const permissionList = decode?.permissions.map(item => item.path);
-  localStorage.setItem("user", JSON.stringify(loginData.user));
-  localStorage.setItem("accessToken", loginData.accessToken || "");
-  localStorage.setItem("refreshToken", loginData.refreshToken || "");
-  localStorage.setItem("role", decode?.role.code);
-  localStorage.setItem("permissions", JSON.stringify(permissionList));
+export const login = (userData) => {
+  localStorage.setItem("user", JSON.stringify(userData));
+  localStorage.setItem("token", JSON.stringify(userData));
+  localStorage.setItem("role", "admin");
 };
 
 export const isAuthenticated = () => {
