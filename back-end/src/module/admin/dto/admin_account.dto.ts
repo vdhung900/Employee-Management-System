@@ -69,12 +69,14 @@ export class CreateAccount {
     @IsOptional()
     @IsMongoId({message: 'ID hợp đồng không hợp lệ'})
     contractId?: Types.ObjectId;
+
+    @IsOptional()
+    @IsString()
+    salaryCoefficientId?: Types.ObjectId;
 }
 
 export class UpdateAccount {
-    @IsMongoId({message: 'ID không hợp lệ'})
-    @IsNotEmpty({message: 'ID không được để trống'})
-    _id: Types.ObjectId;
+   
 
     @IsOptional()
     @IsString()
@@ -83,13 +85,11 @@ export class UpdateAccount {
     
     
     @IsOptional()
-    @IsEnum(['admin', 'manager', 'employee'])
     @IsMongoId({message: 'ID phòng ban không hợp lệ'})
     role?: Types.ObjectId;
 
    
     @IsOptional()
-    @IsEnum(['active', 'inactive'])
     @IsString()
     status?: string;
 
@@ -114,26 +114,6 @@ export class UpdateAccount {
     @IsString()
     @IsEnum(['male', 'female', 'other'])
     gender?: string;
-
-    @IsOptional()
-    @IsString()
-    departmentId?: string;
-
-    @IsOptional()
-    @IsString()
-    positionId?: string;
-
-    @IsOptional()
-    @IsDate()
-    joinDate?: Date;
-
-    @IsOptional()
-    @IsString()
-    bankAccount?: string;
-
-    @IsOptional()
-    @IsString()
-    bankName?: string;
 
     @IsOptional()
     @IsString()
