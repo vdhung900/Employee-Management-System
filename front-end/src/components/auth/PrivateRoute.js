@@ -8,7 +8,6 @@ const PrivateRoute = () => {
   const permissions = JSON.parse(localStorage.getItem('permissions') || '[]');
   const userRole = localStorage.getItem('role');
   const currentPath = location.pathname;
-  const accessToken = localStorage.getItem('accessToken');
 
   if (!isAuth) {
     return <Navigate to="/login" state={{ from: location }} replace />;
