@@ -12,6 +12,7 @@ import { USER_ROLE } from "../../enum/role.enum";
 import { STATUS } from "../../enum/status.enum";
 import { RolePermissionService } from "../auth/role_permission/role_permission.service";
 
+
 @Injectable()
 export class AdminAccountService {
   constructor(
@@ -33,6 +34,7 @@ export class AdminAccountService {
 
 
       const roleId = createAccount.role ? new Types.ObjectId(createAccount.role) : null;
+      const code = await this.generateUserName(createAccount.fullName);
 
       // Tạo thông tin nhân viên mới
       const newEmployee = await this.employeeModel.create({
@@ -49,7 +51,8 @@ export class AdminAccountService {
         bankName: null,
         document: null,
         contractId: null,
-        salaryCoefficientId: null
+        salaryCoefficientId: null,
+        code: code
       });
 
       if (!newEmployee) {
@@ -65,6 +68,7 @@ export class AdminAccountService {
         password: hash,
         role: roleId,
         status: createAccount.status,
+
         employeeId: newEmployee._id
       });
 
@@ -74,6 +78,7 @@ export class AdminAccountService {
       }
 
       return {
+
         account,
         employee: newEmployee,
         message: 'Tạo tài khoản và thông tin nhân viên thành công'
@@ -85,6 +90,7 @@ export class AdminAccountService {
 
   async findAll(query?: any) {
     return this.accountModel.find()
+
       .populate({
         path: 'employeeId',
         select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName'
@@ -93,6 +99,7 @@ export class AdminAccountService {
         path: 'role',
         select: 'name'
       })
+
       .exec();
   }
 
@@ -115,6 +122,7 @@ export class AdminAccountService {
       .populate({
         path: 'role',
         select: 'name'
+
       })
       .exec();
     if (!admin) throw new NotFoundException('Admin not found');
@@ -129,6 +137,7 @@ export class AdminAccountService {
         path: 'employeeId',
         select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName'
       }).exec();
+
       if (!currentAccount) throw new NotFoundException('Không tìm thấy tài khoản');
 
       // Cập nhật thông tin nhân viên
@@ -157,6 +166,7 @@ export class AdminAccountService {
         const updatedEmployee = await this.employeeModel.findByIdAndUpdate(
           currentAccount.employeeId,
           updateEmployee,
+
           { new: true }
         ).exec();
 
@@ -183,6 +193,7 @@ export class AdminAccountService {
       const updatedAccount = await this.accountModel.findByIdAndUpdate(
         id,
         updateAccount,
+
         { new: true }
       ).populate('employeeId').exec();
 
@@ -200,6 +211,7 @@ export class AdminAccountService {
     // if (updateAdminDto.password) {
     //   updateAdminDto.password = await bcrypt.hash(updateAdminDto.password, 10);
     // }
+
 
     const admin = await this.accountModel.findOneAndUpdate(
       { _id: id },
