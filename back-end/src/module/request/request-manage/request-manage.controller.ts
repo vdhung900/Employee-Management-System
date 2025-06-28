@@ -1,12 +1,12 @@
 import {Body, Controller, Get, HttpException, HttpStatus, Param, Post} from '@nestjs/common';
-import {HrRequestService} from "./hr-request.service";
+import {RequestManageService} from "./request-manage.service";
 import {CreateRequestDto} from "../dto/createRequest.dto";
 import {BaseResponse} from "../../../interfaces/response/base.response";
 
-@Controller('hr-request')
-export class HrRequestController {
+@Controller('request-manage')
+export class RequestManageController {
     constructor(
-        private readonly hrRequestService: HrRequestService,
+        private readonly hrRequestService: RequestManageService,
     ) {
     }
 
@@ -14,6 +14,16 @@ export class HrRequestController {
     async getReqByCode(@Param('code') code: string): Promise<BaseResponse> {
         try {
             const resData = await this.hrRequestService.getRequestByCode(code);
+            return BaseResponse.success(resData, 'Request retrieved successfully', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Post('/get-by-filter-code')
+    async getReqByFilterCode(@Body() req: CreateRequestDto){
+        try {
+            const resData = await this.hrRequestService.getRequestByFilter(req);
             return BaseResponse.success(resData, 'Request retrieved successfully', HttpStatus.OK);
         } catch (e) {
             throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);

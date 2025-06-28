@@ -21,7 +21,6 @@ export class AdminAccountService {
     @InjectModel(Position.name) private positionModel: Model<PositionDocument>,
     private readonly rolePermissionService: RolePermissionService,
   ) { }
-  
 
   async create(createAccount: CreateAccount) {
     try {
@@ -156,6 +155,8 @@ export class AdminAccountService {
         if (updateAdminDto.document) {
           updateEmployee.document = updateAdminDto.document;
         }
+// Them ho t cai logic attachments vao nha, cu them vao update gi gi day la dc
+          // attachments: employeeData.document || null,
         // Cập nhật thông tin nhân viên
         const updatedEmployee = await this.employeeModel.findByIdAndUpdate(
           currentAccount.employeeId,
@@ -248,22 +249,22 @@ export class AdminAccountService {
     }
   }
 
-  async createByInfo(info: any) {
-    try {
-      if (!info.fullName || !info.email || !info.department || !info.position) {
+  async createByInfo(info: any, files: any){
+    try{
+      if(!info.fullName || !info.email || !info.department || !info.position) {
         throw new Error('Thông tin không đầy đủ');
       }
       const username = await this.generateUserName(info.fullName);
-      const password = this.generateRandomPassword();
+      const password = this.generateRandomPassword(8);
       // const hashPassword = await bcrypt.hash(password, 10);
       const isValidEmail = await this.employeeModel.findOne({ email: info.email }).exec();
-      if (isValidEmail) {
+      if(isValidEmail) {
         throw new Error('Email đã tồn tại');
       }
       const role = await this.rolePermissionService.getRoleByCode(USER_ROLE.EMPLOYEE);
-      if (!role) {
-        throw new Error('Role không tồn tại');
-      }
+        if(!role) {
+            throw new Error('Role không tồn tại');
+        }
       const newEmployee = await this.employeeModel.create({
         fullName: info.fullName,
         email: info.email,
@@ -271,6 +272,13 @@ export class AdminAccountService {
         departmentId: new Types.ObjectId(info.department),
         positionId: new Types.ObjectId(info.position),
         joinDate: new Date(info.startDate) || new Date(),
+        dob: null,
+        gender: null,
+        resignDate: null,
+        bankAccount: null,
+        bankName: null,
+        contractId:  null,
+        attachments: files
       });
       if (!newEmployee) {
         throw new Error('Không thể tạo thông tin nhân viên');
@@ -282,8 +290,8 @@ export class AdminAccountService {
         employeeId: newEmployee._id,
         status: STATUS.ACTIVE,
       })
-      return { newAccount, newEmployee };
-    } catch (e) {
+      return {newAccount, newEmployee};
+    }catch (e) {
       throw e;
     }
   }
@@ -296,9 +304,9 @@ export class AdminAccountService {
     const initials = middleAndFirst.map(word => word[0]).join("");
     const baseUserName = lastName + initials;
     const existingUsers: { username: string }[] = await this.accountModel
-      .find({ username: new RegExp(`^${baseUserName}\\d*$`, 'i') })
-      .select('username')
-      .lean();
+        .find({ username: new RegExp(`^${baseUserName}\\d*$`, 'i') })
+        .select('username')
+        .lean();
     const suffixes = existingUsers.map(user => {
       const match = user.username.match(new RegExp(`^${baseUserName}(\\d*)$`, 'i'));
       return match ? parseInt(match[1] || '0', 10) : 0;
@@ -309,7 +317,7 @@ export class AdminAccountService {
     return newUserName;
   }
 
-  generateRandomPassword(length: number = 8): string {
+   generateRandomPassword(length: number = 8): string {
     const upperChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const lowerChars = 'abcdefghijklmnopqrstuvwxyz';
     const numberChars = '0123456789';

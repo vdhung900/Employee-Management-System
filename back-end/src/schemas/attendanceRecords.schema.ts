@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { BaseSchema } from "./base.schema";
 import { Types } from "mongoose";
 import { Employees } from "./employees.schema";
+import {typeRequest} from "./typeRequestCategory.schema";
 
 export type AttendanceRecordsDocument = AttendanceRecords & Document;
 
@@ -22,14 +23,29 @@ export class AttendanceRecords extends BaseSchema {
     @Prop()
     totalWorkingHours: number;
 
-    @Prop()
-    leaveType: string;
+    @Prop({type: Types.ObjectId, ref: typeRequest .name})
+    leaveType: Types.ObjectId;
 
     @Prop()
     status: string;
 
     @Prop()
     note: string;
+
+    @Prop({default: false})
+    isOvertime: Boolean;
+
+    @Prop()
+    overtimeRange: string[];
+
+    @Prop({default: false})
+    isLeave: Boolean;
+
+    @Prop({default: false})
+    isEarlyTime: Boolean;
+
+    @Prop()
+    reason: string;
 }
 
 export const AttendanceRecordSchema = SchemaFactory.createForClass(AttendanceRecords);

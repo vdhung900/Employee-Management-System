@@ -1,11 +1,11 @@
 import {Body, Controller, Get, HttpException, HttpStatus, Post} from '@nestjs/common';
-import {RequestManageService} from "./request-manage.service";
+import {SystemService} from "./system.service";
 import {BaseResponse} from "../../interfaces/response/base.response";
 import {SearchReq} from "../../interfaces/request/searchReq.interface";
 
-@Controller('request-manage')
-export class RequestManageController {
-    constructor(private readonly requestManageService: RequestManageService) {
+@Controller('system')
+export class SystemController {
+    constructor(private readonly requestManageService: SystemService) {
     }
 
     @Post('all-logs')

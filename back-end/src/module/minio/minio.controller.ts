@@ -1,10 +1,23 @@
-import { Controller, Post, Get, Delete, Param, UseInterceptors, UploadedFile, Res, HttpException, HttpStatus } from '@nestjs/common';
+import {
+    Controller,
+    Post,
+    Get,
+    Delete,
+    Param,
+    UseInterceptors,
+    UploadedFile,
+    Res,
+    HttpException,
+    HttpStatus,
+    Body
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { UploadService } from './minio.service';
 import { ApiTags, ApiConsumes, ApiBody, ApiParam, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { BaseResponse } from "../../interfaces/response/base.response";
 import { FileResponseDto } from './dto/file-response.dto';
+import {FileRequestDto} from "./dto/file-request.dto";
 
 @ApiTags('files')
 @Controller('files')

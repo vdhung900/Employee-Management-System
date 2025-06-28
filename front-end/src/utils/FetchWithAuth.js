@@ -1,5 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import APIConfig from "../services/APIConfig";
+import {Navigate} from "react-router-dom";
+import React from "react";
 
 /**
  * Utility function for making authenticated API requests
@@ -21,7 +23,16 @@ export const fetchWithAuth = async (
     const token = localStorage.getItem("accessToken");
 
     if (!token) {
-      throw new Error("Đã hết hạn đăng nhập !!!");
+      localStorage.clear();
+      let redirectTo = '/403';
+      return <Navigate to={redirectTo} replace state={{ unauthorized: true }} />;
+    }
+    const decoded = jwtDecode(token);
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (decoded.exp && decoded.exp < currentTime) {
+      localStorage.clear();
+      let redirectTo = '/403';
+      return <Navigate to={redirectTo} replace state={{ unauthorized: true }} />;
     }
 
     let url = `${APIConfig.baseUrl}${endpoint}`;
