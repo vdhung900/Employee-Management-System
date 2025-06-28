@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { BaseSchema } from "./base.schema";
 import { Document, Types } from "mongoose";
-import { SalaryPackage } from "./salaryPackage.schema";
+import { SalaryCoefficient } from "./salaryCoefficents.schema";
 import { Employees } from "./employees.schema";
 
 export type SalarySlipDocument = SalarySlip & Document;
@@ -11,8 +11,8 @@ export class SalarySlip extends BaseSchema {
     @Prop({type: Types.ObjectId, ref: Employees.name})
     employeeId: Types.ObjectId;
 
-    @Prop({type: Types.ObjectId, ref: SalaryPackage.name})
-    salaryPackageId: Types.ObjectId;
+    @Prop({type: Types.ObjectId, ref: SalaryCoefficient.name})
+    salaryCoefficientId: Types.ObjectId;
 
     @Prop()
     month: Date;

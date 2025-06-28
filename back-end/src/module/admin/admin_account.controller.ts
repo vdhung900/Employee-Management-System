@@ -1,4 +1,4 @@
-import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Put} from '@nestjs/common';
+import {Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Put, HttpException, HttpStatus} from '@nestjs/common';
 import { AdminAccountService } from './admin_account.service';
 import { CreateAccount, ResetPassword, UpdateAccount, UpdateStatus } from './dto/admin_account.dto';
 import { BaseReq } from '../../interfaces/request/baseReq.interface';
@@ -6,6 +6,7 @@ import {Roles} from "../../common/decorators/roles.decorator";
 import {JwtAuthGuard} from "../../common/guards/jwt-auth.guard";
 import {RolesGuard} from "../../common/guards/roles.guard";
 import {USER_ROLE} from "../../enum/role.enum";
+import { BaseResponse } from 'src/interfaces/response/base.response';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin-accounts')
@@ -13,47 +14,92 @@ export class AdminAccountController {
   constructor(private readonly adminAccountService: AdminAccountService) {}
 
   @Post()
-  create(@Body() CreateAccount: CreateAccount) {
-    return this.adminAccountService.create(CreateAccount);
+  async create(@Body() CreateAccount: CreateAccount) : Promise<BaseResponse> {
+    try {
+      const data = await this.adminAccountService.create(CreateAccount);
+      return BaseResponse.success(data, "Thành công", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Get()
-  findAll() {
-    return this.adminAccountService.findAll();
+  async findAll() : Promise<BaseResponse> {
+    try {
+      const data = await this.adminAccountService.findAll();
+      return BaseResponse.success(data, "Thành công", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Get('departments')
   // @Roles(USER_ROLE.ADMIN, USER_ROLE.HR)
-  getAllDepartments() {
-    return this.adminAccountService.getDepartments();
+  async getAllDepartments() : Promise<BaseResponse> {
+    try {
+      const data = await this.adminAccountService.getDepartments();
+      return BaseResponse.success(data, "Thành công", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
-  @Get('positions')
+  @Get('/positions')
   // @Roles(USER_ROLE.ADMIN, USER_ROLE.HR)
-  getAllPositions() {
-    return this.adminAccountService.getPositions();
+  async getAllPositions() : Promise<BaseResponse> {
+    try {
+      const data = await this.adminAccountService.getPositions();
+      return BaseResponse.success(data, "Thành công", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.adminAccountService.findOne(id);
+  async findOne(@Param('id') id: string) : Promise<BaseResponse> {
+    try {
+      const data = await this.adminAccountService.findOne(id);
+      return BaseResponse.success(data, "Thành công", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() UpdateAccount: UpdateAccount) {
-    return this.adminAccountService.update(id, UpdateAccount);
+  async update(@Param('id') id: string, @Body() UpdateAccount: UpdateAccount) : Promise<BaseResponse> {
+    try {
+      const data = await this.adminAccountService.update(id, UpdateAccount);
+      return BaseResponse.success(data, "Thành công", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
   @Put(':id/reset-password')
-  resetPassword(@Param('id') id: string, @Body() ResetPassword: ResetPassword) {
-    return this.adminAccountService.resetPassword(id, ResetPassword);
+  async resetPassword(@Param('id') id: string, @Body() ResetPassword: ResetPassword) : Promise<BaseResponse> {
+    try {
+      const data = await this.adminAccountService.resetPassword(id, ResetPassword);
+      return BaseResponse.success(data, "Thành công", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
   @Put(':id/status')
-  updateStatus(@Param('id') id: string, @Body() UpdateStatus: UpdateStatus) {
-    return this.adminAccountService.updateStatus(id, UpdateStatus);
+  async updateStatus(@Param('id') id: string, @Body() UpdateStatus: UpdateStatus) : Promise<BaseResponse> {
+    try {
+      const data = await this.adminAccountService.updateStatus(id, UpdateStatus);
+      return BaseResponse.success(data, "Thành công", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.adminAccountService.remove(id);
+  async remove(@Param('id') id: string) : Promise<BaseResponse> {
+    try {
+      const data = await this.adminAccountService.remove(id);
+      return BaseResponse.success(data, "Thành công", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }
