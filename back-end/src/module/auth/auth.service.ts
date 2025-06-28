@@ -37,9 +37,6 @@ export class AuthService {
   }
 
   async login(req: LoginReq) {
-    // console.log("Login request received:", req);
-    // console.log("all user", await this.accountModel.find().exec());
-
     try {
       const account = await this.findUserByUsername(req.username);
 

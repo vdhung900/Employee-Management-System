@@ -20,7 +20,6 @@ export class BenefitsService {
     }
 
     async create(data: any, user: any) {
-        if (user.role !== 'hr') throw new ForbiddenException('Only HR can create benefits');
         if (data.status === 'auto') {
             data.effective = ALL_MONTHS;
         }
@@ -32,7 +31,6 @@ export class BenefitsService {
     }
 
     async update(id: string, data: any, user: any) {
-        if (user.role !== 'hr') throw new ForbiddenException('Only HR can update benefits');
         if (data.status === 'auto') {
             data.effective = ALL_MONTHS;
         }
@@ -44,7 +42,6 @@ export class BenefitsService {
     }
 
     async delete(id: string, user: any) {
-        if (user.role !== 'hr') throw new ForbiddenException('Only HR can delete benefits');
         return this.benefitModel.findByIdAndDelete(id).exec();
     }
 } 

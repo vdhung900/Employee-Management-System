@@ -4,6 +4,8 @@ import { Document, Types } from "mongoose";
 import {  Departments } from "./departments.schema";
 import { Position } from "./position.schema";
 import { SalaryCoefficient } from "./salaryCoefficents.schema";
+import { Contract } from "./contracts.schema";
+
 
 export type EmployeesDocument = Employees & Document;
 
@@ -48,7 +50,7 @@ export class Employees extends BaseSchema{
     @Prop()
     document: string;
 
-    @Prop({type: Types.ObjectId, ref: 'Contract'})
+    @Prop({type: Types.ObjectId, ref: Contract.name})
     contractId: Types.ObjectId;
 
     @Prop({type: Types.ObjectId, ref: SalaryCoefficient.name})

@@ -1,6 +1,5 @@
 import { IsEmpty, IsMongoId, IsNotEmpty, IsString, IsEmail, IsOptional, IsDate, IsEnum } from "class-validator";
-import e from "express";
-import { ObjectId, Types } from "mongoose";
+import { Types } from "mongoose";
 
 export class CreateAccount {
     // @IsString()
@@ -12,6 +11,7 @@ export class CreateAccount {
     @IsOptional()
     @IsMongoId({message: 'ID phòng ban không hợp lệ'})
     role?: Types.ObjectId;
+
 
     @IsNotEmpty({message: 'Trạng thái không được để trống'})
     @IsString()
@@ -73,16 +73,19 @@ export class CreateAccount {
     @IsOptional()
     @IsString()
     salaryCoefficientId?: Types.ObjectId;
-}
-
-export class UpdateAccount {
-   
 
     @IsOptional()
     @IsString()
-    username?: string;
+    code?: string;
+}
 
-    
+
+
+export class UpdateAccount {
+   
+    @IsOptional()
+    @IsString()
+    username?: string;
     
     @IsOptional()
     @IsMongoId({message: 'ID phòng ban không hợp lệ'})
@@ -91,12 +94,17 @@ export class UpdateAccount {
    
     @IsOptional()
     @IsString()
+
     status?: string;
 
     // Employee fields
     @IsOptional()
     @IsString()
     fullName?: string;
+
+    @IsOptional()
+    @IsString()
+    code?: string;
 
     @IsOptional()
     @IsEmail()
@@ -118,6 +126,7 @@ export class UpdateAccount {
     @IsOptional()
     @IsString()
     document?: string;
+
 }
 
 export class ResetPassword {
@@ -129,4 +138,5 @@ export class UpdateStatus {
     @IsNotEmpty({message: 'Trạng thái không được để trống'})
     @IsString()
     status: string;
+
 }

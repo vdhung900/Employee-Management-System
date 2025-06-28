@@ -33,12 +33,14 @@ import {
   MailOutlined,
   PhoneOutlined,
   EyeOutlined
+
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Admin_account from '../../services/Admin_account';
 import RolePermissionService from '../../services/RolePermissionService';
+
 import moment from 'moment';
 
 const { Title, Text } = Typography;
@@ -109,6 +111,8 @@ const AdminAccount = () => {
   };
 
   useEffect(() => {
+
+
     fetchData();
   }, []);
 
@@ -193,6 +197,7 @@ const AdminAccount = () => {
               {
                 key: 'reset',
                 icon: <LockOutlined />,
+
                 label: 'Reset password',
                 onClick: () => showResetPasswordModal(record)
               },
@@ -202,6 +207,7 @@ const AdminAccount = () => {
                 label: 'Xem chi tiết',
                 onClick: () => showDetailModal(record)
               },
+
             ]
           }}
           trigger={['click']}
@@ -225,6 +231,7 @@ const AdminAccount = () => {
       dob: accountDetail.data.employeeId.dob ? moment(accountDetail.data.employeeId.dob) : null,
       gender: accountDetail.data.employeeId.gender,
     });
+
     setEditModalVisible(true);
   };
 
@@ -244,6 +251,7 @@ const AdminAccount = () => {
       // Call API to update account
       const response = await Admin_account.updateAccount(userToEdit._id, accountData);
       if (response.success) {
+
         message.success('Đã cập nhật người dùng thành công!');
         const accounts = await Admin_account.getAllAcount();
         const users = (accounts.data || []).map((user, idx) => ({
@@ -382,6 +390,7 @@ const AdminAccount = () => {
         if (response.success) {
           message.success('Thêm tài khoản thành công!');
         }
+
         setAddModalVisible(false);
         // Reload lại danh sách tài khoản
         const accounts = await Admin_account.getAllAcount();
@@ -527,6 +536,7 @@ const AdminAccount = () => {
                 </Select>
               </Form.Item>
 
+
             </Col>
             <Col span={12}>
               <Form.Item
@@ -540,6 +550,7 @@ const AdminAccount = () => {
                       {role.name}
                     </Select.Option>
                   ))}
+
                 </Select>
               </Form.Item>
             </Col>
@@ -669,6 +680,8 @@ const AdminAccount = () => {
               </Col>
               <Col span={20}>
                 <Title level={3} style={{ marginBottom: '0', letterSpacing: '0.5px' }}>{accountDetails.employeeId.fullName}</Title>
+                <Text type="secondary" style={{ letterSpacing: '0.5px' }}> Mã nhân viên: {accountDetails.employeeId.code}</Text>
+
                 <Text type="secondary" style={{ letterSpacing: '0.5px' }}>{accountDetails.role.name}</Text>
               </Col>
             </Row>
@@ -733,6 +746,7 @@ const AdminAccount = () => {
                     </Select.Option>
                   ))}
                 </Select>
+
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -811,6 +825,7 @@ const AdminAccount = () => {
             </Col>
           </Row>
           <Divider />
+
         </Form>
       </Modal>
 

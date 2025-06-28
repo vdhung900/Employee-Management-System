@@ -22,6 +22,7 @@ export const login = (loginData) => {
   localStorage.setItem("refreshToken", loginData.refreshToken || "");
   localStorage.setItem("role", decode?.role.code);
   localStorage.setItem("permissions", JSON.stringify(permissionList));
+
 };
 
 export const isAuthenticated = () => {

@@ -9,16 +9,20 @@ import {Departments, DepartmentsSchema} from "../../schemas/departments.schema";
 import {Position, PositionSchema} from "../../schemas/position.schema";
 import {AdminAccountModule} from "../admin/admin_account.module";
 import {MailModule} from "../mail/mail.module";
+import {Documents, DocumentsSchema} from "../../schemas/documents.schema";
+import {UploadModule} from "../minio/minio.module";
 
 @Module({
   imports: [
       MongooseModule.forFeature([
         {name: Requests.name, schema: RequestsSchema},
         {name: typeRequest.name, schema: typeRequestSchema},
-          { name: Departments.name, schema: DepartmentsSchema }, { name: Position.name, schema: PositionSchema }
+          { name: Departments.name, schema: DepartmentsSchema }, { name: Position.name, schema: PositionSchema },
+          {name: Documents.name, schema: DocumentsSchema }
       ]),
       AdminAccountModule,
-      MailModule
+      MailModule,
+      UploadModule
   ],
   providers: [RequestService, HrRequestService],
   controllers: [HrRequestController]

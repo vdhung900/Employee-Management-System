@@ -18,6 +18,7 @@ import {RolesGuard} from "./common/guards/roles.guard";
 import {JwtAuthGuard} from "./common/guards/jwt-auth.guard";
 import {RolePermissionModule} from "./module/auth/role_permission/role_permission.module";
 import { BenefitsModule } from './module/benefits/benefits.module';
+import { UploadModule } from './module/minio/minio.module';
 import { UpdateEmployeeModule } from './module/hr/update_Employees/update_Employee.module';
 import { ProfileModule } from './module/employee/profile/profile.module';
 
@@ -42,8 +43,11 @@ import { ProfileModule } from './module/employee/profile/profile.module';
     DepartmentModule,
     RolePermissionModule,
     BenefitsModule,
+    UploadModule,
     UpdateEmployeeModule,
-    ProfileModule
+    ProfileModule,
+
+
   ],
   controllers: [],
   providers: [
@@ -77,5 +81,6 @@ export class AppModule implements NestModule {
         // { path: 'admin-accounts/positions', method: RequestMethod.GET },
       )
       .forRoutes('*');
+
   }
 }
