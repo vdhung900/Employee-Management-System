@@ -8,6 +8,7 @@ import { SalaryCoefficient, SalaryCoefficientDocument } from 'src/schemas/salary
 import { Contract, ContractDocument } from 'src/schemas/contracts.schema';
 import { Model, Types } from 'mongoose';
 
+
 @Injectable()
 export class UpdateEmployeeService {
   constructor(

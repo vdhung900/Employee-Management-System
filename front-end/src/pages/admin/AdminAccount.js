@@ -110,6 +110,7 @@ const AdminAccount = () => {
 
   useEffect(() => {
 
+
     fetchData();
   }, []);
 
@@ -672,6 +673,7 @@ const AdminAccount = () => {
               <Col span={20}>
                 <Title level={3} style={{ marginBottom: '0', letterSpacing: '0.5px' }}>{accountDetails.employeeId.fullName}</Title>
                 <Text type="secondary" style={{ letterSpacing: '0.5px' }}> Mã nhân viên: {accountDetails.employeeId.code}</Text>
+
                 <Text type="secondary" style={{ letterSpacing: '0.5px' }}>{accountDetails.role.name}</Text>
               </Col>
             </Row>

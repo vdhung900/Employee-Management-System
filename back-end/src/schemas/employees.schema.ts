@@ -6,6 +6,7 @@ import { Position } from "./position.schema";
 import { SalaryCoefficient } from "./salaryCoefficents.schema";
 import { Contract } from "./contracts.schema";
 
+
 export type EmployeesDocument = Employees & Document;
 
 @Schema()

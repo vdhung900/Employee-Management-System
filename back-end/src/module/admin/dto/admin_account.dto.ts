@@ -79,6 +79,7 @@ export class CreateAccount {
 }
 
 export class UpdateAccount { 
+
     @IsOptional()
     @IsString()
     username?: string;

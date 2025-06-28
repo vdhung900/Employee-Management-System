@@ -11,6 +11,7 @@ import { AccountInfoDto } from "./dto/accountInfo.dto";
 import { USER_ROLE } from "../../enum/role.enum";
 import { STATUS } from "../../enum/status.enum";
 import { RolePermissionService } from "../auth/role_permission/role_permission.service";
+
 @Injectable()
 export class AdminAccountService {
   constructor(
@@ -48,8 +49,7 @@ export class AdminAccountService {
         bankName: null,
         document: null,
         contractId: null,
-        salaryCoefficientId: null,
-        code: code
+        salaryCoefficientId: null
       });
 
       if (!newEmployee) {

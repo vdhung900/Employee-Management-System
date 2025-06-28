@@ -11,6 +11,7 @@ import { Contract, ContractSchema } from "src/schemas/contracts.schema";
 @Module({
     imports: [MongooseModule.forFeature([{ name: Employees.name, schema: EmployeesSchema }, { name: Departments.name, schema: DepartmentsSchema },
          { name: Position.name, schema: PositionSchema }, { name: SalaryCoefficient.name, schema: SalaryCoefficientSchema }, { name: Contract.name, schema: ContractSchema }])],
+
     controllers: [UpdateEmployeeController],
     providers: [UpdateEmployeeService],
     exports: [UpdateEmployeeService],
