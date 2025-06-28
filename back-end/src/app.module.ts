@@ -47,6 +47,7 @@ import { ProfileModule } from './module/employee/profile/profile.module';
     UpdateEmployeeModule,
     ProfileModule,
 
+
   ],
   controllers: [],
   providers: [

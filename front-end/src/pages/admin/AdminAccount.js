@@ -112,6 +112,7 @@ const AdminAccount = () => {
 
   useEffect(() => {
 
+
     fetchData();
   }, []);
 
@@ -565,7 +566,6 @@ const AdminAccount = () => {
               <Form.Item
                 name="fullName"
                 label="Họ và tên"
-
               >
                 <Input prefix={<UserOutlined />} placeholder="Nhập họ và tên" />
               </Form.Item>
@@ -681,6 +681,7 @@ const AdminAccount = () => {
               <Col span={20}>
                 <Title level={3} style={{ marginBottom: '0', letterSpacing: '0.5px' }}>{accountDetails.employeeId.fullName}</Title>
                 <Text type="secondary" style={{ letterSpacing: '0.5px' }}> Mã nhân viên: {accountDetails.employeeId.code}</Text>
+
                 <Text type="secondary" style={{ letterSpacing: '0.5px' }}>{accountDetails.role.name}</Text>
               </Col>
             </Row>
@@ -762,7 +763,6 @@ const AdminAccount = () => {
             </Col>
           </Row>
           <Divider />
-
           <Row gutter={16}>
             <Col span={24}>
               <Title level={5}>Thông tin cá nhân</Title>

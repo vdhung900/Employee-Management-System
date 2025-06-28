@@ -13,6 +13,7 @@ import { STATUS } from "../../enum/status.enum";
 import { RolePermissionService } from "../auth/role_permission/role_permission.service";
 
 
+
 @Injectable()
 export class AdminAccountService {
   constructor(
@@ -51,8 +52,7 @@ export class AdminAccountService {
         bankName: null,
         document: null,
         contractId: null,
-        salaryCoefficientId: null,
-        code: code
+        salaryCoefficientId: null
       });
 
       if (!newEmployee) {
@@ -68,7 +68,6 @@ export class AdminAccountService {
         password: hash,
         role: roleId,
         status: createAccount.status,
-
         employeeId: newEmployee._id
       });
 
@@ -78,7 +77,6 @@ export class AdminAccountService {
       }
 
       return {
-
         account,
         employee: newEmployee,
         message: 'Tạo tài khoản và thông tin nhân viên thành công'

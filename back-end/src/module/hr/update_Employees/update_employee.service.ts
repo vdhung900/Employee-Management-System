@@ -8,6 +8,7 @@ import { SalaryCoefficient, SalaryCoefficientDocument } from 'src/schemas/salary
 import { Contract, ContractDocument } from 'src/schemas/contracts.schema';
 import { Model, Types } from 'mongoose';
 
+
 @Injectable()
 export class UpdateEmployeeService {
   constructor(
@@ -54,6 +55,7 @@ export class UpdateEmployeeService {
       path: 'contractId',
       select: 'contract_type'
     })
+
     .exec();
     return employees;
   }
@@ -82,6 +84,4 @@ export class UpdateEmployeeService {
     return contractType;
   }
 
-  
- 
 }   

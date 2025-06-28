@@ -79,8 +79,10 @@ export class CreateAccount {
     code?: string;
 }
 
-export class UpdateAccount { 
 
+
+export class UpdateAccount {
+   
     @IsOptional()
     @IsString()
     username?: string;

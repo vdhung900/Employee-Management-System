@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { BaseSchema } from "./base.schema";
 import { Document, Types } from "mongoose";
-import { SalaryPackage } from "./salaryPackage.schema";
+import { SalaryCoefficient } from "./salaryCoefficents.schema";
 import { Employees } from "./employees.schema";
 import { SalaryCoefficient } from "./salaryCoefficents.schema";
 

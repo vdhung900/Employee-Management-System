@@ -44,7 +44,7 @@ export class AdminAccountController {
     }
   }
 
-  @Get('positions')
+  @Get('/positions')
   // @Roles(USER_ROLE.ADMIN, USER_ROLE.HR)
   async getAllPositions() : Promise<BaseResponse> {
     try {
