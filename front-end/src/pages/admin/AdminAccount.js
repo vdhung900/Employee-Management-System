@@ -39,6 +39,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Admin_account from '../../services/Admin_account';
 import RolePermissionService from '../../services/RolePermissionService';
+
 import moment from 'moment';
 
 const { Title, Text } = Typography;
@@ -76,7 +77,6 @@ const AdminAccount = () => {
     rolesList();
   }, []);
 
-
   const fetchData = async (page = 1, size = 10) => {
     setLoading(true);
     try {
@@ -109,6 +109,7 @@ const AdminAccount = () => {
   };
 
   useEffect(() => {
+
     fetchData();
   }, []);
 
@@ -373,7 +374,6 @@ const AdminAccount = () => {
   };
 
   const handleAddUser = async () => {
-
     try {
       await addForm.validateFields().then(async (values) => {
         setLoading(true);
@@ -527,6 +527,7 @@ const AdminAccount = () => {
                 </Select>
               </Form.Item>
 
+
             </Col>
             <Col span={12}>
               <Form.Item
@@ -540,6 +541,7 @@ const AdminAccount = () => {
                       {role.name}
                     </Select.Option>
                   ))}
+
                 </Select>
               </Form.Item>
             </Col>
@@ -669,6 +671,7 @@ const AdminAccount = () => {
               </Col>
               <Col span={20}>
                 <Title level={3} style={{ marginBottom: '0', letterSpacing: '0.5px' }}>{accountDetails.employeeId.fullName}</Title>
+                <Text type="secondary" style={{ letterSpacing: '0.5px' }}> Mã nhân viên: {accountDetails.employeeId.code}</Text>
                 <Text type="secondary" style={{ letterSpacing: '0.5px' }}>{accountDetails.role.name}</Text>
               </Col>
             </Row>
@@ -733,6 +736,7 @@ const AdminAccount = () => {
                     </Select.Option>
                   ))}
                 </Select>
+
               </Form.Item>
             </Col>
             <Col span={12}>

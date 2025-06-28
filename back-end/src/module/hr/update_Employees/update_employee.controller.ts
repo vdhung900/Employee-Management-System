@@ -46,4 +46,14 @@ export class UpdateEmployeeController {
             throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    @Get("/contracts")
+    async getAllContract() {
+        try {
+            const data = await this.updateEmployeeService.getAllContractType();
+            return BaseResponse.success(data, "Thành công", HttpStatus.OK)
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
