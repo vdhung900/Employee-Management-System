@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { BaseSchema } from "./base.schema";
 import { Document, Types } from "mongoose";
+import {Documents} from "./documents.schema";
 
 export type EmployeesDocument = Employees & Document;
 
@@ -42,8 +43,8 @@ export class Employees extends BaseSchema{
     @Prop()
     bankName: string;
 
-    @Prop()
-    document: string;
+    @Prop({ type: [{ type: Types.ObjectId, ref: Documents.name }] })
+    attachments: Types.ObjectId[];
 
     @Prop({type: Types.ObjectId, ref: 'Contract'})
     contractId: Types.ObjectId;

@@ -152,7 +152,7 @@ export class AdminAccountService {
             joinDate: employeeData.joinDate || null,
             bankAccount: employeeData.bankAccount || null,
             bankName: employeeData.bankName || null,
-            document: employeeData.document || null,
+            attachments: employeeData.document || null,
           },
           { new: true }
         ).exec();
@@ -235,7 +235,7 @@ export class AdminAccountService {
     }
   }
 
-  async createByInfo(info: any){
+  async createByInfo(info: any, files: any){
     try{
       if(!info.fullName || !info.email || !info.department || !info.position) {
         throw new Error('Thông tin không đầy đủ');
@@ -258,6 +258,13 @@ export class AdminAccountService {
         departmentId: new Types.ObjectId(info.department),
         positionId: new Types.ObjectId(info.position),
         joinDate: new Date(info.startDate) || new Date(),
+        dob: null,
+        gender: null,
+        resignDate: null,
+        bankAccount: null,
+        bankName: null,
+        contractId:  null,
+        attachments: files
       });
       if (!newEmployee) {
         throw new Error('Không thể tạo thông tin nhân viên');

@@ -5,9 +5,10 @@ import {Model, Types} from "mongoose";
 import {typeRequest, typeRequestDocument} from "../../schemas/typeRequestCategory.schema";
 import {CreateRequestDto} from "./dto/createRequest.dto";
 import {UploadService} from "../minio/minio.service";
+import {STATUS} from "../../enum/status.enum";
 
 @Injectable()
-export class RequestService {
+export class BaseRequestService {
     constructor(
         @InjectModel(Requests.name) private readonly requestModel: Model<RequestsDocument>,
         @InjectModel(typeRequest.name) private readonly typeRequestModel: Model<typeRequestDocument>,
@@ -24,6 +25,13 @@ export class RequestService {
 
     async findAll() {
         return await this.requestModel.find().populate('employeeId').populate('typeRequest').exec();
+    }
+
+    async findByFilterCode(code: string){
+        return await this.requestModel.find().populate('employeeId').populate({
+            path: 'typeRequest',
+            match: {code: {$ne: code}}
+        }).exec();
     }
 
     async findById(id: any) {
@@ -57,16 +65,7 @@ export class RequestService {
         data.priority = updateData.priority;
         data.note = updateData.note;
         data.updatedAt = new Date();
-        if(updateData.typeCode === 'ACCOUNT_CREATE_REQUEST'){
-            data.dataReq = {
-                fullName: updateData.dataReq.fullName,
-                email: updateData.dataReq.email,
-                phone: updateData.dataReq.phone,
-                position: updateData.dataReq.position,
-                department: updateData.dataReq.department,
-                startDate: updateData.dataReq.startDate,
-            }
-        }
+        data.dataReq = updateData.dataReq;
         return await data.save();
     }
 
@@ -95,7 +94,7 @@ export class RequestService {
                 throw new Error('Request is not pending or approved');
             }
             data.status = 'Rejected';
-            data.reason = reason || 'No reason provided';
+            data.dataReq.reason = reason || 'No reason provided';
             data.timeResolve = 1;
             await data.save();
         }else if (status === "Cancelled") {

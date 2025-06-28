@@ -8,7 +8,7 @@ import { RequestLog, RequestLogSchema } from './schemas/request-log.schema';
 import { RequestLoggerMiddleware } from './middleware/request-logger.middleware';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { RequestManageModule } from './module/request-manage/request-manage.module';
+import { SystemModule } from './module/system/system.module';
 import { RequestModule } from './module/request/request.module';
 import { CategoryModule } from './module/category/category.module';
 import { AdminAccountModule } from './module/admin/admin_account.module';
@@ -34,7 +34,7 @@ import { UploadModule } from './module/minio/minio.module';
         limit: 15
       }
     ]),
-    RequestManageModule,
+    SystemModule,
     RequestModule,
     CategoryModule,
     AdminAccountModule,

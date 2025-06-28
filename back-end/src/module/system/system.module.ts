@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { RequestManageService } from './request-manage.service';
-import { RequestManageController } from './request-manage.controller';
+import { SystemService } from './system.service';
+import { SystemController } from './system.controller';
 import {MongooseModule} from "@nestjs/mongoose";
 import {RequestLog, RequestLogSchema} from "../../schemas/request-log.schema";
 
@@ -10,7 +10,7 @@ import {RequestLog, RequestLogSchema} from "../../schemas/request-log.schema";
         {name: RequestLog.name, schema: RequestLogSchema},
       ])
   ],
-  providers: [RequestManageService],
-  controllers: [RequestManageController]
+  providers: [SystemService],
+  controllers: [SystemController]
 })
-export class RequestManageModule {}
+export class SystemModule {}

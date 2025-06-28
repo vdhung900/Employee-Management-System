@@ -11,7 +11,7 @@ interface RequestStats {
 }
 
 @Injectable()
-export class RequestManageService {
+export class SystemService {
     constructor(
         @InjectModel(RequestLog.name) private requestModel: Model<RequestLogDocument>,
     ) {
