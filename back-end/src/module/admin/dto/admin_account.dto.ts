@@ -73,14 +73,12 @@ export class CreateAccount {
     @IsOptional()
     @IsString()
     salaryCoefficientId?: Types.ObjectId;
-
     @IsOptional()
     @IsString()
     code?: string;
 }
 
 export class UpdateAccount { 
-
     @IsOptional()
     @IsString()
     username?: string;

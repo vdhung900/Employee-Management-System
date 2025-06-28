@@ -54,6 +54,7 @@ export class UpdateEmployeeService {
       path: 'contractId',
       select: 'contract_type'
     })
+
     .exec();
     return employees;
   }
@@ -82,6 +83,4 @@ export class UpdateEmployeeService {
     return contractType;
   }
 
-  
- 
 }   

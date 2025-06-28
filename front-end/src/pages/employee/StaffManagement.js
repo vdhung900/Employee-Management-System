@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import {
     Card,
     Typography,
@@ -61,7 +62,6 @@ import Admin_account from '../../services/Admin_account';
 import moment from 'moment';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
-
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -84,7 +84,6 @@ const StaffManagement = () => {
     const [positions, setPositions] = useState([]);
     const [contracts, setContracts] = useState([]);
     const [salaryCoefficients, setSalaryCoefficients] = useState([]);
-
     const getStatusColor = (status) => {
         switch (status) {
             case 'active': return 'success';
@@ -186,7 +185,6 @@ const StaffManagement = () => {
         console.log('Status filter changed to:', value);
         setFilterStatus(value);
     };
-
     const columns = [
         {
             title: 'Nhân viên',
@@ -474,9 +472,69 @@ const StaffManagement = () => {
                                     label: <span><FileTextOutlined /> Báo cáo</span>,
                                     children: (
                                         <Card>
-                                            <Text>Báo cáo nhân sự</Text>
+                                            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+                                                <Space>
+                                                    <Input
+                                                        placeholder="Tìm kiếm nhân viên, ID, phòng ban..."
+                                                        prefix={<SearchOutlined />}
+                                                        style={{ width: 300 }}
+                                                        value={searchText}
+                                                        onChange={e => setSearchText(e.target.value)}
+                                                        allowClear
+                                                    />
+                                                    <Select
+                                                        style={{ width: 200 }}
+                                                        placeholder="Phòng ban"
+                                                        value={filterDepartment}
+                                                        onChange={setFilterDepartment}
+                                                    >
+                                                        <Option value="all">Tất cả phòng ban</Option>
+                                                        {departments.map(dept => (
+                                                            <Option key={dept._id} value={dept._id}>{dept.name}</Option>
+                                                        ))}
+                                                    </Select>
+                                                    <Select
+                                                        style={{ width: 200 }}
+                                                        placeholder="Trạng thái"
+                                                        value={filterStatus}
+                                                        onChange={setFilterStatus}
+                                                    >
+                                                        <Option value="all">Tất cả trạng thái</Option>
+                                                        <Option value="active">Đang làm việc</Option>
+                                                        <Option value="inactive">Nghỉ việc</Option>
+                                                        <Option value="leave">Nghỉ phép</Option>
+                                                    </Select>
+                                                </Space>
+                                                <Space>
+                                                    {isHR && (
+                                                        <>
+                                                            <Button icon={<FilterOutlined />}>Lọc</Button>
+                                                            <Button icon={<ExportOutlined />}>Export</Button>
+                                                            <Button
+                                                                type="primary"
+                                                                icon={<UserAddOutlined />}
+                                                                onClick={() => showModal('add')}
+                                                            >
+                                                                Thêm nhân viên
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </Space>
+                                            </div>
+                                            <Table
+                                                dataSource={employees}
+                                                columns={columns}
+                                                rowKey="id"
+                                                pagination={{
+                                                    defaultPageSize: 10,
+                                                    showSizeChanger: true,
+                                                    pageSizeOptions: ['10', '20', '50', '100'],
+                                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhân viên`,
+                                                }}
+                                            />
                                         </Card>
                                     )
+
                                 },
                                 isManager && {
                                     key: '4',
