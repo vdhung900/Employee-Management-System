@@ -46,7 +46,6 @@ export class UpdateEmployeeController {
             throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
     @Get("/contracts")
     async getAllContract() {
         try {

@@ -36,7 +36,7 @@ export class UpdateEmployeeDto extends BaseReq {
     @IsOptional()
     @IsMongoId()
     contractId?: Types.ObjectId;
-
+  
     @IsOptional()
     @IsString()
     joinDate?: Date;

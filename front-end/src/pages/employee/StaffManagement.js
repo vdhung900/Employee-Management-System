@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import {
     Card,
     Typography,
@@ -533,6 +534,7 @@ const StaffManagement = () => {
                                             />
                                         </Card>
                                     )
+
                                 },
                                 isManager && {
                                     key: '4',

@@ -33,7 +33,6 @@ import {
   MailOutlined,
   PhoneOutlined,
   EyeOutlined
-
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
@@ -77,7 +76,6 @@ const AdminAccount = () => {
   useEffect(() => {
     rolesList();
   }, []);
-
 
   const fetchData = async (page = 1, size = 10) => {
     setLoading(true);
@@ -197,7 +195,6 @@ const AdminAccount = () => {
               {
                 key: 'reset',
                 icon: <LockOutlined />,
-
                 label: 'Reset password',
                 onClick: () => showResetPasswordModal(record)
               },
@@ -207,7 +204,6 @@ const AdminAccount = () => {
                 label: 'Xem chi tiết',
                 onClick: () => showDetailModal(record)
               },
-
             ]
           }}
           trigger={['click']}
@@ -231,7 +227,6 @@ const AdminAccount = () => {
       dob: accountDetail.data.employeeId.dob ? moment(accountDetail.data.employeeId.dob) : null,
       gender: accountDetail.data.employeeId.gender,
     });
-
     setEditModalVisible(true);
   };
 
@@ -251,7 +246,6 @@ const AdminAccount = () => {
       // Call API to update account
       const response = await Admin_account.updateAccount(userToEdit._id, accountData);
       if (response.success) {
-
         message.success('Đã cập nhật người dùng thành công!');
         const accounts = await Admin_account.getAllAcount();
         const users = (accounts.data || []).map((user, idx) => ({
@@ -381,7 +375,6 @@ const AdminAccount = () => {
   };
 
   const handleAddUser = async () => {
-
     try {
       await addForm.validateFields().then(async (values) => {
         setLoading(true);
@@ -390,7 +383,6 @@ const AdminAccount = () => {
         if (response.success) {
           message.success('Thêm tài khoản thành công!');
         }
-
         setAddModalVisible(false);
         // Reload lại danh sách tài khoản
         const accounts = await Admin_account.getAllAcount();
@@ -825,7 +817,6 @@ const AdminAccount = () => {
             </Col>
           </Row>
           <Divider />
-
         </Form>
       </Modal>
 
