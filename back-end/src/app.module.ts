@@ -8,7 +8,7 @@ import { RequestLog, RequestLogSchema } from "./schemas/request-log.schema";
 import { RequestLoggerMiddleware } from "./middleware/request-logger.middleware";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
-import { RequestManageModule } from "./module/request-manage/request-manage.module";
+import { SystemModule } from "./module/system/system.module";
 import { RequestModule } from "./module/request/request.module";
 import { CategoryModule } from "./module/category/category.module";
 import { AdminAccountModule } from "./module/admin/admin_account.module";
@@ -16,9 +16,12 @@ import { BadRequestException } from "@nestjs/common";
 import { DepartmentModule } from "./module/department/department.module";
 import { RolesGuard } from "./common/guards/roles.guard";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
+import { AttendanceModule } from "./module/attendance/attendance.module";
 import { RolePermissionModule } from "./module/auth/role_permission/role_permission.module";
 import { BenefitsModule } from "./module/benefits/benefits.module";
-import { AttendanceModule } from "./module/attendance/attendance.module";
+import { UpdateEmployeeModule } from "./module/hr/update_Employees/update_Employee.module";
+import { ProfileModule } from "./module/employee/profile/profile.module";
+import { UploadModule } from "./module/minio/minio.module";
 
 @Module({
   imports: [
@@ -32,7 +35,7 @@ import { AttendanceModule } from "./module/attendance/attendance.module";
         limit: 15,
       },
     ]),
-    RequestManageModule,
+    SystemModule,
     RequestModule,
     CategoryModule,
     AdminAccountModule,
@@ -40,6 +43,9 @@ import { AttendanceModule } from "./module/attendance/attendance.module";
     AttendanceModule,
     RolePermissionModule,
     BenefitsModule,
+    UploadModule,
+    UpdateEmployeeModule,
+    ProfileModule,
   ],
   controllers: [],
   providers: [

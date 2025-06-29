@@ -1,395 +1,417 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Typography, Table, Progress, Select, Tabs, Space, Statistic, Button, Divider, Tag, Avatar, Tooltip } from 'antd';
-import { BarChartOutlined, UserOutlined, ArrowUpOutlined, ArrowDownOutlined, TeamOutlined, CheckCircleOutlined, ClockCircleOutlined, FileTextOutlined, AlertOutlined } from '@ant-design/icons';
-import { Line, Bar, Pie } from '@ant-design/charts';
+import { Card, Row, Col, Typography, Table, Progress, Select, Tabs, Space, Statistic, Button, Divider, Tag, Avatar, Tooltip, Form, Input, DatePicker, Modal, InputNumber, Radio } from 'antd';
+import { UserOutlined, BarChartOutlined, FileSearchOutlined, TrophyOutlined, CheckCircleOutlined, DollarOutlined, DownloadOutlined, LineChartOutlined } from '@ant-design/icons';
+import { Line, Column } from '@ant-design/charts';
+import dayjs from 'dayjs';
+import ThreeDCard from '../../components/3d/ThreeDCard';
+import * as XLSX from 'xlsx';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
+const { TextArea } = Input;
+const { RangePicker } = DatePicker;
 
-const TeamPerformance = () => {
-    const [teams, setTeams] = useState([]);
+const MonthlyPerformanceReview = () => {
+    const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [timeRange, setTimeRange] = useState('week');
-    const [activeTab, setActiveTab] = useState('overview');
+    const [selectedMonth, setSelectedMonth] = useState(dayjs());
+    const [activeTab, setActiveTab] = useState('list');
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [form] = Form.useForm();
+    const [isStatsModalVisible, setIsStatsModalVisible] = useState(false);
+    const [selectedEmployeeStats, setSelectedEmployeeStats] = useState(null);
+    const [statsDateRange, setStatsDateRange] = useState([dayjs().startOf('month'), dayjs()]);
+    const [statsViewType, setStatsViewType] = useState('current'); // 'current' or 'all'
 
     // Mock data
     useEffect(() => {
         setLoading(true);
         setTimeout(() => {
-            setTeams([
+            setEmployees([
                 {
-                    id: 1,
-                    name: 'Phát triển phần mềm',
-                    members: 8,
-                    performance: 92,
-                    tasks: { completed: 38, inProgress: 7, pending: 3, total: 48 },
-                    workHours: 312,
-                    attendance: 95,
-                    projectsDelivered: 4,
-                    projectsOngoing: 2,
-                    trend: 'up',
-                    trendValue: 5,
-                    leadName: 'Nguyễn Văn A',
-                    leadAvatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-                    overHours: 12,
-                    ratings: { quality: 93, speed: 88, communication: 90 }
-                },
-                {
-                    id: 2,
-                    name: 'Thiết kế UI/UX',
-                    members: 5,
-                    performance: 88,
-                    tasks: { completed: 22, inProgress: 4, pending: 2, total: 28 },
-                    workHours: 190,
-                    attendance: 92,
-                    projectsDelivered: 3,
-                    projectsOngoing: 1,
-                    trend: 'up',
-                    trendValue: 2,
-                    leadName: 'Trần Thị B',
-                    leadAvatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-                    overHours: 5,
-                    ratings: { quality: 94, speed: 85, communication: 89 }
-                },
-                {
-                    id: 3,
-                    name: 'Kiểm thử',
-                    members: 6,
-                    performance: 85,
-                    tasks: { completed: 25, inProgress: 8, pending: 3, total: 36 },
-                    workHours: 228,
-                    attendance: 90,
-                    projectsDelivered: 2,
-                    projectsOngoing: 3,
-                    trend: 'down',
-                    trendValue: 1,
-                    leadName: 'Lê Văn C',
-                    leadAvatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-                    overHours: 8,
-                    ratings: { quality: 90, speed: 82, communication: 87 }
-                },
-                {
-                    id: 4,
-                    name: 'Hạ tầng & DevOps',
-                    members: 4,
-                    performance: 90,
-                    tasks: { completed: 18, inProgress: 3, pending: 1, total: 22 },
-                    workHours: 156,
-                    attendance: 98,
-                    projectsDelivered: 1,
-                    projectsOngoing: 2,
-                    trend: 'up',
-                    trendValue: 3,
-                    leadName: 'Phạm Thị D',
-                    leadAvatar: 'https://randomuser.me/api/portraits/women/4.jpg',
-                    overHours: 10,
-                    ratings: { quality: 92, speed: 91, communication: 84 }
-                },
+                    id: '1',
+                    name: 'Nguyễn Văn A',
+                    employeeId: 'EMP001',
+                    department: 'Engineering',
+                    position: 'Frontend Developer',
+                    avatar: null,
+                    monthlyReviews: [
+                        {
+                            month: 6,
+                            year: 2024,
+                            results: [
+                                {
+                                    goalTitle: 'Hoàn thành dự án X',
+                                    targetValue: 100,
+                                    actualValue: 95,
+                                    score: 9.5
+                                },
+                                {
+                                    goalTitle: 'Số lỗi bug',
+                                    targetValue: 0,
+                                    actualValue: 2,
+                                    score: 8.5
+                                },
+                                {
+                                    goalTitle: 'Code coverage',
+                                    targetValue: 90,
+                                    actualValue: 88,
+                                    score: 9.0
+                                }
+                            ],
+                            overallScore: 9.0,
+                            comment: 'Hoàn thành tốt các mục tiêu đề ra',
+                            bonus: 1000000,
+                            reviewer: 'Trần Văn B',
+                            status: 'completed'
+                        }
+                    ],
+                    monthlyGoals: [
+                        {
+                            goalTitle: 'Hoàn thành dự án X',
+                            targetValue: 100
+                        },
+                        {
+                            goalTitle: 'Số lỗi bug',
+                            targetValue: 0
+                        },
+                        {
+                            goalTitle: 'Code coverage',
+                            targetValue: 90
+                        }
+                    ]
+                }
             ]);
             setLoading(false);
         }, 1000);
     }, []);
 
-    // Performance time series data
-    const performanceData = [
-        { week: 'Tuần 1', team: 'Phát triển phần mềm', value: 85 },
-        { week: 'Tuần 2', team: 'Phát triển phần mềm', value: 88 },
-        { week: 'Tuần 3', team: 'Phát triển phần mềm', value: 90 },
-        { week: 'Tuần 4', team: 'Phát triển phần mềm', value: 92 },
-        { week: 'Tuần 1', team: 'Thiết kế UI/UX', value: 82 },
-        { week: 'Tuần 2', team: 'Thiết kế UI/UX', value: 84 },
-        { week: 'Tuần 3', team: 'Thiết kế UI/UX', value: 87 },
-        { week: 'Tuần 4', team: 'Thiết kế UI/UX', value: 88 },
-        { week: 'Tuần 1', team: 'Kiểm thử', value: 87 },
-        { week: 'Tuần 2', team: 'Kiểm thử', value: 85 },
-        { week: 'Tuần 3', team: 'Kiểm thử', value: 84 },
-        { week: 'Tuần 4', team: 'Kiểm thử', value: 85 },
-        { week: 'Tuần 1', team: 'Hạ tầng & DevOps', value: 85 },
-        { week: 'Tuần 2', team: 'Hạ tầng & DevOps', value: 87 },
-        { week: 'Tuần 3', team: 'Hạ tầng & DevOps', value: 88 },
-        { week: 'Tuần 4', team: 'Hạ tầng & DevOps', value: 90 },
-    ];
-
-    // Task completion data
-    const taskCompletionData = [
-        { team: 'Phát triển phần mềm', type: 'Hoàn thành', value: 38 },
-        { team: 'Phát triển phần mềm', type: 'Đang làm', value: 7 },
-        { team: 'Phát triển phần mềm', type: 'Chờ xử lý', value: 3 },
-        { team: 'Thiết kế UI/UX', type: 'Hoàn thành', value: 22 },
-        { team: 'Thiết kế UI/UX', type: 'Đang làm', value: 4 },
-        { team: 'Thiết kế UI/UX', type: 'Chờ xử lý', value: 2 },
-        { team: 'Kiểm thử', type: 'Hoàn thành', value: 25 },
-        { team: 'Kiểm thử', type: 'Đang làm', value: 8 },
-        { team: 'Kiểm thử', type: 'Chờ xử lý', value: 3 },
-        { team: 'Hạ tầng & DevOps', type: 'Hoàn thành', value: 18 },
-        { team: 'Hạ tầng & DevOps', type: 'Đang làm', value: 3 },
-        { team: 'Hạ tầng & DevOps', type: 'Chờ xử lý', value: 1 },
-    ];
-
-    // Rating data for radar chart
-    const qualityRatings = teams.map(team => ({
-        team: team.name,
-        type: 'Chất lượng',
-        value: team.ratings.quality
-    }));
-
-    const speedRatings = teams.map(team => ({
-        team: team.name,
-        type: 'Tốc độ',
-        value: team.ratings.speed
-    }));
-
-    const communicationRatings = teams.map(team => ({
-        team: team.name,
-        type: 'Giao tiếp',
-        value: team.ratings.communication
-    }));
-
-    const ratingData = [...qualityRatings, ...speedRatings, ...communicationRatings];
-
-    // Line chart configuration
-    const lineConfig = {
-        data: performanceData,
-        xField: 'week',
-        yField: 'value',
-        seriesField: 'team',
-        yAxis: {
-            title: {
-                text: 'Điểm hiệu suất',
-            },
-            min: 80,
-            max: 100,
-        },
-        legend: {
-            position: 'top',
-        },
-        smooth: true,
-        animation: {
-            appear: {
-                animation: 'path-in',
-                duration: 1000,
-            },
-        },
+    const handleEvaluate = (employee) => {
+        setSelectedEmployee(employee);
+        const currentMonth = dayjs().month() + 1;
+        const currentYear = dayjs().year();
+        
+        form.setFieldsValue({
+            month: dayjs(),
+            results: employee.monthlyGoals.map(goal => ({
+                goalTitle: goal.goalTitle,
+                targetValue: goal.targetValue,
+                actualValue: 0,
+                score: 0
+            })),
+            overallScore: 0,
+            comment: '',
+            bonus: 0
+        });
+        setIsModalVisible(true);
     };
 
-    // Bar chart configuration
-    const barConfig = {
-        data: taskCompletionData,
-        isStack: true,
-        xField: 'value',
-        yField: 'team',
-        seriesField: 'type',
-        label: {
-            position: 'middle',
-            layout: [
-                {
-                    type: 'interval-adjust-position',
-                },
-                {
-                    type: 'interval-hide-overlap',
-                },
-                {
-                    type: 'adjust-color',
-                },
-            ],
-        },
-        color: ['#52c41a', '#1890ff', '#faad14'],
+    const handleSubmitEvaluation = () => {
+        form.validateFields().then(values => {
+            const month = values.month.month() + 1;
+            const year = values.month.year();
+            console.log('Evaluation submitted:', {
+                ...values,
+                month,
+                year
+            });
+            setIsModalVisible(false);
+        });
     };
 
-    // Team performance table columns
+    const handleShowStats = (employee) => {
+        setSelectedEmployeeStats(employee);
+        setIsStatsModalVisible(true);
+    };
+
+    const exportToExcel = (data, fileName) => {
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Đánh giá");
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+    };
+
+    const handleExportStats = () => {
+        const exportData = selectedEmployeeStats.monthlyReviews.map(review => ({
+            'Tháng': `${review.month}/${review.year}`,
+            'Điểm tổng thể': review.overallScore,
+            'Thưởng': review.bonus,
+            'Nhận xét': review.comment,
+            ...review.results.reduce((acc, result, index) => ({
+                ...acc,
+                [`Mục tiêu ${index + 1}`]: result.goalTitle,
+                [`Chỉ tiêu ${index + 1}`]: result.targetValue,
+                [`Thực tế ${index + 1}`]: result.actualValue,
+                [`Điểm ${index + 1}`]: result.score,
+            }), {})
+        }));
+
+        exportToExcel(exportData, `Thống kê đánh giá - ${selectedEmployeeStats.name}`);
+    };
+
     const columns = [
         {
-            title: 'Đội nhóm',
+            title: 'Nhân viên',
             dataIndex: 'name',
             key: 'name',
             render: (text, record) => (
                 <Space>
-                    <Avatar
-                        style={{ backgroundColor: '#1890ff' }}
-                        icon={<TeamOutlined />}
-                    />
+                    <Avatar icon={<UserOutlined />} src={record.avatar} />
                     <div>
                         <Text strong>{text}</Text>
                         <div>
-                            <Text type="secondary">Trưởng nhóm: {record.leadName}</Text>
+                            <Text type="secondary">{record.employeeId}</Text>
                         </div>
                     </div>
                 </Space>
             ),
         },
         {
-            title: 'Hiệu suất',
-            key: 'performance',
-            dataIndex: 'performance',
-            sorter: (a, b) => a.performance - b.performance,
-            render: (performance, record) => (
-                <Space direction="vertical" style={{ width: '100%' }}>
-                    <Progress
-                        percent={performance}
-                        size="small"
-                        status={
-                            performance >= 90 ? 'success' :
-                                performance >= 80 ? 'normal' :
-                                    performance >= 70 ? 'active' : 'exception'
-                        }
-                    />
-                    <Space size="small">
-                        {record.trend === 'up' ? (
-                            <Tag color="green">
-                                <ArrowUpOutlined /> +{record.trendValue}%
-                            </Tag>
-                        ) : (
-                            <Tag color="red">
-                                <ArrowDownOutlined /> -{record.trendValue}%
-                            </Tag>
-                        )}
+            title: 'Phòng ban',
+            dataIndex: 'department',
+            key: 'department',
+        },
+        {
+            title: 'Vị trí',
+            dataIndex: 'position',
+            key: 'position',
+        },
+        {
+            title: 'Đánh giá gần nhất',
+            key: 'lastReview',
+            render: (_, record) => {
+                const lastReview = record.monthlyReviews?.[0];
+                return lastReview ? (
+                    <Space direction="vertical" size={0}>
+                        <Tag color={lastReview.status === 'completed' ? 'success' : 'processing'}>
+                            {lastReview.status === 'completed' ? 'Đã đánh giá' : 'Chờ đánh giá'}
+                        </Tag>
+                        <Text type="secondary">Tháng {lastReview.month}/{lastReview.year}</Text>
+                        <Text>Điểm: <Text strong>{lastReview.overallScore}</Text>/10</Text>
                     </Space>
-                </Space>
-            ),
-        },
-        {
-            title: 'Công việc',
-            dataIndex: 'tasks',
-            key: 'tasks',
-            render: (tasks) => (
-                <Space direction="vertical" size={0}>
-                    <Text>Hoàn thành: {tasks.completed}/{tasks.total}</Text>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                        Đang làm: {tasks.inProgress}, Chờ xử lý: {tasks.pending}
-                    </Text>
-                    <Progress
-                        percent={Math.round((tasks.completed / tasks.total) * 100)}
-                        size="small"
-                        showInfo={false}
-                    />
-                </Space>
-            ),
-        },
-        {
-            title: 'Chuyên cần',
-            dataIndex: 'attendance',
-            key: 'attendance',
-            sorter: (a, b) => a.attendance - b.attendance,
-            render: (attendance) => (
-                <Progress
-                    type="circle"
-                    percent={attendance}
-                    width={50}
-                    format={(percent) => `${percent}%`}
-                    status={
-                        attendance >= 95 ? 'success' :
-                            attendance >= 90 ? 'normal' :
-                                attendance >= 85 ? 'active' : 'exception'
-                    }
-                />
-            ),
-        },
-        {
-            title: 'Dự án',
-            key: 'projects',
-            render: (_, record) => (
-                <Space direction="vertical" size={0}>
-                    <Text>Đã hoàn thành: {record.projectsDelivered}</Text>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                        Đang triển khai: {record.projectsOngoing}
-                    </Text>
-                </Space>
-            ),
-        },
-        {
-            title: 'Giờ làm việc',
-            dataIndex: 'workHours',
-            key: 'workHours',
-            sorter: (a, b) => a.workHours - b.workHours,
-            render: (hours, record) => (
-                <div>
-                    <Statistic value={hours} suffix="giờ" valueStyle={{ fontSize: '16px' }} />
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                        Thêm giờ: {record.overHours} giờ
-                    </Text>
-                </div>
-            ),
+                ) : (
+                    <Tag color="warning">Chưa có đánh giá</Tag>
+                );
+            }
         },
         {
             title: 'Thao tác',
             key: 'action',
-            render: () => (
-                <Button type="link">Chi tiết</Button>
+            render: (_, record) => (
+                <Space>
+                    <Button 
+                        type="primary"
+                        icon={<FileSearchOutlined />}
+                        onClick={() => handleEvaluate(record)}
+                    >
+                        Đánh giá
+                    </Button>
+                    <Button
+                        type="default"
+                        icon={<LineChartOutlined />}
+                        onClick={() => handleShowStats(record)}
+                    >
+                        Thống kê
+                    </Button>
+                </Space>
             ),
         },
     ];
 
-    // Tabs for different views
+    const getPerformanceData = (employee) => {
+        if (!employee?.monthlyReviews) return [];
+        return employee.monthlyReviews.map(review => ({
+            month: `${review.month}/${review.year}`,
+            score: review.overallScore
+        })).reverse();
+    };
+
+    const lineConfig = {
+        data: getPerformanceData(selectedEmployee),
+        xField: 'month',
+        yField: 'score',
+        yAxis: {
+            title: {
+                text: 'Điểm đánh giá',
+            },
+            min: 0,
+            max: 10,
+        },
+        point: {
+            size: 5,
+            shape: 'diamond',
+        },
+        label: {
+            style: {
+                fill: '#aaa',
+            },
+        }
+    };
+
+    const getOverallStats = () => {
+        const allReviews = employees.flatMap(emp => emp.monthlyReviews || []);
+        return {
+            avgScore: allReviews.reduce((sum, review) => sum + review.overallScore, 0) / allReviews.length,
+            totalBonus: allReviews.reduce((sum, review) => sum + (review.bonus || 0), 0),
+            completedGoals: allReviews.reduce((sum, review) => 
+                sum + review.results.filter(r => r.actualValue >= r.targetValue).length, 0),
+            totalGoals: allReviews.reduce((sum, review) => sum + review.results.length, 0),
+        };
+    };
+
     const items = [
         {
-            key: 'overview',
-            label: 'Tổng quan',
+            key: 'list',
+            label: 'Danh sách đánh giá',
             children: (
                 <div>
                     <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                         <Col span={24}>
-                            <Card title="Hiệu suất theo thời gian">
-                                <Line {...lineConfig} />
-                            </Card>
-                        </Col>
-                    </Row>
-                    <Row gutter={[16, 16]}>
-                        <Col xs={24} md={12}>
-                            <Card title="Hoàn thành công việc">
-                                <Bar {...barConfig} />
-                            </Card>
-                        </Col>
-                        <Col xs={24} md={12}>
-                            <Card title="Đánh giá hiệu suất các mặt">
-                                <Pie
-                                    data={ratingData}
-                                    angleField='value'
-                                    colorField='type'
-                                    radius={0.8}
-                                    innerRadius={0.5}
-                                    label={{
-                                        type: 'outer',
-                                        content: '{name}: {value}',
-                                    }}
-                                    interactions={[
-                                        {
-                                            type: 'element-selected',
-                                        },
-                                        {
-                                            type: 'element-active',
-                                        },
-                                    ]}
+                            <Space size="large">
+                                <DatePicker.MonthPicker 
+                                    value={selectedMonth}
+                                    onChange={setSelectedMonth}
+                                    format="MM/YYYY"
+                                    placeholder="Chọn tháng đánh giá"
                                 />
-                            </Card>
+                                <Select defaultValue="all" style={{ width: 200 }}>
+                                    <Option value="all">Tất cả trạng thái</Option>
+                                    <Option value="pending">Chờ đánh giá</Option>
+                                    <Option value="completed">Đã đánh giá</Option>
+                                </Select>
+                            </Space>
                         </Col>
                     </Row>
+                    <Table 
+                        columns={columns}
+                        dataSource={employees}
+                        rowKey="id"
+                        loading={loading}
+                    />
                 </div>
             ),
         },
         {
-            key: 'teams',
-            label: 'Hiệu suất các đội',
+            key: 'statistics',
+            label: 'Thống kê đánh giá',
             children: (
-                <Table
-                    columns={columns}
-                    dataSource={teams}
-                    rowKey="id"
-                    loading={loading}
-                    pagination={false}
-                />
-            ),
-        },
-        {
-            key: 'individual',
-            label: 'Hiệu suất cá nhân',
-            children: (
-                <Card>
-                    <Paragraph>
-                        <Text strong>Tính năng đang phát triển</Text>
-                        <br />
-                        Hiệu suất cá nhân sẽ hiển thị thông tin chi tiết về sự đóng góp, hiệu quả và năng suất của từng nhân viên trong đội nhóm.
-                    </Paragraph>
-                </Card>
+                <div>
+                    <Row gutter={[16, 16]}>
+                        <Col span={24}>
+                            <Space size="large" style={{ marginBottom: 16 }}>
+                                <DatePicker.MonthPicker 
+                                    value={selectedMonth}
+                                    onChange={setSelectedMonth}
+                                    format="MM/YYYY"
+                                    placeholder="Chọn tháng thống kê"
+                                />
+                                <Button 
+                                    type="primary" 
+                                    icon={<DownloadOutlined />}
+                                    onClick={() => {
+                                        const allData = employees.flatMap(emp => 
+                                            emp.monthlyReviews.map(review => ({
+                                                'Nhân viên': emp.name,
+                                                'Phòng ban': emp.department,
+                                                'Vị trí': emp.position,
+                                                'Tháng': `${review.month}/${review.year}`,
+                                                'Điểm tổng thể': review.overallScore,
+                                                'Thưởng': review.bonus,
+                                            }))
+                                        );
+                                        exportToExcel(allData, 'Thống kê đánh giá toàn công ty');
+                                    }}
+                                >
+                                    Xuất Excel
+                                </Button>
+                            </Space>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={[16, 16]}>
+                        <Col xs={24} md={6}>
+                            <ThreeDCard>
+                                <Statistic
+                                    title="Điểm trung bình"
+                                    value={getOverallStats().avgScore.toFixed(1)}
+                                    suffix="/10"
+                                    prefix={<TrophyOutlined />}
+                                    valueStyle={{ color: '#1890ff' }}
+                                />
+                            </ThreeDCard>
+                        </Col>
+                        <Col xs={24} md={6}>
+                            <ThreeDCard>
+                                <Statistic
+                                    title="Mục tiêu hoàn thành"
+                                    value={getOverallStats().completedGoals}
+                                    suffix={`/${getOverallStats().totalGoals}`}
+                                    prefix={<CheckCircleOutlined />}
+                                    valueStyle={{ color: '#52c41a' }}
+                                />
+                            </ThreeDCard>
+                        </Col>
+                        <Col xs={24} md={6}>
+                            <ThreeDCard>
+                                <Statistic
+                                    title="Tổng thưởng"
+                                    value={getOverallStats().totalBonus}
+                                    prefix={<DollarOutlined />}
+                                    valueStyle={{ color: '#faad14' }}
+                                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                />
+                            </ThreeDCard>
+                        </Col>
+                        <Col xs={24} md={6}>
+                            <ThreeDCard>
+                                <Statistic
+                                    title="Số nhân viên"
+                                    value={employees.length}
+                                    prefix={<UserOutlined />}
+                                    valueStyle={{ color: '#722ed1' }}
+                                />
+                            </ThreeDCard>
+                        </Col>
+                    </Row>
+
+                    <Card title="Phân bố điểm đánh giá" style={{ marginTop: 16 }}>
+                        <Column
+                            data={employees.map(emp => ({
+                                name: emp.name,
+                                score: emp.monthlyReviews[0]?.overallScore || 0
+                            }))}
+                            xField="name"
+                            yField="score"
+                            label={{
+                                position: 'top',
+                            }}
+                            yAxis={{
+                                min: 0,
+                                max: 10,
+                            }}
+                        />
+                    </Card>
+
+                    <Card title="Xu hướng điểm đánh giá theo phòng ban" style={{ marginTop: 16 }}>
+                        <Line
+                            data={employees.flatMap(emp => 
+                                emp.monthlyReviews.map(review => ({
+                                    month: `${review.month}/${review.year}`,
+                                    department: emp.department,
+                                    score: review.overallScore
+                                }))
+                            )}
+                            xField="month"
+                            yField="score"
+                            seriesField="department"
+                            yAxis={{
+                                min: 0,
+                                max: 10,
+                            }}
+                        />
+                    </Card>
+                </div>
             ),
         },
     ];
@@ -397,78 +419,350 @@ const TeamPerformance = () => {
     return (
         <div>
             <Title level={2}>
-                <BarChartOutlined /> Hiệu suất đội nhóm
+                <BarChartOutlined /> Đánh giá hiệu suất nhân viên
             </Title>
             <Divider />
 
-            <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-                <Col xs={24} sm={12} md={6}>
-                    <Card>
-                        <Statistic
-                            title="Hiệu suất trung bình"
-                            value={Math.round(teams.reduce((sum, team) => sum + team.performance, 0) / teams.length)}
-                            suffix="%"
-                            valueStyle={{ color: '#3f8600' }}
-                            prefix={<ArrowUpOutlined />}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                    <Card>
-                        <Statistic
-                            title="Tổng số công việc hoàn thành"
-                            value={teams.reduce((sum, team) => sum + team.tasks.completed, 0)}
-                            valueStyle={{ color: '#1890ff' }}
-                            prefix={<CheckCircleOutlined />}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                    <Card>
-                        <Statistic
-                            title="Tổng giờ làm việc"
-                            value={teams.reduce((sum, team) => sum + team.workHours, 0)}
-                            suffix="giờ"
-                            valueStyle={{ color: '#faad14' }}
-                            prefix={<ClockCircleOutlined />}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                    <Card>
-                        <Statistic
-                            title="Tổng dự án hoàn thành"
-                            value={teams.reduce((sum, team) => sum + team.projectsDelivered, 0)}
-                            valueStyle={{ color: '#52c41a' }}
-                            prefix={<FileTextOutlined />}
-                        />
-                    </Card>
-                </Col>
-            </Row>
-
-            <Card
-                title="Phân tích hiệu suất đội nhóm"
-                extra={
-                    <Select
-                        defaultValue="week"
-                        style={{ width: 150 }}
-                        onChange={setTimeRange}
-                    >
-                        <Option value="week">Theo tuần</Option>
-                        <Option value="month">Theo tháng</Option>
-                        <Option value="quarter">Theo quý</Option>
-                        <Option value="year">Theo năm</Option>
-                    </Select>
-                }
-            >
+            <Card>
                 <Tabs
                     activeKey={activeTab}
                     items={items}
                     onChange={setActiveTab}
                 />
             </Card>
+
+            <Modal
+                title="Đánh giá hiệu suất nhân viên"
+                open={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                onOk={handleSubmitEvaluation}
+                width={800}
+            >
+                {selectedEmployee && (
+                    <Form
+                        form={form}
+                        layout="vertical"
+                    >
+                        <Row gutter={[16, 16]}>
+                            <Col span={24}>
+                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+                                    <Avatar
+                                        size="large"
+                                        icon={<UserOutlined />}
+                                        src={selectedEmployee.avatar}
+                                        style={{ marginRight: 16 }}
+                                    />
+                                    <div>
+                                        <Text strong style={{ fontSize: 16 }}>{selectedEmployee.name}</Text>
+                                        <div>
+                                            <Text type="secondary">{selectedEmployee.position} - {selectedEmployee.department}</Text>
+                                        </div>
+                                    </div>
+                                </div>
+                                <Divider />
+                            </Col>
+
+                            <Col span={12}>
+                                <Form.Item
+                                    name="month"
+                                    label="Tháng đánh giá"
+                                    rules={[{ required: true, message: 'Vui lòng chọn tháng đánh giá' }]}
+                                >
+                                    <DatePicker.MonthPicker 
+                                        format="MM/YYYY"
+                                        style={{ width: '100%' }}
+                                    />
+                                </Form.Item>
+                            </Col>
+
+                            <Col span={24}>
+                                <Divider orientation="left">Đánh giá các mục tiêu</Divider>
+                                <Form.List name="results">
+                                    {(fields) => (
+                                        <>
+                                            {fields.map(({ key, name }) => (
+                                                <Row key={key} gutter={[16, 16]}>
+                                                    <Col span={8}>
+                                                        <Form.Item
+                                                            name={[name, 'goalTitle']}
+                                                            label="Mục tiêu"
+                                                        >
+                                                            <Input disabled />
+                                                        </Form.Item>
+                                                    </Col>
+                                                    <Col span={5}>
+                                                        <Form.Item
+                                                            name={[name, 'targetValue']}
+                                                            label="Chỉ tiêu"
+                                                        >
+                                                            <InputNumber disabled style={{ width: '100%' }} />
+                                                        </Form.Item>
+                                                    </Col>
+                                                    <Col span={5}>
+                                                        <Form.Item
+                                                            name={[name, 'actualValue']}
+                                                            label="Thực tế"
+                                                            rules={[{ required: true, message: 'Vui lòng nhập giá trị thực tế' }]}
+                                                        >
+                                                            <InputNumber style={{ width: '100%' }} />
+                                                        </Form.Item>
+                                                    </Col>
+                                                    <Col span={6}>
+                                                        <Form.Item
+                                                            name={[name, 'score']}
+                                                            label="Điểm"
+                                                            rules={[{ required: true, message: 'Vui lòng nhập điểm đánh giá' }]}
+                                                        >
+                                                            <InputNumber 
+                                                                min={0} 
+                                                                max={10} 
+                                                                style={{ width: '100%' }}
+                                                            />
+                                                        </Form.Item>
+                                                    </Col>
+                                                </Row>
+                                            ))}
+                                        </>
+                                    )}
+                                </Form.List>
+                            </Col>
+
+                            <Col span={8}>
+                                <Form.Item
+                                    name="overallScore"
+                                    label="Điểm tổng thể"
+                                    rules={[{ required: true, message: 'Vui lòng nhập điểm tổng thể' }]}
+                                >
+                                    <InputNumber 
+                                        min={0} 
+                                        max={10} 
+                                        style={{ width: '100%' }}
+                                    />
+                                </Form.Item>
+                            </Col>
+
+                            <Col span={8}>
+                                <Form.Item
+                                    name="bonus"
+                                    label="Thưởng"
+                                >
+                                    <InputNumber 
+                                        style={{ width: '100%' }}
+                                        formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                        parser={value => value.replace(/\$\s?|(,*)/g, '')}
+                                    />
+                                </Form.Item>
+                            </Col>
+
+                            <Col span={24}>
+                                <Form.Item
+                                    name="comment"
+                                    label="Nhận xét đánh giá"
+                                    rules={[{ required: true, message: 'Vui lòng nhập nhận xét đánh giá' }]}
+                                >
+                                    <TextArea rows={4} placeholder="Nhập nhận xét chi tiết về hiệu suất làm việc của nhân viên" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </Form>
+                )}
+            </Modal>
+
+            <Modal
+                title={`Thống kê đánh giá - ${selectedEmployeeStats?.name}`}
+                open={isStatsModalVisible}
+                onCancel={() => setIsStatsModalVisible(false)}
+                width={1000}
+                footer={[
+                    <Button key="close" onClick={() => setIsStatsModalVisible(false)}>
+                        Đóng
+                    </Button>,
+                    <Button 
+                        key="export" 
+                        type="primary" 
+                        icon={<DownloadOutlined />}
+                        onClick={handleExportStats}
+                    >
+                        Xuất Excel
+                    </Button>
+                ]}
+            >
+                {selectedEmployeeStats && (
+                    <div>
+                        <Row gutter={[16, 16]}>
+                            <Col span={24}>
+                                <Space size="large" style={{ marginBottom: 16 }}>
+                                    <Radio.Group 
+                                        value={statsViewType}
+                                        onChange={e => setStatsViewType(e.target.value)}
+                                    >
+                                        <Radio.Button value="current">Tháng hiện tại</Radio.Button>
+                                        <Radio.Button value="all">Tất cả các tháng</Radio.Button>
+                                    </Radio.Group>
+                                    {statsViewType === 'all' && (
+                                        <RangePicker
+                                            value={statsDateRange}
+                                            onChange={setStatsDateRange}
+                                            picker="month"
+                                        />
+                                    )}
+                                </Space>
+                            </Col>
+                        </Row>
+
+                        <Row gutter={[16, 16]}>
+                            <Col span={8}>
+                                <ThreeDCard>
+                                    <Statistic
+                                        title="Điểm trung bình"
+                                        value={selectedEmployeeStats.monthlyReviews.reduce((sum, review) => 
+                                            sum + review.overallScore, 0) / selectedEmployeeStats.monthlyReviews.length}
+                                        suffix="/10"
+                                        precision={1}
+                                    />
+                                </ThreeDCard>
+                            </Col>
+                            <Col span={8}>
+                                <ThreeDCard>
+                                    <Statistic
+                                        title="Mục tiêu hoàn thành"
+                                        value={selectedEmployeeStats.monthlyReviews.reduce((sum, review) => 
+                                            sum + review.results.filter(r => r.actualValue >= r.targetValue).length, 0)}
+                                        suffix={`/${selectedEmployeeStats.monthlyReviews.reduce((sum, review) => 
+                                            sum + review.results.length, 0)}`}
+                                    />
+                                </ThreeDCard>
+                            </Col>
+                            <Col span={8}>
+                                <ThreeDCard>
+                                    <Statistic
+                                        title="Tổng thưởng"
+                                        value={selectedEmployeeStats.monthlyReviews.reduce((sum, review) => 
+                                            sum + (review.bonus || 0), 0)}
+                                        formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                    />
+                                </ThreeDCard>
+                            </Col>
+                        </Row>
+
+                        <Card title="Xu hướng điểm đánh giá" style={{ marginTop: 16 }}>
+                            <Line
+                                data={selectedEmployeeStats.monthlyReviews
+                                    .filter(review => {
+                                        if (statsViewType === 'current') {
+                                            const currentMonth = dayjs().month() + 1;
+                                            const currentYear = dayjs().year();
+                                            return review.month === currentMonth && review.year === currentYear;
+                                        }
+                                        const reviewDate = dayjs(`${review.year}-${review.month}`);
+                                        return reviewDate.isBetween(statsDateRange[0], statsDateRange[1], 'month', '[]');
+                                    })
+                                    .map(review => ({
+                                        month: `${review.month}/${review.year}`,
+                                        score: review.overallScore
+                                    }))}
+                                xField="month"
+                                yField="score"
+                                yAxis={{
+                                    min: 0,
+                                    max: 10,
+                                }}
+                            />
+                        </Card>
+
+                        <Card title="Chi tiết đánh giá theo mục tiêu" style={{ marginTop: 16 }}>
+                            <Table
+                                dataSource={selectedEmployeeStats.monthlyReviews
+                                    .filter(review => {
+                                        if (statsViewType === 'current') {
+                                            const currentMonth = dayjs().month() + 1;
+                                            const currentYear = dayjs().year();
+                                            return review.month === currentMonth && review.year === currentYear;
+                                        }
+                                        const reviewDate = dayjs(`${review.year}-${review.month}`);
+                                        return reviewDate.isBetween(statsDateRange[0], statsDateRange[1], 'month', '[]');
+                                    })}
+                                columns={[
+                                    {
+                                        title: 'Tháng',
+                                        key: 'month',
+                                        render: (_, record) => `${record.month}/${record.year}`
+                                    },
+                                    {
+                                        title: 'Điểm tổng thể',
+                                        dataIndex: 'overallScore',
+                                        render: score => (
+                                            <Tag color={score >= 8 ? 'success' : score >= 6 ? 'warning' : 'error'}>
+                                                {score}/10
+                                            </Tag>
+                                        )
+                                    },
+                                    {
+                                        title: 'Mục tiêu hoàn thành',
+                                        key: 'completedGoals',
+                                        render: (_, record) => (
+                                            `${record.results.filter(r => r.actualValue >= r.targetValue).length}/${record.results.length}`
+                                        )
+                                    },
+                                    {
+                                        title: 'Thưởng',
+                                        dataIndex: 'bonus',
+                                        render: bonus => bonus?.toLocaleString() || 0
+                                    },
+                                    {
+                                        title: 'Chi tiết',
+                                        key: 'details',
+                                        render: (_, record) => (
+                                            <Button type="link" onClick={() => {
+                                                Modal.info({
+                                                    title: `Chi tiết đánh giá tháng ${record.month}/${record.year}`,
+                                                    width: 800,
+                                                    content: (
+                                                        <div>
+                                                            <Table
+                                                                dataSource={record.results}
+                                                                columns={[
+                                                                    {
+                                                                        title: 'Mục tiêu',
+                                                                        dataIndex: 'goalTitle',
+                                                                    },
+                                                                    {
+                                                                        title: 'Chỉ tiêu',
+                                                                        dataIndex: 'targetValue',
+                                                                    },
+                                                                    {
+                                                                        title: 'Thực tế',
+                                                                        dataIndex: 'actualValue',
+                                                                    },
+                                                                    {
+                                                                        title: 'Điểm',
+                                                                        dataIndex: 'score',
+                                                                    },
+                                                                ]}
+                                                                pagination={false}
+                                                            />
+                                                            <Divider />
+                                                            <Paragraph>
+                                                                <Text strong>Nhận xét: </Text>
+                                                                {record.comment}
+                                                            </Paragraph>
+                                                        </div>
+                                                    ),
+                                                });
+                                            }}>
+                                                Xem chi tiết
+                                            </Button>
+                                        )
+                                    },
+                                ]}
+                                pagination={false}
+                            />
+                        </Card>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };
 
-export default TeamPerformance;
+export default MonthlyPerformanceReview;

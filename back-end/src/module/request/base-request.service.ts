@@ -4,17 +4,21 @@ import {Requests, RequestsDocument} from "../../schemas/requests.schema";
 import {Model, Types} from "mongoose";
 import {typeRequest, typeRequestDocument} from "../../schemas/typeRequestCategory.schema";
 import {CreateRequestDto} from "./dto/createRequest.dto";
+import {UploadService} from "../minio/minio.service";
+import {STATUS} from "../../enum/status.enum";
 
 @Injectable()
-export class RequestService {
+export class BaseRequestService {
     constructor(
         @InjectModel(Requests.name) private readonly requestModel: Model<RequestsDocument>,
         @InjectModel(typeRequest.name) private readonly typeRequestModel: Model<typeRequestDocument>,
+        private readonly uploadService: UploadService
     ) {
     }
 
     async create(requestData: CreateRequestDto) {
         const newRequest = new this.requestModel(requestData);
+        newRequest.attachments = requestData.attachments ? requestData.attachments.map(item => item._id) : [];
         await newRequest.save()
         return this.findById(newRequest._id);
     }
@@ -23,16 +27,23 @@ export class RequestService {
         return await this.requestModel.find().populate('employeeId').populate('typeRequest').exec();
     }
 
+    async findByFilterCode(code: string){
+        return await this.requestModel.find().populate('employeeId').populate({
+            path: 'typeRequest',
+            match: {code: {$ne: code}}
+        }).exec();
+    }
+
     async findById(id: any) {
         return await this.requestModel.findById(id).populate('employeeId').populate('typeRequest').exec();
     }
 
     async findByTypeCode(typeRequestId: Types.ObjectId) {
-        return await this.requestModel.find({typeRequest: typeRequestId}).populate('employeeId').populate('typeRequest').exec();
+        return await this.requestModel.find({typeRequest: typeRequestId}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
     }
 
     async findByEmployeeId(employeeId: string) {
-        return await this.requestModel.find({employeeId: employeeId}).populate('employeeId').populate('typeRequest').exec();
+        return await this.requestModel.find({employeeId: employeeId}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
     }
 
     async update(id: string, updateData: CreateRequestDto) {
@@ -40,19 +51,21 @@ export class RequestService {
         if (!data) {
             throw new Error('Request not found');
         }
+        if(updateData.attachments.length > 0){
+            const dataRes = await this.uploadService.saveAndReplace(updateData.attachments);
+            data.attachments = Array.isArray(dataRes)
+                ? dataRes
+                    .filter(item => item && item._id)
+                    .map(item => new Types.ObjectId(item._id as string)
+                    )
+                : [];
+        }else{
+            data.attachments = [];
+        }
         data.priority = updateData.priority;
         data.note = updateData.note;
         data.updatedAt = new Date();
-        if(updateData.typeCode === 'ACCOUNT_CREATE_REQUEST'){
-            data.dataReq = {
-                fullName: updateData.dataReq.fullName,
-                email: updateData.dataReq.email,
-                phone: updateData.dataReq.phone,
-                position: updateData.dataReq.position,
-                department: updateData.dataReq.department,
-                startDate: updateData.dataReq.startDate,
-            }
-        }
+        data.dataReq = updateData.dataReq;
         return await data.save();
     }
 
@@ -81,7 +94,7 @@ export class RequestService {
                 throw new Error('Request is not pending or approved');
             }
             data.status = 'Rejected';
-            data.reason = reason || 'No reason provided';
+            data.dataReq.reason = reason || 'No reason provided';
             data.timeResolve = 1;
             await data.save();
         }else if (status === "Cancelled") {

@@ -27,6 +27,15 @@ import {
     UserOutlined,
     PrinterOutlined,
     MailOutlined,
+    ApartmentOutlined,
+    FileTextOutlined,
+    ExclamationCircleOutlined,
+    CalendarOutlined,
+    BellOutlined,
+    TeamOutlined,
+    IdcardOutlined,
+    FilterOutlined,
+    DownloadOutlined,
 } from '@ant-design/icons';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
 import RequestService from '../../services/RequestService';
@@ -40,24 +49,44 @@ const ApproveRequest = () => {
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0,
+        showSizeChanger: true,
+        pageSizeOptions: ['10', '20', '30', '40'],
+        showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} bản ghi`
+    });
 
     useEffect(() => {
-        loadRequests();
+        loadRequests(pagination.current, pagination.pageSize);
     }, []);
 
-    const loadRequests = async () => {
+    const loadRequests = async (page = 1, size = 10) => {
         setLoading(true);
         try{
-            const code = 'ACCOUNT_CREATE_REQUEST';
-            const response = await RequestService.getByTypeCode(code);
+            let body = {}
+            body.page = page;
+            body.limit = size;
+            const response = await RequestService.getByFilterCode(body);
             if(response.success){
-                setRequests(response.data);
+                setRequests(response.data.content || []);
+                setPagination(prev => ({
+                    ...prev,
+                    current: page,
+                    pageSize: size,
+                    total: response.data.totalItems || 0
+                }));
             }
         }catch (e) {
             console.log(e)
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleTableChange = (pagination) => {
+        loadRequests(pagination.current, pagination.pageSize);
     };
 
     const getStatusColor = (status) => {
@@ -189,6 +218,11 @@ const ApproveRequest = () => {
             key: 'note',
         },
         {
+            title: 'Lí do',
+            dataIndex: ['dataReq', 'reason'],
+            key: 'reason',
+        },
+        {
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
@@ -230,94 +264,145 @@ const ApproveRequest = () => {
     const rejectedRequests = requests.filter((r) => r.status === 'Rejected').length;
 
     return (
-        <div style={{ padding: '10px' }}>
-            <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
+        <div style={{ padding: '24px' }}>
+            <Row gutter={[24, 24]}>
                 <Col span={24}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <Title level={2}>Duyệt đơn nhân viên</Title>
-                            <Text type="secondary">HR/Manager phê duyệt các yêu cầu của nhân viên</Text>
-                        </div>
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        marginBottom: 24
+                    }}>
+                        <Space direction="vertical" size={4}>
+                            <Title level={2} style={{ margin: 0 }}>
+                                <ApartmentOutlined style={{ marginRight: 12, color: '#1890ff' }} />
+                                Duyệt đơn nhân viên
+                            </Title>
+                            <Text type="secondary" style={{ fontSize: 16 }}>
+                                <TeamOutlined style={{ marginRight: 8 }} />
+                                HR/Manager phê duyệt các yêu cầu của nhân viên
+                            </Text>
+                        </Space>
+                        <Space size={12}>
+                            <Button type="primary" icon={<DownloadOutlined />}>
+                                Xuất báo cáo
+                            </Button>
+                        </Space>
                     </div>
                 </Col>
-            </Row>
-            <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
+
                 <Col xs={24} sm={12} lg={8}>
                     <ThreeDContainer>
-                        <Card>
+                        <Card bordered={false} style={{ borderRadius: 8 }}>
                             <Statistic
-                                title="Đang chờ duyệt"
+                                title={
+                                    <Text strong style={{ fontSize: 16 }}>
+                                        <ClockCircleOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+                                        Đang chờ duyệt
+                                    </Text>
+                                }
                                 value={pendingRequests}
-                                valueStyle={{ color: '#1890ff' }}
-                                prefix={<ClockCircleOutlined />}
+                                valueStyle={{ color: '#1890ff', fontSize: 28 }}
                             />
-                            <div style={{ marginTop: 8 }}>
-                                <Progress percent={requests.length ? Math.round((pendingRequests / requests.length) * 100) : 0} size="small" strokeColor="#1890ff" />
-                            </div>
+                            <Progress 
+                                percent={requests.length ? Math.round((pendingRequests / requests.length) * 100) : 0}
+                                strokeColor="#1890ff"
+                                size="small"
+                                style={{ marginTop: 16 }}
+                            />
                         </Card>
                     </ThreeDContainer>
                 </Col>
+
                 <Col xs={24} sm={12} lg={8}>
                     <ThreeDContainer>
-                        <Card>
+                        <Card bordered={false} style={{ borderRadius: 8 }}>
                             <Statistic
-                                title="Đã phê duyệt"
+                                title={
+                                    <Text strong style={{ fontSize: 16 }}>
+                                        <CheckCircleOutlined style={{ marginRight: 8, color: '#52c41a' }} />
+                                        Đã phê duyệt
+                                    </Text>
+                                }
                                 value={approvedRequests}
-                                valueStyle={{ color: '#52c41a' }}
-                                prefix={<CheckCircleOutlined />}
+                                valueStyle={{ color: '#52c41a', fontSize: 28 }}
                             />
-                            <div style={{ marginTop: 8 }}>
-                                <Progress percent={requests.length ? Math.round((approvedRequests / requests.length) * 100) : 0} size="small" strokeColor="#52c41a" />
-                            </div>
+                            <Progress 
+                                percent={requests.length ? Math.round((approvedRequests / requests.length) * 100) : 0}
+                                strokeColor="#52c41a"
+                                size="small"
+                                style={{ marginTop: 16 }}
+                            />
                         </Card>
                     </ThreeDContainer>
                 </Col>
+
                 <Col xs={24} sm={12} lg={8}>
                     <ThreeDContainer>
-                        <Card>
+                        <Card bordered={false} style={{ borderRadius: 8 }}>
                             <Statistic
-                                title="Từ chối"
+                                title={
+                                    <Text strong style={{ fontSize: 16 }}>
+                                        <CloseCircleOutlined style={{ marginRight: 8, color: '#ff4d4f' }} />
+                                        Từ chối
+                                    </Text>
+                                }
                                 value={rejectedRequests}
-                                valueStyle={{ color: '#ff4d4f' }}
-                                prefix={<CloseCircleOutlined />}
+                                valueStyle={{ color: '#ff4d4f', fontSize: 28 }}
                             />
-                            <div style={{ marginTop: 8 }}>
-                                <Progress percent={requests.length ? Math.round((rejectedRequests / requests.length) * 100) : 0} size="small" strokeColor="#ff4d4f" />
+                            <Progress 
+                                percent={requests.length ? Math.round((rejectedRequests / requests.length) * 100) : 0}
+                                strokeColor="#ff4d4f"
+                                size="small"
+                                style={{ marginTop: 16 }}
+                            />
+                        </Card>
+                    </ThreeDContainer>
+                </Col>
+
+                <Col span={24}>
+                    <ThreeDContainer>
+                        <Card bordered={false} style={{ borderRadius: 8 }}>
+                            <div style={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center',
+                                marginBottom: 24 
+                            }}>
+                                <Space size={16}>
+                                    <Input.Search
+                                        placeholder="Tìm kiếm theo tên, email..."
+                                        style={{ width: 300 }}
+                                        value={searchText}
+                                        onChange={e => setSearchText(e.target.value)}
+                                        allowClear
+                                    />
+                                    <Button icon={<FilterOutlined />}>Bộ lọc</Button>
+                                </Space>
+                                <Space>
+                                    <Button icon={<PrinterOutlined />}>In danh sách</Button>
+                                    <Button icon={<DownloadOutlined />}>Tải xuống</Button>
+                                </Space>
                             </div>
+
+                            <Table
+                                dataSource={requests.filter(item =>
+                                    (item.status === 'Pending' || item.status === 'Approved' || item.status === 'Rejected') &&
+                                    (item.employeeId.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
+                                        item.employeeId.email.toLowerCase().includes(searchText.toLowerCase()))
+                                )}
+                                columns={columns}
+                                rowKey={record => record._id}
+                                loading={loading}
+                                pagination={pagination}
+                                onChange={handleTableChange}
+                                style={{ marginTop: 16 }}
+                            />
                         </Card>
                     </ThreeDContainer>
                 </Col>
             </Row>
-            <ThreeDContainer>
-                <Card>
-                    <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-                        <Input
-                            placeholder="Tìm kiếm theo tên, email..."
-                            prefix={<SearchOutlined />}
-                            style={{ width: 300 }}
-                            value={searchText}
-                            onChange={e => setSearchText(e.target.value)}
-                            allowClear
-                        />
-                    </div>
-                    <Table
-                        dataSource={requests.filter(item =>
-                            (item.status === 'Pending' || item.status === 'Approved' || item.status === 'Rejected') &&
-                            (item.employeeId.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
-                                item.employeeId.email.toLowerCase().includes(searchText.toLowerCase()))
-                        )}
-                        columns={columns}
-                        rowKey={record => record._id}
-                        loading={loading}
-                        pagination={{
-                            defaultPageSize: 10,
-                            showSizeChanger: true,
-                            pageSizeOptions: ['10', '20', '50', '100'],
-                            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} yêu cầu`,
-                        }}
-                    />
-                </Card>
-            </ThreeDContainer>
+
             <Drawer
                 title="Chi tiết yêu cầu"
                 placement="right"

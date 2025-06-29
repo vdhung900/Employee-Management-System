@@ -1,5 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import APIConfig from "../services/APIConfig";
+import {Navigate} from "react-router-dom";
+import React from "react";
 
 /**
  * Utility function for making authenticated API requests
@@ -21,7 +23,16 @@ export const fetchWithAuth = async (
     const token = localStorage.getItem("accessToken");
 
     if (!token) {
-      throw new Error("Đã hết hạn đăng nhập !!!");
+      localStorage.clear();
+      let redirectTo = '/403';
+      return <Navigate to={redirectTo} replace state={{ unauthorized: true }} />;
+    }
+    const decoded = jwtDecode(token);
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (decoded.exp && decoded.exp < currentTime) {
+      localStorage.clear();
+      let redirectTo = '/403';
+      return <Navigate to={redirectTo} replace state={{ unauthorized: true }} />;
     }
 
     let url = `${APIConfig.baseUrl}${endpoint}`;
@@ -40,7 +51,12 @@ export const fetchWithAuth = async (
     };
 
     if (body) {
-      options.body = JSON.stringify(body);
+      if (body instanceof FormData) {
+        delete options.headers['Content-Type'];
+        options.body = body;
+      } else {
+        options.body = JSON.stringify(body);
+      }
     }
 
     const response = await fetch(url, options);
@@ -75,3 +91,24 @@ export const handleApiError = (error, callback = null) => {
 
   return { error: true, message: errorMessage };
 };
+
+/**
+ * Utility function for making authenticated file API requests to /files endpoint
+ * @param {string} endpoint - API endpoint (appended to /files, e.g. '/abc')
+ * @param {string} method - HTTP method (GET, POST, PUT, DELETE)
+ * @param {Object} body - Request body (for POST, PUT requests)
+ * @param {boolean} includeUserId - Whether to include userId from token in the endpoint (for DELETE requests)
+ * @param {Object} customHeaders - Additional headers to include
+ * @returns {Promise<any>} - Response data
+ */
+export const fetchFileWithAuth = async (
+  endpoint = '',
+  method = 'GET',
+  body = null,
+  includeUserId = false,
+  customHeaders = {}
+) => {
+  const fullEndpoint = `/files${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+  return fetchWithAuth(fullEndpoint, method, body, includeUserId, customHeaders);
+};
+

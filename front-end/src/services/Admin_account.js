@@ -52,6 +52,7 @@ const Admin_account = {
   async getAllDepartments() {
     try {
       return await fetchWithAuth(`/admin-accounts/departments`, 'GET');
+
     } catch (e) {
       throw handleApiError(e);
     }
@@ -67,6 +68,7 @@ const Admin_account = {
   async getAllRoles() {
     try {
       return await fetchWithAuth('/role-permission/role', 'GET');
+
     } catch (e) {
       throw handleApiError(e);
     }

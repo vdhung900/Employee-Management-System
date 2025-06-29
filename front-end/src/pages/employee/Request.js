@@ -26,7 +26,7 @@ import {
     Drawer,
     Timeline,
     List,
-    Radio
+    Radio, message, TimePicker, InputNumber
 } from 'antd';
 import {
     SearchOutlined,
@@ -57,6 +57,8 @@ import requestService from "../../services/RequestService";
 import admin_account from "../../services/Admin_account";
 import {formatDate} from "../../utils/format";
 import moment from 'moment';
+import UploadFileComponent from "../../components/file-list/FileList";
+import {STATUS} from "../../constants/Status";
 
 const {Title, Text, Paragraph} = Typography;
 const {Option} = Select;
@@ -105,7 +107,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = []}) 
                 }
             }
         },
-        OVERTIME: {
+        OVERTIME_REQUEST: {
             fields: (
                 <>
                     <Row gutter={16}>
@@ -121,10 +123,13 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = []}) 
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'hours']}
-                                label="Số giờ tăng ca"
-                                rules={[{required: true, message: 'Vui lòng nhập số giờ tăng ca'}]}
+                                label="Thời gian làm thêm"
+                                rules={[{ required: true, message: 'Vui lòng chọn thời gian!' }]}
                             >
-                                <Input type="number" min={1} max={24}/>
+                                <TimePicker.RangePicker
+                                    style={{ width: '100%' }}
+                                    format="HH:mm"
+                                />
                             </Form.Item>
                         </Col>
                     </Row>
@@ -228,6 +233,14 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = []}) 
                                 </Select>
                             </Form.Item>
                         </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'reason']}
+                                label="Chức vụ"
+                                hidden={true}
+                            >
+                            </Form.Item>
+                        </Col>
                     </Row>
 
                 </>
@@ -240,7 +253,104 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = []}) 
                     phone: '',
                     department: undefined,
                     position: undefined,
-                    note: ''
+                    note: '',
+                    reason: ''
+                }
+            }
+        },
+        TARGET_REQUEST: {
+            fields: (
+                <>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'month']}
+                                label="Tháng"
+                                rules={[
+                                    { required: true, message: 'Vui lòng chọn tháng' },
+                                    { type: 'number', min: 1, max: 12, message: 'Tháng phải từ 1-12' }
+                                ]}
+                            >
+                                <Select placeholder="Chọn tháng">
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                        <Option key={i + 1} value={i + 1}>Tháng {i + 1}</Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={10}>
+                            <Form.Item
+                                name={['dataReq', 'year']}
+                                label="Năm"
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập năm' },
+                                    { type: 'number', min: 2000, message: 'Năm không hợp lệ' }
+                                ]}
+                            >
+                                <InputNumber style={{ width: '100%' }} placeholder="Nhập năm" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={16}>
+                            <Form.Item
+                                name={['dataReq', 'reason']}
+                                hidden={true}
+                            >
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    
+                    <Form.List name={['dataReq', 'goals']}>
+                        {(fields, { add, remove }) => (
+                            <>
+                                {fields.map(({ key, name, ...restField }) => (
+                                    <Row key={key} gutter={16} style={{ marginBottom: 8 }}>
+                                        <Col span={12}>
+                                            <Form.Item
+                                                {...restField}
+                                                name={[name, 'title']}
+                                                rules={[{ required: true, message: 'Vui lòng nhập tiêu đề mục tiêu' }]}
+                                            >
+                                                <Input placeholder="Tiêu đề mục tiêu" />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={10}>
+                                            <Form.Item
+                                                {...restField}
+                                                name={[name, 'targetValue']}
+                                                rules={[
+                                                    { required: true, message: 'Vui lòng nhập mức độ hoàn thành mục tiêu (tối đa 100)' },
+                                                    { type: 'number', max: 100, min: 0, message: 'Mức độ hoàn thành tối đa là 100' }
+                                                ]}
+                                            >
+                                                <InputNumber 
+                                                    style={{ width: '100%' }} 
+                                                    placeholder="Mức độ hoàn thành mục tiêu (tối đa 100)"
+                                                />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={2}>
+                                            <Button type="text" danger onClick={() => remove(name)}>
+                                                <DeleteOutlined />
+                                            </Button>
+                                        </Col>
+                                    </Row>
+                                ))}
+                                <Form.Item>
+                                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                                        Thêm mục tiêu
+                                    </Button>
+                                </Form.Item>
+                            </>
+                        )}
+                    </Form.List>
+                </>
+            ),
+            initialValues: {
+                dataReq: {
+                    month: undefined,
+                    year: new Date().getFullYear(),
+                    reason: '',
+                    goals: []
                 }
             }
         }
@@ -265,6 +375,8 @@ const Requests = () => {
     const [departments, setDepartments] = useState([]);
     const [positions, setPositions] = useState([]);
     const [isEdit, setIsEdit] = useState(false);
+    const [fileResponse, setFileResponse] = useState([]);
+
 
     useEffect(() => {
         try {
@@ -280,7 +392,10 @@ const Requests = () => {
     const loadDepartments = async () => {
         try {
             const response = await admin_account.getAllDepartments();
-            setDepartments(response);
+            if(response.success){
+                setDepartments(response);
+
+            }
         } catch (e) {
             console.log(e, 'test');
 
@@ -290,7 +405,9 @@ const Requests = () => {
     const loadPositions = async () => {
         try {
             const response = await admin_account.getAllPositions();
-            setPositions(response);
+            if(response.success){
+                setPositions(response.data);
+            }
         } catch (e) {
             console.log(e, 'test');
 
@@ -398,8 +515,10 @@ const Requests = () => {
                 typeCode: request.typeRequest.code,
                 priority: request.priority,
                 note: request.note,
+                attachments: request.attachments
             });
-            if (request.typeRequest.code === "ACCOUNT_CREATE_REQUEST") {
+            setFileResponse(request.attachments)
+            if (request.typeRequest.code === STATUS.ACCOUNT_CREATE_REQUEST) {
                 form.setFieldsValue({
                     dataReq: {
                         fullName: request.dataReq.fullName || '',
@@ -408,14 +527,43 @@ const Requests = () => {
                         phone: request.dataReq.phone || '',
                         department: request.dataReq.department || '',
                         position: request.dataReq.position || '',
-                        note: request.dataReq.note || ''
+                        note: request.dataReq.note || '',
+                        reason: request.dataReq.reason || ''
                     }
                 })
-            } else if (request.typeRequest.code === "LEAVE_REQUEST") {
+            } else if (request.typeRequest.code === STATUS.LEAVE_REQUEST) {
                 form.setFieldsValue({
                     dataReq: {
                         startDate: request.dataReq.startDate ? moment(request.dataReq.startDate) : undefined,
                         endDate: request.dataReq.endDate ? moment(request.dataReq.endDate) : undefined,
+                        reason: request.dataReq.reason || ''
+                    }
+                })
+            }else if(request.typeRequest.code === STATUS.OVERTIME_REQUEST){
+                let hoursValue;
+                if (request.dataReq.hours && Array.isArray(request.dataReq.hours)) {
+                    try {
+                        hoursValue = [
+                            moment(request.dataReq.hours[0], 'HH:mm'),
+                            moment(request.dataReq.hours[1], 'HH:mm')
+                        ];
+                    } catch (error) {
+                        hoursValue = undefined;
+                    }
+                }
+                form.setFieldsValue({
+                    dataReq: {
+                        startDate: request.dataReq.startDate ? moment(request.dataReq.startDate) : undefined,
+                        hours: hoursValue,
+                        reason: request.dataReq.reason || ''
+                    }
+                })
+            }else if(request.typeRequest.code === STATUS.TARGET_REQUEST){
+                form.setFieldsValue({
+                    dataReq: {
+                        month: request.dataReq.month || '',
+                        year: request.dataReq.year || new Date().getFullYear(),
+                        goals: request.dataReq.goals || [],
                         reason: request.dataReq.reason || ''
                     }
                 })
@@ -428,25 +576,46 @@ const Requests = () => {
     const handleCancel = () => {
         setIsModalVisible(false);
         setSelectedRequestType(null);
+        setFileResponse([])
         setIsEdit(false);
     };
 
     const handleFormSubmit = async (values) => {
         try {
             let body = values;
+            if (body.typeCode === STATUS.OVERTIME_REQUEST && body.dataReq.hours) {
+                console.log('Form hours before format:', body.dataReq.hours);
+                body.dataReq.hours = body.dataReq.hours.map(time =>
+                    time ? time.format('HH:mm') : null
+                ).filter(time => time !== null);
+                console.log('Form hours after format:', body.dataReq.hours);
+            }
+            if(fileResponse.length > 0){
+                body.attachments = fileResponse;
+            }else{
+                body.attachments = [];
+            }
             if (body.requestId) {
-                await requestService.updateRequest(body);
+                const response = await requestService.updateRequest(body);
+                if(response.success) {
+                    message.success(response.message);
+                }
             } else {
                 const user = JSON.parse(localStorage.getItem("user"));
                 body.employeeId = user.employeeId;
-                await requestService.createRequest(body);
+                const response = await requestService.createRequest(body);
+                if(response.success) {
+                    message.success(response.message);
+                }
             }
+        } catch (e) {
+            message.error("Lỗi khi lưu thông tin")
+        }finally {
             loadDataReq();
             setIsModalVisible(false);
+            setFileResponse([])
             form.resetFields();
             setSelectedDataType(null);
-        } catch (e) {
-
         }
     };
 
@@ -475,6 +644,14 @@ const Requests = () => {
                     phone: undefined,
                     department: undefined,
                     position: undefined,
+                    reason: undefined
+                }
+            },
+            TARGET_REQUEST: {
+                dataReq: {
+                    month: undefined,
+                    year: new Date().getFullYear(),
+                    goals: []
                 }
             }
         };
@@ -520,7 +697,7 @@ const Requests = () => {
 
     const columns = [
         {
-            title: 'Nhân viên gửi yêu cầu',
+            title: 'Người gửi yêu cầu',
             dataIndex: ['employeeId', 'fullName'],
             key: 'employeeName',
             render: (text, record) => (
@@ -532,11 +709,6 @@ const Requests = () => {
                     </div>
                 </Space>
             ),
-            sorter: (a, b) => a.employeeId.fullName.localeCompare(b.employeeId.fullName),
-            filteredValue: searchText ? [searchText] : null,
-            onFilter: (value, record) =>
-                record.employeeId.fullName.toLowerCase().includes(value.toLowerCase()) ||
-                record.employeeId.email.toLowerCase().includes(value.toLowerCase())
         },
         {
             title: 'Thông tin yêu cầu',
@@ -556,7 +728,7 @@ const Requests = () => {
             key: 'duration',
             render: (_, record) => (
                 <Space direction="vertical" size="small">
-                    <div>Gửi: {formatDate(record.createdAt)}</div>
+                    <div>Ngày gửi: {formatDate(record.createdAt)}</div>
                 </Space>
             ),
             sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
@@ -935,11 +1107,8 @@ const Requests = () => {
 
                     <Form.Item
                         name="attachments"
-                        label="Tài liệu đính kèm"
                     >
-                        <Upload listType="picture" multiple>
-                            <Button icon={<UploadOutlined/>}>Tải lên tập tin</Button>
-                        </Upload>
+                        <UploadFileComponent uploadFileSuccess={setFileResponse} isSingle={true} files={fileResponse}/>
                     </Form.Item>
                     {selectedRequestType && (
                         <>
