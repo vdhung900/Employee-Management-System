@@ -2,50 +2,50 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { BaseSchema } from "./base.schema";
 import { Types } from "mongoose";
 import { Employees } from "./employees.schema";
-import {typeRequest} from "./typeRequestCategory.schema";
+import { typeRequest } from "./typeRequestCategory.schema";
 
 export type AttendanceRecordsDocument = AttendanceRecords & Document;
 
 @Schema()
 export class AttendanceRecords extends BaseSchema {
-    @Prop({type: Types.ObjectId, ref: Employees.name})
-    employeeId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: Employees.name })
+  employeeId: Types.ObjectId;
 
-    @Prop()
-    date: Date;
+  @Prop()
+  date: Date;
 
-    @Prop()
-    firstCheckIn: Date;
+  @Prop()
+  firstCheckIn: Date;
 
-    @Prop()
-    lastCheckIn: Date;
+  @Prop()
+  lastCheckOut: Date;
 
-    @Prop()
-    totalWorkingHours: number;
+  @Prop()
+  totalWorkingHours: number;
 
-    @Prop({type: Types.ObjectId, ref: typeRequest .name})
-    leaveType: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: typeRequest.name })
+  leaveType: Types.ObjectId;
 
-    @Prop()
-    status: string;
+  @Prop()
+  status: string;
 
-    @Prop()
-    note: string;
+  @Prop()
+  note: string;
 
-    @Prop({default: false})
-    isOvertime: Boolean;
+  @Prop({ default: false })
+  isOvertime: Boolean;
 
-    @Prop()
-    overtimeRange: string[];
+  @Prop()
+  overtimeRange: string[];
 
-    @Prop({default: false})
-    isLeave: Boolean;
+  @Prop({ default: false })
+  isLeave: Boolean;
 
-    @Prop({default: false})
-    isEarlyTime: Boolean;
+  @Prop({ default: false })
+  isEarlyTime: Boolean;
 
-    @Prop()
-    reason: string;
+  @Prop()
+  reason: string;
 }
 
 export const AttendanceRecordSchema = SchemaFactory.createForClass(AttendanceRecords);

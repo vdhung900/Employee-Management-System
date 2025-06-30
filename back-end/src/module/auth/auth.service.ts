@@ -5,7 +5,7 @@ import { LoginReq } from "src/interfaces/loginReq.interface";
 import { Employees, EmployeesDocument } from "src/schemas/employees.schema";
 import { Account, AccountDocument } from "src/schemas/account.schema";
 import { JwtService } from "@nestjs/jwt";
-import {RolePermissionService} from "./role_permission/role_permission.service";
+import { RolePermissionService } from "./role_permission/role_permission.service";
 
 @Injectable()
 export class AuthService {
@@ -13,7 +13,7 @@ export class AuthService {
     @InjectModel(Account.name) private accountModel: Model<AccountDocument>,
     @InjectModel(Employees.name) private employeesModel: Model<EmployeesDocument>,
     private jwtService: JwtService,
-    private readonly rolePermissionService: RolePermissionService,
+    private readonly rolePermissionService: RolePermissionService
   ) {}
 
   async findUserByUsername(username: string): Promise<Account | null> {
@@ -47,7 +47,7 @@ export class AuthService {
       }
 
       const rolePermission = await this.rolePermissionService.getRolePermissionByRole(account.role);
-      if( !rolePermission ) {
+      if (!rolePermission) {
         throw new Error("Role permission not found for this user");
       }
       const payload = {
