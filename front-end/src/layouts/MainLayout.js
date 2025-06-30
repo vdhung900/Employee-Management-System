@@ -40,6 +40,7 @@ import ThreeDButton from '../components/3d/ThreeDButton';
 import ThreeDContainer from '../components/3d/ThreeDContainer';
 import '../components/3d/ThreeDStyles.css';
 import {useLoading} from "../contexts/LoadingContext";
+import ProfileModal from '../components/profile/ProfileModal';
 
 const {Header, Sider, Content, Footer} = Layout;
 const {Title} = Typography;
@@ -69,6 +70,7 @@ const MainLayout = () => {
     const navigate = useNavigate();
     const [permissions, setPermissions] = useState([]);
     const [role, setRole] = useState(null);
+    const [profileModalVisible, setProfileModalVisible] = useState(false);
 
     const {
         token: {colorBgContainer},
@@ -96,10 +98,10 @@ const MainLayout = () => {
 
     const userMenuItems = [
         {
-            key: "/employee/profile",
+            key: "profile",
             label: "Hồ sơ cá nhân",
             icon: <UserOutlined/>,
-            onClick: () => navigate("/employee/profile"),
+            onClick: () => setProfileModalVisible(true),
         },
         {
             type: "divider",
@@ -501,26 +503,22 @@ const MainLayout = () => {
                         <Outlet/>
                     </Spin>
                 </Content>
-                {/*<Footer*/}
-                {/*    style={{*/}
-                {/*        textAlign: 'center',*/}
-                {/*        background: colorTheme.footerBg,*/}
-                {/*        color: colorTheme.footerText,*/}
-                {/*        padding: '12px 50px',*/}
-                {/*        height: '50px'*/}
-                {/*    }}*/}
-                {/*>*/}
-                {/*    <div style={{*/}
-                {/*        display: 'flex',*/}
-                {/*        justifyContent: 'space-between',*/}
-                {/*        alignItems: 'center',*/}
-                {/*        fontSize: '14px'*/}
-                {/*    }}>*/}
-                {/*        <div>Employee Management System ©{new Date().getFullYear()}</div>*/}
-                {/*        <div>Version 1.0.0</div>*/}
-                {/*    </div>*/}
-                {/*</Footer>*/}
             </Layout>
+            <ProfileModal
+                visible={profileModalVisible}
+                onCancel={() => setProfileModalVisible(false)}
+                userData={currentUser}
+                onSave={async (values) => {
+                    try {
+                        // TODO: Call API to update user profile
+                        console.log('Updated profile:', values);
+                        setProfileModalVisible(false);
+                        message.success('Cập nhật thông tin thành công!');
+                    } catch (error) {
+                        message.error('Có lỗi xảy ra khi cập nhật thông tin!');
+                    }
+                }}
+            />
             <style jsx>{`
                 .user-dropdown:hover {
                     background-color: rgba(82, 196, 26, 0.15);
