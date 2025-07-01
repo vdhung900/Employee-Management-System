@@ -17,11 +17,21 @@ export class SalaryCoeficientService {
   }
 
   async findAll() {
-    return this.salaryCoeficientModel.find().populate('salary_rankId').exec();
+    return this.salaryCoeficientModel.find()
+      .populate({
+        path: 'salary_rankId',
+        select: 'name salary_base',
+      })
+      .exec();
   }
 
   async findOne(id: string) {
-    const coef = await this.salaryCoeficientModel.findById(id).populate('salary_rankId').exec();
+    const coef = await this.salaryCoeficientModel.findById(id)
+      .populate({
+        path: 'salary_rankId',
+        select: 'name salary_base',
+      })
+      .exec();
     if (!coef) throw new NotFoundException('Không tìm thấy hệ số lương');
     return coef;
   }
