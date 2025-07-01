@@ -19,6 +19,7 @@ import {JwtAuthGuard} from "./common/guards/jwt-auth.guard";
 import {RolePermissionModule} from "./module/auth/role_permission/role_permission.module";
 import { BenefitsModule } from './module/benefits/benefits.module';
 import { UpdateEmployeeModule } from './module/hr/update_Employees/update_Employee.module';
+import { SalaryCoeficientModule } from './module/hr/salary_Coeficient/salary_coeficient.module';
 import { ProfileModule } from './module/employee/profile/profile.module';
 import { UploadModule } from './module/minio/minio.module';
 
@@ -46,6 +47,7 @@ import { UploadModule } from './module/minio/minio.module';
     BenefitsModule,
     UploadModule,
     UpdateEmployeeModule,
+    SalaryCoeficientModule,
     ProfileModule,
   ],
   controllers: [],
