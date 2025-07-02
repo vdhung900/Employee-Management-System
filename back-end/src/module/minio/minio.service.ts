@@ -14,6 +14,7 @@ import {FileRequestDto} from "./dto/file-request.dto";
 import {InjectModel} from "@nestjs/mongoose";
 import {Model, Types} from "mongoose";
 import {Documents, DocumentsDocument} from "../../schemas/documents.schema";
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
 export class UploadService {
@@ -47,7 +48,7 @@ export class UploadService {
             mimeType: file.mimetype,
             size: file.size,
             uploadDate: new Date(),
-            url: `${this.minioEndpoint}/${this.bucketName}/${key}`
+            url: `${this.minioEndpoint}/${this.bucketName}/${key}`,
         });
     }
 
@@ -92,6 +93,21 @@ export class UploadService {
             const insertedDocs = await this.documentsModel.insertMany(req);
             return insertedDocs;
         } catch (e) {
+            throw new Error(e.message)
+        }
+    }
+
+    async getPresignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
+        try{
+            const command = new GetObjectCommand({
+                Bucket: this.bucketName,
+                Key: key,
+            });
+            const url = await getSignedUrl(s3Client, command, {
+                expiresIn: expiresInSeconds,
+            });
+            return url;
+        }catch (e) {
             throw new Error(e.message)
         }
     }

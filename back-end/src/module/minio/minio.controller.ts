@@ -75,6 +75,21 @@ export class UploadController {
         }
     }
 
+    @Get('presigned/:key')
+    @ApiOperation({ summary: 'Get file preview' })
+    @ApiParam({ name: 'key', description: 'File key/name to preview' })
+    async getPresignedUrl(@Param('key') key: string) {
+        try {
+            const url = await this.uploadService.getPresignedUrl(key);
+            return BaseResponse.success(url, 'File preview successfully', HttpStatus.OK);
+        } catch (error) {
+            throw new HttpException(
+                'Error downloading file',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
     @Delete(':key')
     @ApiOperation({ summary: 'Delete a file' })
     @ApiParam({ name: 'key', description: 'File key/name to delete' })
