@@ -393,7 +393,7 @@ const Requests = () => {
         try {
             const response = await admin_account.getAllDepartments();
             if(response.success){
-                setDepartments(response);
+                setDepartments(response.data);
 
             }
         } catch (e) {
