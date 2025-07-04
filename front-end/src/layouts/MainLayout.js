@@ -34,7 +34,8 @@ import {
     UnorderedListOutlined,
     GiftOutlined,
     CheckCircleOutlined,
-    CalculatorOutlined
+    CalculatorOutlined,
+    BarChartOutlined
 } from '@ant-design/icons';
 import {logout, getCurrentUser} from '../utils/auth';
 import ThreeDButton from '../components/3d/ThreeDButton';
@@ -277,6 +278,12 @@ const MainLayout = () => {
             icon: <CalculatorOutlined />,
             label: "Hệ số lương",
             permission: "EMPLOYEE_SALARY_COEFFICIENT",
+        },
+        {
+            key: "/employee/employee-statistics",
+            icon: <BarChartOutlined />,
+            label: "Thống kê nhân viên",
+            permission: "EMPLOYEE_EMPLOYEE_STATISTICS",
         },
     ];
 
