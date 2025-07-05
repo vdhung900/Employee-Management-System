@@ -111,9 +111,6 @@ const SalaryCoefficient = () => {
       key: 'action',
       render: (_, record) => (
         <Space>
-          {/* <Button type="link" onClick={() => handleEdit(record)}>
-            Sửa
-          </Button> */}
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} size="small" type="primary" ghost>
             Sửa
           </Button>
@@ -126,18 +123,27 @@ const SalaryCoefficient = () => {
   ];
 
   return (
-    <div>
+    <div className="welcome-section glass-effect" style={{
+      padding: '24px',
+      marginBottom: '24px',
+      borderRadius: '16px',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: '16px',
+      backdropFilter: 'blur(8px)',
+      border: '1px solid rgba(57, 120, 26, 0.2)'
+    }}>
       <Title level={3}>Quản lý hệ số lương</Title>
       <Space style={{ marginBottom: 16 }}>
-        <Button type="primary" onClick={handleAdd}>
-          Thêm hệ số lương
-        </Button>
         <input
           placeholder="Tìm kiếm theo bậc lương hoặc hệ số"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ padding: 4, borderRadius: 4, border: '1px solid #ddd', width: 'auto', minWidth: 180, height: 32, flex: 1 }}
+          style={{ padding: 4, borderRadius: 4, border: '1px solid #ddd', width: 'auto', minWidth: 250, height: 36, flex: 1, marginRight: 16 }}
         />
+        <Button type="primary" onClick={handleAdd}>
+          Thêm hệ số lương
+        </Button>
       </Space>
       <Table
         columns={columns}

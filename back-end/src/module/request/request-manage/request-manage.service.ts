@@ -43,7 +43,7 @@ export class RequestManageService {
                 throw new Error("No requests found for this type");
             }
             let response = {};
-            if (code === STATUS.ACCOUNT_CREATE_REQUEST) {
+            if (code === STATUS.ACCOUNT_CREATE_REQUEST || code === STATUS.LEAVE_REQUEST) {
                 response = await Promise.all(
                     data
                         .filter(item => item.status !== 'Cancelled')
