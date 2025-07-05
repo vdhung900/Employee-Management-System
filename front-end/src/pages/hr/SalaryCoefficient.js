@@ -154,20 +154,56 @@ const SalaryCoefficient = () => {
         onChange={pag => setPagination(pag)}
       />
       <Modal
-        title={editData ? 'Cập nhật hệ số lương' : 'Thêm hệ số lương'}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 20, fontWeight: 600, color: '#262626' }}>
+              {editData ? 'Cập nhật hệ số lương' : 'Thêm hệ số lương mới'}
+            </span>
+          </div>
+        }
         open={modalVisible}
         onOk={handleOk}
         onCancel={() => setModalVisible(false)}
         okText="Lưu"
         cancelText="Hủy"
+        width={500}
+        centered
+        okButtonProps={{
+          style: {
+            borderRadius: 6,
+            height: 36,
+            fontWeight: 500
+          }
+        }}
+        cancelButtonProps={{
+          style: {
+            borderRadius: 6,
+            height: 36,
+            fontWeight: 500
+          }
+        }}
+        bodyStyle={{
+          padding: '20px 0'
+        }}
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" style={{ padding: '0 24px' }}>
           <Form.Item
             name="salary_rankId"
-            label="Bậc lương"
+            label={
+              <span style={{ fontWeight: 500, color: '#262626', fontSize: 14 }}>
+                Bậc lương
+              </span>
+            }
             rules={[{ required: true, message: 'Vui lòng chọn bậc lương' }]}
           >
-            <Select placeholder="Chọn bậc lương">
+            <Select 
+              placeholder="Chọn bậc lương"
+              style={{ height: 36, borderRadius: 6 }}
+              showSearch
+              filterOption={(input, option) =>
+                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+            >
               {salaryRanks.map((rank) => (
                 <Option key={rank._id} value={rank._id}>
                   {rank.name}
@@ -177,24 +213,101 @@ const SalaryCoefficient = () => {
           </Form.Item>
           <Form.Item
             name="salary_coefficient"
-            label="Hệ số lương"
+            label={
+              <span style={{ fontWeight: 500, color: '#262626', fontSize: 14 }}>
+                Hệ số lương
+              </span>
+            }
             rules={[{ required: true, message: 'Vui lòng nhập hệ số lương' }]}
           >
-            <InputNumber min={0} step={0.01} style={{ width: '100%' }} />
+            <InputNumber 
+              min={0} 
+              step={0.01} 
+              style={{ width: '100%', height: 36, borderRadius: 6 }} 
+              placeholder="Nhập hệ số lương"
+            />
           </Form.Item>
         </Form>
       </Modal>
       <Modal
-        title="Chi tiết hệ số lương"
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 20, fontWeight: 600, color: '#262626' }}>
+              Chi tiết hệ số lương
+            </span>
+          </div>
+        }
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={null}
+        width={500}
+        centered
+        bodyStyle={{
+          padding: '24px'
+        }}
       >
         {detailData && (
           <div>
-            <p><b>Bậc lương:</b> {detailData.salary_rankId?.name || detailData.salary_rankId}</p>
-            <p><b>Hệ số lương:</b> <Tag color="blue">{detailData.salary_coefficient}</Tag></p>
-            <p><b>Lương cơ bản:</b> <Tag color="green">{detailData.salary_rankId?.salary_base ?? 'Không có dữ liệu'}</Tag></p>
+            <div style={{ 
+              background: '#fafafa', 
+              padding: '10px', 
+              borderRadius: 6, 
+              border: '1px solid #f0f0f0'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: 14, color: '#262626' }}>Bậc lương:</span>
+                <span style={{ fontWeight: 500, fontSize: 14, color: '#595959' }}>
+                  {detailData.salary_rankId?.name || detailData.salary_rankId}
+                </span>
+              </div>
+            </div>
+            
+            <div style={{ 
+              background: '#fafafa', 
+              padding: '10px', 
+              borderRadius: 6, 
+              border: '1px solid #f0f0f0'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8}}>
+                <span style={{ fontWeight: 600, fontSize: 14, color: '#262626' }}>Hệ số lương:</span>
+                <Tag 
+                  color="blue" 
+                  style={{ 
+                    fontSize: 13, 
+                    fontWeight: 500, 
+                    padding: '2px 8px',
+                    borderRadius: 4
+                  }}
+                >
+                  {detailData.salary_coefficient}
+                </Tag>
+              </div>
+            </div>
+            
+            <div style={{ 
+              background: '#fafafa', 
+              padding: '10px', 
+              borderRadius: 6,
+              border: '1px solid #f0f0f0'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: 14, color: '#262626' }}>Lương cơ bản:</span>
+                <Tag 
+                  color="green" 
+                  style={{ 
+                    fontSize: 13, 
+                    fontWeight: 500, 
+                    padding: '2px 8px',
+                    borderRadius: 4
+                  }}
+                >
+                  {detailData.salary_rankId?.salary_base ? 
+                    `${detailData.salary_rankId.salary_base.toLocaleString('vi-VN')} VNĐ` : 
+                    'Không có dữ liệu'
+                  }
+                </Tag>
+              </div>
+            </div>
           </div>
         )}
       </Modal>
