@@ -15,6 +15,9 @@ import {paginate} from "../../../utils/pagination";
 import {AttendanceRecords, AttendanceRecordsDocument} from "../../../schemas/attendanceRecords.schema";
 import {getAllWorkingDatesBetween} from "../../../utils/format";
 import {MonthlyGoal, MonthlyGoalDocument} from "../../../schemas/monthGoals.schema";
+import {Employees, EmployeesDocument} from "../../../schemas/employees.schema";
+import {SalaryCoefficient, SalaryCoefficientDocument} from "../../../schemas/salaryCoefficents.schema";
+import {SalaryRank, SalaryRankDocument} from "../../../schemas/salaryRank.schema";
 
 @Injectable()
 export class RequestManageService {
@@ -25,6 +28,9 @@ export class RequestManageService {
         @InjectModel(Position.name) private positionModel: Model<PositionDocument>,
         @InjectModel(AttendanceRecords.name) private attendanceRecordModel: Model<AttendanceRecordsDocument>,
         @InjectModel(MonthlyGoal.name) private monthlyGoalModel: Model<MonthlyGoalDocument>,
+        @InjectModel(Employees.name) private employeeModel: Model<EmployeesDocument>,
+        @InjectModel(SalaryCoefficient.name) private salaryCoefficientModel: Model<SalaryCoefficientDocument>,
+        @InjectModel(SalaryRank.name) private salaryRankModel: Model<SalaryRankDocument>,
         private readonly requestService: BaseRequestService,
         private readonly adminAccountService: AdminAccountService,
         private readonly mailService: MailService,
@@ -149,6 +155,9 @@ export class RequestManageService {
                     case STATUS.TARGET_REQUEST:
                         await this.createMonthGoals(req, data, typeRequest);
                         break;
+                    case STATUS.SALARY_INCREASE:
+                        await this.updateCoefficient(req, data, typeRequest);
+                        break;
                     default:
                         throw new Error("Trạng thái đơn không hợp lệ!");
                 }
@@ -272,6 +281,47 @@ export class RequestManageService {
             }
         }catch (e) {
             throw new Error(e);
+        }
+    }
+
+    async updateCoefficient(req: CreateRequestDto, dataRequest: any, typeRequest: any) {
+        try {
+            if(!dataRequest){
+                throw new Error("Không tìm thấy dữ liệu cần sửa")
+            }
+            if(dataRequest.dataReq === null || dataRequest.dataReq === undefined){
+                throw new Error("Lỗi do không có thông tin chi tiết kế hoạch tăng lương");
+            }
+            if(typeRequest.code === STATUS.SALARY_INCREASE){
+                const employee = await this.employeeModel.findById(dataRequest.dataReq?.employeeId).exec();
+                if(!employee){
+                    throw new Error("Không tìm thấy nhân viên");
+                }
+
+                if (employee.timeUpdateSalary) {
+                    const lastUpdateTime = new Date(employee.timeUpdateSalary);
+                    const currentTime = new Date();
+                    const monthsSinceLastUpdate = (currentTime.getFullYear() - lastUpdateTime.getFullYear()) * 12 + 
+                        (currentTime.getMonth() - lastUpdateTime.getMonth());
+                    
+                    if (monthsSinceLastUpdate < 6) {
+                        throw new Error("Nhân viên chưa đến kỳ được đề xuất tăng lương");
+                    }
+                }
+
+                const salaryCoefficient = await this.salaryCoefficientModel.findById(new Types.ObjectId(dataRequest.dataReq?.salaryCoefficientsId)).exec();
+                if(!salaryCoefficient){
+                    throw new Error("Không tìm thấy hệ số lương");
+                }
+                if(dataRequest.dataReq?.proposedCoefficient !== salaryCoefficient.salary_coefficient){
+                    throw new Error("Hệ số lương đề xuất không hợp lệ");
+                }
+                employee.salaryCoefficientId = new Types.ObjectId(salaryCoefficient.id);
+                employee.timeUpdateSalary = new Date();
+                await employee.save();
+            }
+        } catch (error) {
+            throw new Error(error.message || error);
         }
     }
 }
