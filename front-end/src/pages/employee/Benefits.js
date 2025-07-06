@@ -28,6 +28,7 @@ const Benefits = () => {
     const [filterDepartment, setFilterDepartment] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterMonth, setFilterMonth] = useState('all');
+    const userRole = localStorage.getItem('role');
 
     useEffect(() => {
         fetchBenefits();
