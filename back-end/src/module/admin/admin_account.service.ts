@@ -256,7 +256,7 @@ export class AdminAccountService {
       }
       const username = await this.generateUserName(info.fullName);
       const password = this.generateRandomPassword(8);
-      // const hashPassword = await bcrypt.hash(password, 10);
+      const hashPassword = await bcrypt.hash(password, 10);
       const isValidEmail = await this.employeeModel.findOne({ email: info.email }).exec();
       if(isValidEmail) {
         throw new Error('Email đã tồn tại');
@@ -285,7 +285,7 @@ export class AdminAccountService {
       }
       const newAccount = await this.accountModel.create({
         username: username,
-        password: password,
+        password: hashPassword,
         role: role._id,
         employeeId: newEmployee._id,
         status: STATUS.ACTIVE,

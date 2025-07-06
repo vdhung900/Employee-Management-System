@@ -55,9 +55,6 @@ export class Employees extends BaseSchema{
 
     @Prop({type: Types.ObjectId, ref: SalaryCoefficient.name})
     salaryCoefficientId: Types.ObjectId;
-
-
-
 }
 
 export const EmployeesSchema = SchemaFactory.createForClass(Employees);

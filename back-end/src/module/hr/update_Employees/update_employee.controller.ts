@@ -56,4 +56,14 @@ export class UpdateEmployeeController {
         }
     }
 
+    @Get("/salary/employees")
+    async getEmployeesBySalary() {
+        try {
+            const data = await this.updateEmployeeService.getEmployeeAndSalaray();
+            return BaseResponse.success(data, "Thành công", HttpStatus.OK)
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

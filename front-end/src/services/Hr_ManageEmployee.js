@@ -43,9 +43,12 @@ const Hr_ManageEmployee = {
             throw handleApiError(error);
         }
     },
-
-
-
-
+    async getEmployeeSalary(){
+        try{
+            return await fetchWithAuth('/hr/salary/employees')
+        }catch (e) {
+            throw handleApiError(e)
+        }
+    }
 };
 export default Hr_ManageEmployee;
