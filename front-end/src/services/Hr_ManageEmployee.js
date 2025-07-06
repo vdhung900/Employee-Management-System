@@ -49,6 +49,14 @@ const Hr_ManageEmployee = {
         }catch (e) {
             throw handleApiError(e)
         }
+    },
+    async getAnalyzeEmployeeByUserId(userId) {
+        try {
+            const response = await fetchWithAuth(`/hr/analyze/employees/${userId}`, 'GET');
+            return response;
+        } catch (error) {
+            throw handleApiError(error);
+        }
     }
 };
 export default Hr_ManageEmployee;

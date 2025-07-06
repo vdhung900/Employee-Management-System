@@ -16,7 +16,7 @@ import {
     Badge,
     Statistic,
     Progress,
-    Drawer,
+    Drawer, message,
 } from 'antd';
 import {
     SearchOutlined,
@@ -35,11 +35,14 @@ import {
     TeamOutlined,
     IdcardOutlined,
     FilterOutlined,
-    DownloadOutlined,
+    DownloadOutlined, RiseOutlined,
 } from '@ant-design/icons';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
 import RequestService from '../../services/RequestService';
 import { formatDate } from '../../utils/format';
+import { STATUS } from '../../constants/Status';
+import Hr_ManageEmployee from "../../services/Hr_ManageEmployee";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -57,6 +60,9 @@ const ApproveRequest = () => {
         pageSizeOptions: ['10', '20', '30', '40'],
         showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} bản ghi`
     });
+    const [statsModalVisible, setStatsModalVisible] = useState(false);
+    const [employeeStats, setEmployeeStats] = useState(null);
+    const [selectedRequestForStats, setSelectedRequestForStats] = useState(null);
 
     useEffect(() => {
         loadRequests(pagination.current, pagination.pageSize);
@@ -83,6 +89,74 @@ const ApproveRequest = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const analyzeEmployee = async (userId, request) => {
+        try {
+            const response = await Hr_ManageEmployee.getAnalyzeEmployeeByUserId(userId);
+            if(response.success) {
+                setEmployeeStats(response.data);
+                setSelectedRequestForStats(request);
+                setStatsModalVisible(true);
+            }
+        } catch (e) {
+            message.error(e.message);
+        }
+    };
+
+    const handleStatsModalClose = () => {
+        setStatsModalVisible(false);
+        setEmployeeStats(null);
+        setSelectedRequestForStats(null);
+    };
+
+    const renderPerformanceChart = (data) => {
+        if (!data || !data.last6MonthsScores || data.last6MonthsScores.length === 0) return null;
+        
+        const chartData = data.last6MonthsScores.map(item => ({
+            month: item.month.split('-')[1],
+            score: item.score
+        })).reverse();
+
+        return (
+            <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis domain={[0, 10]} />
+                    <RechartsTooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="score" stroke="#8884d8" name="Điểm đánh giá" />
+                </LineChart>
+            </ResponsiveContainer>
+        );
+    };
+
+    const renderAttendanceChart = (data) => {
+        if (!data || !data.monthlyBreakdown) return null;
+
+        const chartData = Object.entries(data.monthlyBreakdown).map(([month, stats]) => ({
+            month: month.split('-')[1],
+            đúng_giờ: stats.present - (stats.late || 0),
+            đi_muộn: stats.late || 0,
+            vắng: stats.absent || 0,
+            total: stats.total || 0
+        })).reverse();
+
+        return (
+            <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <RechartsTooltip />
+                    <Legend />
+                    <Bar dataKey="đúng_giờ" stackId="a" fill="#52c41a" />
+                    <Bar dataKey="đi_muộn" stackId="a" fill="#faad14" />
+                    <Bar dataKey="vắng" stackId="a" fill="#ff4d4f" />
+                </BarChart>
+            </ResponsiveContainer>
+        );
     };
 
     const handleTableChange = (pagination) => {
@@ -164,11 +238,19 @@ const ApproveRequest = () => {
             cancelText: 'Hủy',
             async onOk() {
                 try {
-                    await RequestService.approveRequest({ requestId: request._id, status });
+                    const response = await RequestService.approveRequest({ requestId: request._id, status });
+                    if(response.success){
+                        message.success(`Yêu cầu đã ${status === 'Approved' ? 'phê duyệt' : 'từ chối'} thành công!`);
+                    }else{
+                        message.error(`Không thể ${status === 'Approved' ? 'phê duyệt' : 'từ chối'} yêu cầu này.`);
+                    }
                     loadRequests();
                     closeDrawer();
+                    if(requests.typeRequest.code === STATUS.SALARY_INCREASE){
+                        handleStatsModalClose();
+                    }
                 } catch (e) {
-                    // handle error
+                    message.error(`Lỗi khi ${status === 'Approved' ? 'phê duyệt' : 'từ chối'} yêu cầu: ${e.message}`);
                 }
             },
         });
@@ -244,15 +326,33 @@ const ApproveRequest = () => {
                     <Tooltip title="Xem chi tiết">
                         <Button type="text" icon={<EyeOutlined />} onClick={() => showDrawer(record)} />
                     </Tooltip>
-                    {record.status === 'Pending' && (
-                        <>
-                            <Tooltip title="Phê duyệt">
-                                <Button type="text" icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />} onClick={() => handleApprove(record, 'Approved')} />
-                            </Tooltip>
-                            <Tooltip title="Từ chối">
-                                <Button type="text" icon={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />} onClick={() => handleApprove(record, 'Rejected')} />
-                            </Tooltip>
-                        </>
+                    {record.typeRequest?.code === STATUS.SALARY_INCREASE && record.status === STATUS.PENDING ? (
+                        <Tooltip title="Thống kê nhân viên">
+                            <Button 
+                                type="primary" 
+                                icon={<RiseOutlined />} 
+                                onClick={() => analyzeEmployee(record.dataReq.employeeId, record)}
+                            />
+                        </Tooltip>
+                    ) : (
+                        record.status === STATUS.PENDING && (
+                            <>
+                                <Tooltip title="Phê duyệt">
+                                    <Button 
+                                        type="text" 
+                                        icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />} 
+                                        onClick={() => handleApprove(record, STATUS.APPROVED)}
+                                    />
+                                </Tooltip>
+                                <Tooltip title="Từ chối">
+                                    <Button 
+                                        type="text" 
+                                        icon={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />} 
+                                        onClick={() => handleApprove(record, STATUS.REJECTED)}
+                                    />
+                                </Tooltip>
+                            </>
+                        )
                     )}
                 </Space>
             ),
@@ -473,6 +573,156 @@ const ApproveRequest = () => {
                     </>
                 )}
             </Drawer>
+
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <RiseOutlined style={{ fontSize: '24px', marginRight: '12px', color: '#722ed1' }} />
+                        <span>Thống kê nhân viên</span>
+                    </div>
+                }
+                open={statsModalVisible}
+                onCancel={handleStatsModalClose}
+                width={1000}
+                footer={[
+                    <Button key="cancel" onClick={handleStatsModalClose}>
+                        Đóng
+                    </Button>,
+                    <Button
+                        key="reject"
+                        danger
+                        icon={<CloseCircleOutlined />}
+                        onClick={() => {
+                            handleApprove(selectedRequestForStats, STATUS.REJECTED);
+                            handleStatsModalClose();
+                        }}
+                    >
+                        Từ chối
+                    </Button>,
+                    <Button
+                        key="approve"
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        onClick={() => {
+                            handleApprove(selectedRequestForStats, STATUS.APPROVED);
+                        }}
+                    >
+                        Phê duyệt
+                    </Button>,
+                ]}
+            >
+                {employeeStats && (
+                    <>
+                        <Card>
+                            <Row gutter={[16, 16]}>
+                                <Col span={24}>
+                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+                                        <Avatar size={64} icon={<UserOutlined />} style={{ backgroundColor: '#722ed1', marginRight: 16 }} />
+                                        <div>
+                                            <Title level={4} style={{ margin: 0 }}>{employeeStats.employeeInfo.fullName}</Title>
+                                            <Text>{employeeStats.employeeInfo.position} - {employeeStats.employeeInfo.department}</Text>
+                                        </div>
+                                    </div>
+                                </Col>
+                            </Row>
+                        </Card>
+
+                        <Divider orientation="left">
+                            <Space>
+                                <CalendarOutlined />
+                                <span>Thống kê chấm công</span>
+                            </Space>
+                        </Divider>
+                        <Row gutter={[16, 16]}>
+                            <Col span={6}>
+                                <Card>
+                                    <Statistic
+                                        title="Tổng số ngày"
+                                        value={employeeStats.attendance.overall.totalDays}
+                                        suffix="ngày"
+                                    />
+                                </Card>
+                            </Col>
+                            <Col span={6}>
+                                <Card>
+                                    <Statistic
+                                        title="Đi làm đúng giờ"
+                                        value={employeeStats.attendance.overall.presentDays - employeeStats.attendance.overall.lateDays}
+                                        suffix="ngày"
+                                        valueStyle={{ color: '#52c41a' }}
+                                    />
+                                </Card>
+                            </Col>
+                            <Col span={6}>
+                                <Card>
+                                    <Statistic
+                                        title="Đi muộn"
+                                        value={employeeStats.attendance.overall.lateDays}
+                                        suffix="ngày"
+                                        valueStyle={{ color: '#faad14' }}
+                                    />
+                                </Card>
+                            </Col>
+                            <Col span={6}>
+                                <Card>
+                                    <Statistic
+                                        title="Tỷ lệ chuyên cần"
+                                        value={employeeStats.attendance.overall.attendanceRate}
+                                        suffix="%"
+                                        precision={2}
+                                        valueStyle={employeeStats.attendance.overall.attendanceRate >= 80 ? { color: '#52c41a' } : { color: '#ff4d4f' }}
+                                    />
+                                </Card>
+                            </Col>
+                            <Col span={24}>
+                                <Card>
+                                    <div style={{ marginBottom: 16 }}>
+                                        <Text strong>Biểu đồ chấm công theo tháng</Text>
+                                    </div>
+                                    {renderAttendanceChart(employeeStats.attendance)}
+                                </Card>
+                            </Col>
+                        </Row>
+
+                        <Divider orientation="left">
+                            <Space>
+                                <RiseOutlined />
+                                <span>Đánh giá hiệu suất</span>
+                            </Space>
+                        </Divider>
+                        <Row gutter={[16, 16]}>
+                            <Col span={12}>
+                                <Card>
+                                    <Statistic
+                                        title="Điểm trung bình"
+                                        value={employeeStats.performance.averageScore}
+                                        precision={2}
+                                        valueStyle={employeeStats.performance.averageScore >= 8 ? { color: '#52c41a' } : { color: '#ff4d4f' }}
+                                        suffix="/10"
+                                    />
+                                </Card>
+                            </Col>
+                            <Col span={12}>
+                                <Card>
+                                    <Statistic
+                                        title="Số lần được đánh giá"
+                                        value={employeeStats.performance.totalReviews}
+                                        valueStyle={{ color: '#722ed1' }}
+                                    />
+                                </Card>
+                            </Col>
+                            <Col span={24}>
+                                <Card>
+                                    <div style={{ marginBottom: 16 }}>
+                                        <Text strong>Biểu đồ điểm đánh giá theo tháng</Text>
+                                    </div>
+                                    {renderPerformanceChart(employeeStats.performance)}
+                                </Card>
+                            </Col>
+                        </Row>
+                    </>
+                )}
+            </Modal>
         </div>
     );
 };

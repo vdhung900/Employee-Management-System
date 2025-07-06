@@ -13,6 +13,9 @@ import {Documents, DocumentsSchema} from "../../schemas/documents.schema";
 import {UploadModule} from "../minio/minio.module";
 import {AttendanceRecords, AttendanceRecordSchema} from "../../schemas/attendanceRecords.schema";
 import {MonthlyGoal, MonthlyGoalSchema} from "../../schemas/monthGoals.schema";
+import {SalaryCoefficient, SalaryCoefficientSchema} from "../../schemas/salaryCoefficents.schema";
+import {SalaryRank, SalaryRankSchema} from "../../schemas/salaryRank.schema";
+import {Employees, EmployeesSchema} from "../../schemas/employees.schema";
 
 @Module({
   imports: [
@@ -23,6 +26,9 @@ import {MonthlyGoal, MonthlyGoalSchema} from "../../schemas/monthGoals.schema";
           {name: Documents.name, schema: DocumentsSchema },
           {name: AttendanceRecords.name, schema: AttendanceRecordSchema },
           {name: MonthlyGoal.name, schema: MonthlyGoalSchema },
+          {name: SalaryCoefficient.name, schema: SalaryCoefficientSchema },
+          {name: SalaryRank.name, schema: SalaryRankSchema },
+          {name: Employees.name, schema: EmployeesSchema },
       ]),
       AdminAccountModule,
       MailModule,
