@@ -38,7 +38,7 @@ export class UpdateRoleDto {
 }
 
 export class CreatePermissionDto extends BaseReq {
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     name: string;
 
@@ -74,13 +74,8 @@ export class UpdatePermissionDto {
 }
 
 export class UpdateRolePermissionsDto extends BaseReq {
-    @IsNotEmpty()
-    @IsMongoId()
+    @IsOptional()
     roleId: string;
-
-    @IsArray()
-    @ArrayNotEmpty()
-    @ArrayUnique()
-    @IsMongoId({ each: true })
+    @IsOptional()
     permissionIds: string[];
 } 

@@ -39,6 +39,8 @@ import Benefits from './pages/employee/Benefits';
 import ApproveRequest from "./pages/employee/ApproveRequest";
 import EmployeeReviewResult from "./pages/employee/EmployeeReviewResult";
 import DocumentManagement from "./pages/employee/DocumentManagement";
+import SalaryCoefficient from './pages/hr/SalaryCoefficient';
+import EmployeeStatistics from './pages/hr/EmployeeStatistics';
 
 const router = createBrowserRouter(
   [
@@ -106,6 +108,8 @@ const router = createBrowserRouter(
             { path: "approve-request", element: <ApproveRequest /> },
             { path: "review", element: <EmployeeReviewResult /> },
             { path: "documents", element: <DocumentManagement /> },
+            { path: "salary-coefficient", element: <SalaryCoefficient /> },
+            { path: "employee-statistics", element: <EmployeeStatistics /> },
           ],
         },
       ],

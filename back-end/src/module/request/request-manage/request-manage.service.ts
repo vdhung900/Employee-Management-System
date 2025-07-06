@@ -43,7 +43,7 @@ export class RequestManageService {
                 throw new Error("No requests found for this type");
             }
             let response = {};
-            if (code === STATUS.ACCOUNT_CREATE_REQUEST) {
+            if (code === STATUS.ACCOUNT_CREATE_REQUEST || code === STATUS.LEAVE_REQUEST) {
                 response = await Promise.all(
                     data
                         .filter(item => item.status !== 'Cancelled')
@@ -244,10 +244,13 @@ export class RequestManageService {
                 throw new Error("Lỗi do không có thông tin chi tiết lịch nghỉ");
             }
             if(typeRequest.code === STATUS.TARGET_REQUEST){
-                const checkData = await this.monthlyGoalModel.findOne({
+                const checkData = await this.monthlyGoalModel
+                  .findOne({
+                    employee_id: dataRequest.employeeId,
                     month: dataRequest.dataReq.month,
                     year: dataRequest.dataReq.year,
-                }).exec();
+                  })
+                  .exec();
                 if(checkData){
                     const existingTitles = checkData.goals.map(goal => goal.title.trim().toLowerCase());
                     const newUniqueGoals = dataRequest.dataReq.goals.filter(goal => {
