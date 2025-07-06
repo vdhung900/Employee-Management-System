@@ -22,10 +22,8 @@ const EmployeeDashboard = () => {
   const [currentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(currentDate);
   const user = getCurrentUser();
-  console.log('run here')
 
   useEffect(() => {
-    console.log('run here')
   }, []);
 
   // Mock data for employee stats

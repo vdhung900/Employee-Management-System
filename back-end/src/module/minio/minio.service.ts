@@ -73,7 +73,6 @@ export class UploadService {
             throw new Error('No file data received');
         }
 
-        // Convert the ReadableStream to Node.js Readable stream
         const stream = Readable.from(data.Body as any);
 
         return {
@@ -89,7 +88,6 @@ export class UploadService {
                     await this.documentsModel.findByIdAndDelete(new Types.ObjectId(item._id));
                 }
             }
-            console.log(req)
             const insertedDocs = await this.documentsModel.insertMany(req);
             return insertedDocs;
         } catch (e) {

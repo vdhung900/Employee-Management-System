@@ -9,3 +9,9 @@ export function formatDate(dateInput) {
 
     return `${day}/${month}/${year}`;
 }
+
+export function formatNumber(value) {
+    if (value === null || value === undefined || isNaN(Number(value))) return "0";
+    const number = Math.floor(Number(value));
+    return number.toLocaleString("vi-VN");
+}

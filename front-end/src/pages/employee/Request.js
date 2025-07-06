@@ -55,17 +55,18 @@ import ThreeDContainer from '../../components/3d/ThreeDContainer';
 import CategoryService from "../../services/CategoryService";
 import requestService from "../../services/RequestService";
 import admin_account from "../../services/Admin_account";
-import {formatDate} from "../../utils/format";
+import {formatDate, formatNumber} from "../../utils/format";
 import moment from 'moment';
 import UploadFileComponent from "../../components/file-list/FileList";
 import {STATUS} from "../../constants/Status";
+import Hr_ManageEmployee from "../../services/Hr_ManageEmployee";
 
 const {Title, Text, Paragraph} = Typography;
 const {Option} = Select;
 const {TabPane} = Tabs;
 const {RangePicker} = DatePicker;
 
-const RequestTypeForm = ({form, requestType, departments = [], positions = []}) => {
+const RequestTypeForm = ({form, requestType, departments = [], positions = [], employees = [], coefficients = []}) => {
     const formFields = {
         LEAVE_REQUEST: {
             fields: (
@@ -353,6 +354,178 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = []}) 
                     goals: []
                 }
             }
+        },
+        SALARY_INCREASE: {
+            fields: (
+                <>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'employeeId']}
+                                label="Nhân viên"
+                                rules={[{ required: true, message: 'Vui lòng chọn nhân viên' }]}
+                            >
+                                <Select
+                                    placeholder="Chọn nhân viên"
+                                    showSearch
+                                    optionFilterProp="children"
+                                    onChange={(value) => {
+                                        const selectedEmployee = employees.find(emp => emp._id === value);
+                                        if (selectedEmployee) {
+                                            const nextCoefficient = coefficients.find(coef => coef.rank === (selectedEmployee.salaryCoefficientId?.rank + 1));
+                                            if(!nextCoefficient) {
+                                                message.error("Nhân viên đã đạt đến mức lương tối đa, vui lòng thử lại với nhân viên khác!")
+                                            }
+                                            form.setFieldsValue({
+                                                dataReq: {
+                                                    ...form.getFieldValue('dataReq'),
+                                                    department: selectedEmployee.departmentId?.name || '',
+                                                    currentCoefficient: selectedEmployee.salaryCoefficientId?.salary_coefficient || 0,
+                                                    currentSalary: formatNumber(selectedEmployee.salaryCoefficientId?.salary_coefficient * selectedEmployee.salaryCoefficientId?.salary_rankId?.salary_base) || 0,
+                                                    proposedCoefficient: nextCoefficient ? nextCoefficient.salary_coefficient : 0,
+                                                    proposedSalary: nextCoefficient ? formatNumber(nextCoefficient.salary_coefficient * nextCoefficient.salary_rankId?.salary_base) : 0,
+                                                    salaryCoefficientsId: nextCoefficient._id,
+                                                    employeeSalaryIncreaseId: selectedEmployee._id
+                                                }
+                                            });
+                                        }
+                                    }}
+                                >
+                                    {employees.map(employee => (
+                                        <Option key={employee._id} value={employee._id}>
+                                            {employee.fullName} - {employee.email}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'department']}
+                                label="Bộ phận"
+                            >
+                                <Input disabled />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'currentCoefficient']}
+                                label="Hệ số lương hiện tại"
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập hệ số lương hiện tại' },
+                                ]}
+                            >
+                                <InputNumber
+                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                    disabled
+                                    precision={2}
+                                    step={0.01}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'currentSalary']}
+                                label="Số lương hiện tại"
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập số lương hiện tại' },
+                                ]}
+                            >
+                                <InputNumber
+                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                    precision={2}
+                                    step={0.01}
+                                    disabled
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'proposedCoefficient']}
+                                label="Hệ số lương đề xuất"
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập hệ số lương hiện tại' },
+                                ]}
+                            >
+                                <InputNumber
+                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                    disabled
+                                    precision={2}
+                                    step={0.01}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name={['dataReq', 'proposedSalary']}
+                                label="Số lương đề xuất"
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập hệ số lương đề xuất' },
+                                ]}
+                            >
+                                <InputNumber
+                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                    precision={2}
+                                    step={0.01}
+                                    disabled
+                                />
+                            </Form.Item>
+                            <Form.Item
+                                name={['dataReq', 'salaryCoefficientsId']}
+                                label="Số lương đề xuất"
+                                hidden={true}
+                            >
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={24}>
+                            <Form.Item
+                                name={['dataReq', 'effectiveDate']}
+                                label="Ngày hiệu lực"
+                            >
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    format="DD/MM/YYYY"
+                                    placeholder="Chọn ngày hiệu lực"
+                                    disabled
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Form.Item
+                        name={['dataReq', 'reason']}
+                        label="Lý do đề xuất"
+                        rules={[
+                            { required: true, message: 'Vui lòng nhập lý do đề xuất' },
+                            { min: 10, message: 'Lý do phải có ít nhất 10 ký tự' }
+                        ]}
+                    >
+                        <Input.TextArea 
+                            rows={4} 
+                            placeholder="Nhập lý do đề xuất tăng lương (thành tích, đóng góp, kỹ năng mới,...)"
+                        />
+                    </Form.Item>
+                </>
+            ),
+            initialValues: {
+                dataReq: {
+                    employeeId: undefined,
+                    department: '',
+                    currentCoefficient: undefined,
+                    currentSalary: undefined,
+                    proposedCoefficient: undefined,
+                    proposedSalary: undefined,
+                    salaryCoefficientsId: undefined,
+                    effectiveDate: undefined,
+                    reason: '',
+                    attachments: []
+                }
+            }
         }
     };
 
@@ -374,6 +547,8 @@ const Requests = () => {
     const [requests, setRequests] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [positions, setPositions] = useState([]);
+    const [employees, setEmployees] = useState([]);
+    const [coefficients, setCoefficients] = useState([]);
     const [isEdit, setIsEdit] = useState(false);
     const [fileResponse, setFileResponse] = useState([]);
 
@@ -382,8 +557,7 @@ const Requests = () => {
         try {
             loadTypeReq();
             loadDataReq();
-            loadDepartments();
-            loadPositions();
+            loadEmployees();
         } catch (e) {
             console.log(e, 'test');
         }
@@ -394,11 +568,9 @@ const Requests = () => {
             const response = await admin_account.getAllDepartments();
             if(response.success){
                 setDepartments(response.data);
-
             }
         } catch (e) {
             console.log(e, 'test');
-
         }
     }
 
@@ -443,6 +615,31 @@ const Requests = () => {
             }
         } catch (e) {
             console.log(e)
+        }
+    }
+
+    const loadEmployees = async () => {
+        try {
+            const response = await Hr_ManageEmployee.getEmployeeSalary();
+            if(response.success){
+                setEmployees(response.data);
+            }
+        } catch (e) {
+            message.error('Error loading employees');
+        }
+    }
+
+    const loadCoefficient = async () => {
+        try{
+            const response = await Hr_ManageEmployee.getAllCoefficients();
+            if(response.success){
+                let data = response.data;
+                data.sort((a, b) => a.rank - b.rank);
+                console.log(data)
+                setCoefficients(data);
+            }
+        }catch (e) {
+            message.error('Error loading coefficient');
         }
     }
 
@@ -567,6 +764,19 @@ const Requests = () => {
                         reason: request.dataReq.reason || ''
                     }
                 })
+            }else if(request.typeRequest.code === STATUS.SALARY_INCREASE){
+                form.setFieldsValue({
+                    dataReq: {
+                        employeeId: request.dataReq.employeeId || '',
+                        currentSalary: request.dataReq.currentSalary || '',
+                        proposedSalary: request.dataReq.proposedSalary || '',
+                        currentCoefficient: request.dataReq.currentCoefficient || '',
+                        proposedCoefficient: request.dataReq.proposedCoefficient || '',
+                        effectiveDate: request.dataReq.effectiveDate ? moment(request.dataReq.effectiveDate) : undefined,
+                        department: request.dataReq.department || '',
+                        reason: request.dataReq.reason || ''
+                    }
+                })
             }
         } else {
             form.resetFields();
@@ -584,11 +794,9 @@ const Requests = () => {
         try {
             let body = values;
             if (body.typeCode === STATUS.OVERTIME_REQUEST && body.dataReq.hours) {
-                console.log('Form hours before format:', body.dataReq.hours);
                 body.dataReq.hours = body.dataReq.hours.map(time =>
                     time ? time.format('HH:mm') : null
                 ).filter(time => time !== null);
-                console.log('Form hours after format:', body.dataReq.hours);
             }
             if(fileResponse.length > 0){
                 body.attachments = fileResponse;
@@ -621,6 +829,13 @@ const Requests = () => {
 
     const handleRequestTypeChange = (value) => {
         setSelectedRequestType(value);
+        if(value === STATUS.ACCOUNT_CREATE_REQUEST){
+            loadPositions();
+            loadDepartments();
+        }else if (value === STATUS.SALARY_INCREASE){
+            loadEmployees();
+            loadCoefficient();
+        }
         const formFields = {
             LEAVE_REQUEST: {
                 dataReq: {
@@ -653,6 +868,16 @@ const Requests = () => {
                     year: new Date().getFullYear(),
                     goals: []
                 }
+            },
+            SALARY_INCREASE: {
+                dataReq: {
+                    employeeId: undefined,
+                    currentSalary: undefined,
+                    proposedSalary: undefined,
+                    effectiveDate: undefined,
+                    department: undefined,
+                    reason: undefined
+                }
             }
         };
         form.setFieldsValue(formFields[value] || {});
@@ -660,7 +885,7 @@ const Requests = () => {
 
     const renderRequestTypeFields = () => {
         return <RequestTypeForm form={form} requestType={selectedRequestType} departments={departments}
-                                positions={positions}/>;
+                                positions={positions} employees={employees} coefficients={coefficients}/>;
     };
 
     const showDrawer = (request) => {
