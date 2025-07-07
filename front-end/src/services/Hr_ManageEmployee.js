@@ -57,6 +57,19 @@ const Hr_ManageEmployee = {
         } catch (error) {
             throw handleApiError(error);
         }
+    },
+    async getAvatar(key){
+        try{
+            const response = await fetchWithAuth(`/files/presigned/${key}`,'GET');
+            return response;
+
+        } catch(error){
+            throw handleApiError(error);
+        }
     }
+
+
+
+
 };
 export default Hr_ManageEmployee;

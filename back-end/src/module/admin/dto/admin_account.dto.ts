@@ -23,7 +23,7 @@ export class CreateAccount {
     fullName: string;
 
     @IsOptional()
-    @IsDate()
+    @IsString()
     dob?: Date;
 
     @IsOptional()
@@ -47,11 +47,11 @@ export class CreateAccount {
     positionId?: Types.ObjectId;
 
     @IsOptional()
-    @IsDate()
+    @IsString()
     joinDate?: Date;
 
     @IsOptional()
-    @IsDate()
+    @IsString()
     resignDate?: Date;
 
     @IsOptional()
@@ -73,9 +73,18 @@ export class CreateAccount {
     @IsOptional()
     @IsString()
     salaryCoefficientId?: Types.ObjectId;
+    
     @IsOptional()
     @IsString()
     code?: string;
+
+    @IsOptional()
+    @IsString()
+    address?: string;
+
+    @IsOptional()
+    @IsString()
+    avatar?: string;
 }
 
 export class UpdateAccount { 
@@ -112,7 +121,7 @@ export class UpdateAccount {
     phone?: string;
 
     @IsOptional()
-    @IsDate()
+    @IsString()
     dob?: Date;
 
     @IsOptional()
@@ -123,6 +132,14 @@ export class UpdateAccount {
     @IsOptional()
     @IsString()
     document?: string;
+
+    @IsOptional()
+    @IsString()
+    address?: string;
+
+    @IsOptional()
+    @IsString()
+    avatar?: string;    
 
 }
 
