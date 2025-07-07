@@ -31,6 +31,9 @@ export class MonthlyGoal extends BaseSchema {
 
   @Prop({ default: STATUS.PENDING })
   status: STATUS.PENDING | STATUS.APPROVED | STATUS.REJECTED;
+
+  @Prop({ default: false })
+  isReviewed: boolean;
 }
 
 export const MonthlyGoalSchema = SchemaFactory.createForClass(MonthlyGoal);

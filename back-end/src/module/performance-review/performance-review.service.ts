@@ -78,7 +78,11 @@ export class PerformanceReviewService {
       comment: dtoToCreate.comment,
       overallScore: dtoToCreate.overallScore,
     });
-    return newReview.save();
+    const savedReview = newReview.save();
+    monthlyGoal.isReviewed = true;
+    monthlyGoal.save();
+
+    return savedReview;
   }
 
   findAll() {

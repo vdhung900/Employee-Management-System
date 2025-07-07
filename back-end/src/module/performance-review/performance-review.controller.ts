@@ -9,12 +9,6 @@ export class PerformanceReviewController {
 
   @Post()
   create(@Req() req: any, @Body() createPerformanceReviewDto: CreatePerformanceReviewDto) {
-    // const existingRecord = await this.attendanceRecordService.findByEmployeeIdToday(
-    //   req.user.userId
-    // );
-    // if (existingRecord) {
-    //   throw new BadRequestException("Attendance record for this person already exists for today.");
-    // }
     createPerformanceReviewDto.reviewer_id = req?.user?.userId;
     return this.performanceReviewService.create(createPerformanceReviewDto);
   }
