@@ -20,6 +20,10 @@ export class CreateAttendanceRecordDto {
   lastCheckOut: Date;
 
   @IsOptional()
+  @IsDate()
+  isLate: boolean;
+
+  @IsOptional()
   @IsNumber()
   totalWorkingHours: number;
 

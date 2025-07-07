@@ -21,6 +21,9 @@ export class AttendanceRecords extends BaseSchema {
   lastCheckOut: Date;
 
   @Prop()
+  isLate: boolean;
+
+  @Prop()
   totalWorkingHours: number;
 
   @Prop({ type: Types.ObjectId, ref: typeRequest.name })
