@@ -30,9 +30,8 @@ export class AdminAccountService {
 
 
 
-
+      const name = await this.generateUserName(createAccount.fullName);
       const roleId = createAccount.role ? new Types.ObjectId(createAccount.role) : null;
-      const code = await this.generateUserName(createAccount.fullName);
       // Tạo thông tin nhân viên mới
       const newEmployee = await this.employeeModel.create({
         fullName: createAccount.fullName,
@@ -48,7 +47,10 @@ export class AdminAccountService {
         bankName: null,
         document: null,
         contractId: null,
-        salaryCoefficientId: null
+        code: name,
+        salaryCoefficientId: null,
+        address: createAccount.address || null,
+        avatar: null
       });
 
       if (!newEmployee) {
@@ -58,7 +60,7 @@ export class AdminAccountService {
 
       // Tạo tài khoản với thông tin nhân viên vừa tạo
       const hash = await this.generateRandomPassword(8);
-      const name = await this.generateUserName(createAccount.fullName);
+     
       const account = await this.accountModel.create({
         username: name,
         password: hash,
@@ -87,7 +89,7 @@ export class AdminAccountService {
 
       .populate({
         path: 'employeeId',
-        select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName'
+        select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName code address avatar'
       })
       .populate({
         path: 'role',
@@ -101,7 +103,7 @@ export class AdminAccountService {
     const admin = await this.accountModel.findById(id)
       .populate({
         path: 'employeeId',
-        select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName',
+        select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName code address avatar',
         populate: [
           {
             path: 'departmentId',
@@ -129,7 +131,7 @@ export class AdminAccountService {
       // Lấy thông tin tài khoản hiện tại
       const currentAccount = await this.accountModel.findById(id).populate({
         path: 'employeeId',
-        select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName'
+        select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName address'
       }).exec();
       if (!currentAccount) throw new NotFoundException('Không tìm thấy tài khoản');
 
@@ -155,6 +157,12 @@ export class AdminAccountService {
         if (updateAdminDto.document) {
           updateEmployee.document = updateAdminDto.document;
         }
+        if (updateAdminDto.address) {
+          updateEmployee.address = updateAdminDto.address;
+        }
+        // if (updateAdminDto.avatar) {
+        //   updateEmployee.avatar = updateAdminDto.avatar;
+        // }
 // Them ho t cai logic attachments vao nha, cu them vao update gi gi day la dc
           // attachments: employeeData.document || null,
         // Cập nhật thông tin nhân viên
@@ -265,6 +273,7 @@ export class AdminAccountService {
         if(!role) {
             throw new Error('Role không tồn tại');
         }
+        const code = await this.generateUserName(info.fullName);
       const newEmployee = await this.employeeModel.create({
         fullName: info.fullName,
         email: info.email,
@@ -278,6 +287,8 @@ export class AdminAccountService {
         bankAccount: null,
         bankName: null,
         contractId:  null,
+        code: code,
+        address: null,
         attachments: files
       });
       if (!newEmployee) {

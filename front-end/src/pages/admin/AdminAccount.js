@@ -32,7 +32,16 @@ import {
   LockOutlined,
   MailOutlined,
   PhoneOutlined,
-  EyeOutlined
+  EyeOutlined,
+  EnvironmentOutlined,
+  FileImageOutlined,
+  IdcardOutlined,
+  TeamOutlined,
+  CalendarOutlined,
+  ManOutlined,
+  ApartmentOutlined,
+  CrownOutlined,
+  SafetyCertificateOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
@@ -41,6 +50,8 @@ import Admin_account from '../../services/Admin_account';
 import RolePermissionService from '../../services/RolePermissionService';
 
 import moment from 'moment';
+import Employee_profile from '../../services/Employee_profile';
+import UploadFileComponent from '../../components/file-list/FileList';
 
 const { Title, Text } = Typography;
 
@@ -68,12 +79,22 @@ const AdminAccount = () => {
   });
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [accountDetails, setAccountDetails] = useState(null);
+  const [fileResponse, setFileResponse] = useState([]);
+  const [urlImage, setUrlImage] = useState('');
 
   const rolesList = async () => {
     const role = await Admin_account.getAllRoles();
     setRoles(role.data);
   }
+
   useEffect(() => {
+    if (fileResponse[0]?.key) {
+      const data = async () => {
+        const data = await Employee_profile.updatefileimage(fileResponse[0]?.key);
+        setUrlImage(data.data);
+      }
+      data();
+    }
     rolesList();
   }, []);
 
@@ -226,7 +247,10 @@ const AdminAccount = () => {
       phone: accountDetail.data.employeeId.phone,
       dob: accountDetail.data.employeeId.dob ? moment(accountDetail.data.employeeId.dob) : null,
       gender: accountDetail.data.employeeId.gender,
+      address: accountDetail.data.employeeId.address,
+      // avatar: accountDetail.data.employeeId.avatar,
     });
+    setFileResponse(accountDetail.data.employeeId.avatar);
     setEditModalVisible(true);
   };
 
@@ -241,8 +265,13 @@ const AdminAccount = () => {
       if (values.fullName !== userToEdit.employeeId.fullName) accountData.fullName = values.fullName;
       if (values.email !== userToEdit.employeeId.email) accountData.email = values.email;
       if (values.phone !== userToEdit.employeeId.phone) accountData.phone = values.phone;
-      if (values.dob !== userToEdit.employeeId.dob) accountData.dob = values.dob;
+      if (values.dob && values.dob !== userToEdit.employeeId.dob) {
+        // Nếu là moment object thì chuyển về ISO string
+        accountData.dob = values.dob ? moment(values.dob).format('YYYY-MM-DD') : null;
+      }
       if (values.gender !== userToEdit.employeeId.gender) accountData.gender = values.gender;
+      if (values.address !== userToEdit.employeeId.address) accountData.address = values.address;
+      // if (values.avatar !== userToEdit.employeeId.avatar) accountData.avatar = values.avatar;
       // Call API to update account
       const response = await Admin_account.updateAccount(userToEdit._id, accountData);
       if (response.success) {
@@ -319,7 +348,9 @@ const AdminAccount = () => {
       user.dob,
       user.gender,
       user.role.name,
-      user.status
+      user.status,
+      user.address,
+      // user.avatar
     ]));
     const ws = XLSX.utils.aoa_to_sheet([
       ['Tên', 'Tên đăng nhập', 'Vai trò', 'Trạng thái'],
@@ -399,6 +430,7 @@ const AdminAccount = () => {
     } catch (error) {
       message.error(error.message || 'Lỗi khi thêm tài khoản!');
     } finally {
+      setFileResponse([])
       setLoading(false);
     }
 
@@ -590,11 +622,7 @@ const AdminAccount = () => {
                 name="dob"
                 label="Ngày sinh"
               >
-                <DatePicker
-                  style={{ width: '100%' }}
-                  placeholder="Chọn ngày sinh"
-                  format="DD/MM/YYYY"
-                />
+               <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -609,7 +637,25 @@ const AdminAccount = () => {
                 </Select>
               </Form.Item>
             </Col>
+
+            <Col span={12}>
+              <Form.Item
+                name="address"
+                label="Địa chỉ"
+              >
+                <Input prefix={<EnvironmentOutlined />} placeholder="Nhập địa chỉ" />
+              </Form.Item>
+            </Col>
+            {/* <Col span={12}>
+              <Form.Item
+                name="avatar"
+                label="Ảnh đại diện"
+              >
+                <Input prefix={<FileImageOutlined />} placeholder="Nhập đường dẫn ảnh" />
+              </Form.Item>
+            </Col> */}
           </Row>
+
 
           <Divider />
 
@@ -671,39 +717,55 @@ const AdminAccount = () => {
                 <UserOutlined style={{ fontSize: '48px', color: '#1890ff' }} />
               </Col>
               <Col span={20}>
-                <Title level={3} style={{ marginBottom: '0', letterSpacing: '0.5px' }}>{accountDetails.employeeId.fullName}</Title>
-                <Text type="secondary" style={{ letterSpacing: '0.5px' }}> Mã nhân viên: {accountDetails.employeeId.code}</Text>
-
-                <Text type="secondary" style={{ letterSpacing: '0.5px' }}>{accountDetails.role.name}</Text>
+                <Title level={3} style={{ marginBottom: 8, letterSpacing: '0.5px' }}>{accountDetails.employeeId.fullName}</Title>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                  <IdcardOutlined style={{ marginRight: 6, color: '#52c41a' }} />
+                  <Text type="secondary" style={{ letterSpacing: '0.5px' }}>Mã nhân viên: <b>{accountDetails.employeeId.code}</b></Text>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                  <TeamOutlined style={{ marginRight: 6, color: '#722ed1' }} />
+                  <Text type="secondary" style={{ letterSpacing: '0.5px' }}>Vai trò: <Tag color="geekblue" style={{ fontWeight: 500 }}>{accountDetails.role.name}</Tag></Text>
+                </div>
               </Col>
             </Row>
-            <Divider style={{ margin: '16px 0' }} />
+            <Divider style={{ margin: '16px 0' }}>Thông tin chi tiết</Divider>
             <Row gutter={[16, 16]}>
-              <Col span={12} style={{ backgroundColor: '#f9f9f9', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
+              <Col span={12} style={{ backgroundColor: '#f9f9f9', padding: '16px', borderRadius: '8px' }}>
+                <Title level={5} style={{ marginBottom: 12 }}>Thông tin cá nhân</Title>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
                   <MailOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-                  <strong style={{ marginRight: '8px' }}>Email:</strong> {accountDetails.employeeId.email}
+                  <span><b>Email:</b> {accountDetails.employeeId.email}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
                   <PhoneOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-                  <strong style={{ marginRight: '8px' }}>Số điện thoại:</strong> {accountDetails.employeeId.phone}
+                  <span><b>Số điện thoại:</b> {accountDetails.employeeId.phone}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
-                  <strong style={{ marginRight: '8px' }}>Ngày sinh:</strong> {accountDetails.employeeId.dob ? moment(accountDetails.employeeId.dob).format('DD/MM/YYYY') : 'N/A'}
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                  <CalendarOutlined style={{ marginRight: 8, color: '#faad14' }} />
+                  <span><b>Ngày sinh:</b> {accountDetails.employeeId.dob ? moment(accountDetails.employeeId.dob).format('DD/MM/YYYY') : 'N/A'}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                  <ManOutlined style={{ marginRight: 8, color: '#eb2f96' }} />
+                  <span><b>Giới tính:</b> {accountDetails.employeeId.gender}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                  <EnvironmentOutlined style={{ marginRight: 8, color: '#13c2c2' }} />
+                  <span><b>Địa chỉ:</b> {accountDetails.employeeId.address || 'N/A'}</span>
                 </div>
               </Col>
-              <Col span={12} style={{ backgroundColor: '#f9f9f9', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
-                  <strong style={{ marginRight: '8px' }}>Giới tính:</strong> {accountDetails.employeeId.gender}
+              <Col span={12} style={{ backgroundColor: '#f9f9f9', padding: '16px', borderRadius: '8px' }}>
+                <Title level={5} style={{ marginBottom: 12 }}>Thông tin công việc</Title>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                  <ApartmentOutlined style={{ marginRight: 8, color: '#fa541c' }} />
+                  <span><b>Phòng ban:</b> {accountDetails.employeeId.departmentId?.name || 'N/A'}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
-                  <strong style={{ marginRight: '8px' }}>Phòng ban:</strong> {accountDetails.employeeId.departmentId?.name || 'N/A'}
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                  <CrownOutlined style={{ marginRight: 8, color: '#fadb14' }} />
+                  <span><b>Chức vụ:</b> {accountDetails.employeeId.positionId?.name || 'N/A'}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
-                  <strong style={{ marginRight: '8px' }}>Chức vụ:</strong> {accountDetails.employeeId.positionId?.name || 'N/A'}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', marginBottom: '12px', letterSpacing: '0.5px' }}>
-                  <strong style={{ marginRight: '8px' }}>Trạng thái:</strong> {accountDetails.status === 'active' ? <Tag color="green">Đang hoạt động</Tag> : <Tag color="red">Vô hiệu hóa</Tag>}
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                  <SafetyCertificateOutlined style={{ marginRight: 8, color: '#52c41a' }} />
+                  <span><b>Trạng thái:</b> {accountDetails.status === 'active' ? <Tag color="green">Đang hoạt động</Tag> : <Tag color="red">Vô hiệu hóa</Tag>}</span>
                 </div>
               </Col>
             </Row>
@@ -815,6 +877,28 @@ const AdminAccount = () => {
                 </Select>
               </Form.Item>
             </Col>
+
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="address"
+                label="Địa chỉ"
+              >
+                <Input prefix={<EnvironmentOutlined />} placeholder="Nhập địa chỉ" />
+              </Form.Item>
+            </Col>
+            {/* <Col span={12}>
+              <Form.Item
+                name="avatar"
+                label="Ảnh đại diện"
+              >
+
+                <UploadFileComponent uploadFileSuccess={setFileResponse} isSingle={true} files={fileResponse} />
+                {urlImage && <img src={urlImage} alt="Avatar" style={{ width: '100%', borderRadius: '50%' }} />}
+
+              </Form.Item>
+            </Col> */}
           </Row>
           <Divider />
         </Form>

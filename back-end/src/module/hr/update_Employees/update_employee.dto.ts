@@ -61,6 +61,20 @@ export class UpdateEmployeeDto extends BaseReq {
     @IsMongoId()
     salaryCoefficientId?: Types.ObjectId;   
 
+    @IsOptional()
+    @IsString()
+    code?: string;
+
+    @IsOptional()
+    @IsString()
+    address?: string;
+
+    @IsOptional()
+    @IsString()
+    avatar?: string;
+    
+    
+
 }
 
 
