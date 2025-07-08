@@ -269,16 +269,26 @@ export class RequestManageService {
                   const title = goal.title.trim().toLowerCase();
                   return !existingTitles.includes(title);
                 });
+                const goalsWithCode = newUniqueGoals.map((goal, index) => ({
+                  ...goal,
+                  code: checkData.goals.length + index,
+                }));
+
                 if (newUniqueGoals.length > 0) {
-                  checkData.goals.push(...newUniqueGoals);
+                  checkData.goals.push(...goalsWithCode);
                   await checkData.save();
                 }
               } else {
+                const goalsWithCode = dataRequest.dataReq.goals.map((goal: any, index: number) => ({
+                  ...goal,
+                  code: index,
+                }));
+
                 await this.monthlyGoalModel.insertOne({
                   employee_id: dataRequest.employeeId._id,
                   month: dataRequest.dataReq.month,
                   year: dataRequest.dataReq.year,
-                  goals: dataRequest.dataReq.goals,
+                  goals: goalsWithCode,
                 });
               }
             }

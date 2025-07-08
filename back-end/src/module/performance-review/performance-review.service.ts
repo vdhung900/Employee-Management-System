@@ -35,6 +35,7 @@ export class PerformanceReviewService {
       });
     }
 
+    // console.log(monthlyGoal?.goals.length, dtoToCreate.results.length);
     if (monthlyGoal?.goals.length !== dtoToCreate.results.length) {
       return new BaseResponse({
         status: "Create review failed",
@@ -44,23 +45,22 @@ export class PerformanceReviewService {
     }
 
     if (
-      JSON.stringify(monthlyGoal.goals.map((goal) => goal._id).sort()) !==
-      JSON.stringify(dtoToCreate.results.map((rs) => rs.singleGoalId).sort())
+      JSON.stringify(monthlyGoal.goals.map((goal) => goal.code).sort()) !==
+      JSON.stringify(dtoToCreate.results.map((rs) => rs.code).sort())
     ) {
       return new BaseResponse({
         status: "Create review failed",
         success: false,
-        message: "Invalid results, check the goal ids ",
+        message: "Invalid results, check the goal codes ",
       });
     } else {
       // console.log("Passed");
     }
 
     const newResults = dtoToCreate.results.map((rs) => {
-      const existingGoal = monthlyGoal.goals.find(
-        (goal) => goal._id.toString() === rs.singleGoalId
-      );
+      const existingGoal = monthlyGoal.goals.find((goal) => goal.code === rs.code);
       return {
+        code: rs.code,
         goalTitle: existingGoal?.title,
         targetValue: existingGoal?.targetValue,
         actualValue: rs.actualValue,

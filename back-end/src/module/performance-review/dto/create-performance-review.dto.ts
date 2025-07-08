@@ -19,9 +19,8 @@ class ResultDto {
   // @IsNumber()
   // targetValue: number;
 
-  @IsString()
-  @IsMongoId()
-  singleGoalId: string;
+  @IsNumber()
+  code: number;
 
   @IsNumber()
   actualValue: number;

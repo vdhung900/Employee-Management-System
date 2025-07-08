@@ -21,13 +21,14 @@ export class MonthlyGoal extends BaseSchema {
     type: [
       {
         _id: { type: Types.ObjectId },
+        code: { type: Number },
         title: { type: String, required: true },
         targetValue: { type: Number, required: true },
       },
     ],
     required: true,
   })
-  goals: { _id: Types.ObjectId; title: string; targetValue: number }[];
+  goals: { _id: Types.ObjectId; code: number; title: string; targetValue: number }[];
 
   @Prop({ default: STATUS.PENDING })
   status: STATUS.PENDING | STATUS.APPROVED | STATUS.REJECTED;
