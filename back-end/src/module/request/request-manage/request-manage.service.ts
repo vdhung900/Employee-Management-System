@@ -252,32 +252,35 @@ export class RequestManageService {
             if(dataRequest.dataReq === null || dataRequest.dataReq === undefined){
                 throw new Error("Lỗi do không có thông tin chi tiết lịch nghỉ");
             }
-            if(typeRequest.code === STATUS.TARGET_REQUEST){
-                const checkData = await this.monthlyGoalModel
-                  .findOne({
-                    employee_id: dataRequest.employeeId,
-                    month: dataRequest.dataReq.month,
-                    year: dataRequest.dataReq.year,
-                  })
-                  .exec();
-                if(checkData){
-                    const existingTitles = checkData.goals.map(goal => goal.title.trim().toLowerCase());
-                    const newUniqueGoals = dataRequest.dataReq.goals.filter(goal => {
-                        const title = goal.title.trim().toLowerCase();
-                        return !existingTitles.includes(title);
-                    });
-                    if (newUniqueGoals.length > 0) {
-                        checkData.goals.push(...newUniqueGoals);
-                        await checkData.save();
-                    }
-                }else{
-                    await this.monthlyGoalModel.insertOne({
-                        employee_id: dataRequest.employeeId,
-                        month: dataRequest.dataReq.month,
-                        year: dataRequest.dataReq.year,
-                        goals: dataRequest.dataReq.goals
-                    })
+
+            if (typeRequest.code === STATUS.TARGET_REQUEST) {
+              const checkData = await this.monthlyGoalModel
+                .findOne({
+                  employee_id: dataRequest.employeeId._id,
+                  month: dataRequest.dataReq.month,
+                  year: dataRequest.dataReq.year,
+                })
+                .exec();
+              if (checkData) {
+                const existingTitles = checkData.goals.map((goal) =>
+                  goal.title.trim().toLowerCase()
+                );
+                const newUniqueGoals = dataRequest.dataReq.goals.filter((goal) => {
+                  const title = goal.title.trim().toLowerCase();
+                  return !existingTitles.includes(title);
+                });
+                if (newUniqueGoals.length > 0) {
+                  checkData.goals.push(...newUniqueGoals);
+                  await checkData.save();
                 }
+              } else {
+                await this.monthlyGoalModel.insertOne({
+                  employee_id: dataRequest.employeeId._id,
+                  month: dataRequest.dataReq.month,
+                  year: dataRequest.dataReq.year,
+                  goals: dataRequest.dataReq.goals,
+                });
+              }
             }
         }catch (e) {
             throw new Error(e);

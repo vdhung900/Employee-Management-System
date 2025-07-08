@@ -24,6 +24,7 @@ import { SalaryCoeficientModule } from "./module/hr/salary_Coeficient/salary_coe
 import { ProfileModule } from "./module/employee/profile/profile.module";
 import { UploadModule } from "./module/minio/minio.module";
 import { PerformanceReviewModule } from "./module/performance-review/performance-review.module";
+import { MonthlyGoalModule } from "./module/monthly-goal/monthly-goal.module";
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { PerformanceReviewModule } from "./module/performance-review/performance
     SalaryCoeficientModule,
     ProfileModule,
     PerformanceReviewModule,
+    MonthlyGoalModule,
   ],
   controllers: [],
   providers: [
