@@ -324,4 +324,22 @@ export class RequestManageService {
             throw new Error(error.message || error);
         }
     }
+
+    async getLeaveRequestsByDepartment(departmentId: string) {
+        // Lấy typeRequestId của LEAVE_REQUEST
+        const leaveType = await this.typeRequestModel.findOne({ code: 'LEAVE_REQUEST' });
+        if (!leaveType) throw new Error('Không tìm thấy loại đơn nghỉ phép');
+
+        // Lấy tất cả nhân viên thuộc phòng ban này
+        const employees = await this.employeeModel.find({ departmentId: new Types.ObjectId(departmentId) }).select('_id');
+        const employeeIds = employees.map(e => e._id);
+
+        // Lấy tất cả đơn nghỉ phép của các nhân viên này
+        const leaveRequests = await this.requestModel.find({
+            typeRequest: leaveType._id,
+            employeeId: { $in: employeeIds }
+        });
+
+        return leaveRequests;
+    }
 }
