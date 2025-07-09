@@ -1,6 +1,6 @@
 import { fetchWithAuth, handleApiError } from "../utils/FetchWithAuth";
 
-const ManagerStatisticsService = {
+const StatisticsService = {
   async getEmployeesByDepartment(departmentId) {
     try {
       return await fetchWithAuth(`/employee/by-department/${departmentId}`);
@@ -17,4 +17,4 @@ const ManagerStatisticsService = {
   }
 };
 
-export default ManagerStatisticsService; 
+export default StatisticsService; 
