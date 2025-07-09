@@ -31,7 +31,7 @@ export class MonthlyGoalService {
         $match: {
           "employee.departmentId": new Types.ObjectId(departmentId),
           //Tạm thời lấy các bản ghi chưa được Review
-          isReviewed: false,
+          // isReviewed: false,
         },
       },
     ]);
