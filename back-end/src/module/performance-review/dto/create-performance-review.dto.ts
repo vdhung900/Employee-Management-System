@@ -32,11 +32,11 @@ class ResultDto {
 export class CreatePerformanceReviewDto {
   @IsNotEmpty()
   @IsMongoId()
-  goal_ref: String;
+  goal_ref: string;
 
   //Thêm vào trong Controller
   @IsEmpty()
-  reviewer_id: String;
+  reviewer_id: string;
 
   @IsArray()
   @ValidateNested({ each: true })
