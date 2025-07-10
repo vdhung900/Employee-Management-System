@@ -69,4 +69,14 @@ export class RequestManageController {
             throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @Get('/leave/by-department/:departmentId')
+    async getLeaveRequestsByDepartment(@Param('departmentId') departmentId: string) {
+        try {
+            const resData = await this.hrRequestService.getLeaveRequestsByDepartment(departmentId);
+            return BaseResponse.success(resData, 'Lấy danh sách đơn nghỉ phép theo phòng ban thành công', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
