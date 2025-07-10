@@ -11,15 +11,7 @@ const GoalService = {
     }
   },
 
-  // Gửi đánh giá hiệu suất
-  async submitPerformanceReview(reviewData) {
-    try {
-      const response = await fetchWithAuth("/performance-review", "POST", reviewData);
-      return response;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
+
 };
 
 export default GoalService;

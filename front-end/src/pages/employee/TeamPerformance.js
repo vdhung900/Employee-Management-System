@@ -38,6 +38,7 @@ import dayjs from "dayjs";
 import ThreeDCard from "../../components/3d/ThreeDCard";
 import * as XLSX from "xlsx";
 import GoalService from "../../services/GoalService";
+import PerformanceReviewService from "../../services/PerformanceReviewService";
 import Employee_profile from "../../services/Employee_profile";
 import { getCurrentUser } from "../../utils/auth";
 
@@ -56,10 +57,7 @@ const MonthlyPerformanceReview = () => {
   const [form] = Form.useForm();
   const [isStatsModalVisible, setIsStatsModalVisible] = useState(false);
   const [selectedEmployeeStats, setSelectedEmployeeStats] = useState(null);
-  const [statsDateRange, setStatsDateRange] = useState([
-    dayjs().startOf("month"),
-    dayjs(),
-  ]);
+  const [statsDateRange, setStatsDateRange] = useState([dayjs().startOf("month"), dayjs()]);
   const [statsViewType, setStatsViewType] = useState("current");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentUser, setCurrentUser] = useState(null);
@@ -88,18 +86,14 @@ const MonthlyPerformanceReview = () => {
         // Lấy thông tin employee profile để có departmentId
         console.log("try to fetch : CALL profile");
 
-        const profileResponse = await Employee_profile.getEmployeeProfile(
-          currentUser.employeeId
-        );
+        const profileResponse = await Employee_profile.getEmployeeProfile(currentUser.employeeId);
         departmentId = profileResponse?.data?.departmentId?._id;
       }
 
       if (departmentId) {
         console.log("try to fetch : CALL");
 
-        const response = await GoalService.getMonthlyGoalsByDepartment(
-          departmentId
-        );
+        const response = await GoalService.getMonthlyGoalsByDepartment(departmentId);
         console.log("Monthly goals response:", response);
         setMonthlyGoals(response || []);
       }
@@ -134,8 +128,7 @@ const MonthlyPerformanceReview = () => {
     const selectedMonthValue = selectedMonth.month() + 1;
     const selectedYearValue = selectedMonth.year();
     filtered = filtered.filter(
-      (goal) =>
-        goal.month === selectedMonthValue && goal.year === selectedYearValue
+      (goal) => goal.month === selectedMonthValue && goal.year === selectedYearValue
     );
 
     return filtered;
@@ -181,7 +174,7 @@ const MonthlyPerformanceReview = () => {
       };
 
       console.log("Sending review data:", reviewData);
-      await GoalService.submitPerformanceReview(reviewData);
+      await PerformanceReviewService.submitPerformanceReview(reviewData);
       message.success("Đánh giá hiệu suất đã được gửi thành công!");
       setIsModalVisible(false);
 
@@ -223,10 +216,7 @@ const MonthlyPerformanceReview = () => {
       ),
     }));
 
-    exportToExcel(
-      exportData,
-      `Thống kê mục tiêu - ${dayjs().format("YYYY-MM")}`
-    );
+    exportToExcel(exportData, `Thống kê mục tiêu - ${dayjs().format("YYYY-MM")}`);
   };
 
   const columns = [
@@ -308,13 +298,8 @@ const MonthlyPerformanceReview = () => {
 
   const getOverallStats = () => {
     const filteredGoals = getFilteredGoals();
-    const totalGoals = filteredGoals.reduce(
-      (sum, goal) => sum + (goal.goals?.length || 0),
-      0
-    );
-    const reviewedGoals = filteredGoals.filter(
-      (goal) => goal.isReviewed
-    ).length;
+    const totalGoals = filteredGoals.reduce((sum, goal) => sum + (goal.goals?.length || 0), 0);
+    const reviewedGoals = filteredGoals.filter((goal) => goal.isReviewed).length;
 
     return {
       totalEmployees: filteredGoals.length,
@@ -339,20 +324,12 @@ const MonthlyPerformanceReview = () => {
                   format="MM/YYYY"
                   placeholder="Chọn tháng đánh giá"
                 />
-                <Select
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                  style={{ width: 200 }}
-                >
+                <Select value={statusFilter} onChange={setStatusFilter} style={{ width: 200 }}>
                   <Option value="all">Tất cả trạng thái</Option>
                   <Option value="pending">Chờ đánh giá</Option>
                   <Option value="completed">Đã đánh giá</Option>
                 </Select>
-                <Button
-                  type="default"
-                  icon={<DownloadOutlined />}
-                  onClick={handleExportStats}
-                >
+                <Button type="default" icon={<DownloadOutlined />} onClick={handleExportStats}>
                   Xuất Excel
                 </Button>
               </Space>
@@ -367,8 +344,7 @@ const MonthlyPerformanceReview = () => {
               pageSize: 10,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} của ${total} mục tiêu`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} mục tiêu`,
             }}
           />
         </div>
@@ -388,11 +364,7 @@ const MonthlyPerformanceReview = () => {
                   format="MM/YYYY"
                   placeholder="Chọn tháng thống kê"
                 />
-                <Select
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                  style={{ width: 200 }}
-                >
+                <Select value={statusFilter} onChange={setStatusFilter} style={{ width: 200 }}>
                   <Option value="all">Tất cả trạng thái</Option>
                   <Option value="pending">Chờ đánh giá</Option>
                   <Option value="completed">Đã đánh giá</Option>
@@ -461,9 +433,7 @@ const MonthlyPerformanceReview = () => {
               label={{
                 position: "top",
               }}
-              color={({ status }) =>
-                status === "Đã đánh giá" ? "#52c41a" : "#faad14"
-              }
+              color={({ status }) => (status === "Đã đánh giá" ? "#52c41a" : "#faad14")}
             />
           </Card>
         </div>
@@ -501,19 +471,13 @@ const MonthlyPerformanceReview = () => {
                     marginBottom: 16,
                   }}
                 >
-                  <Avatar
-                    size="large"
-                    icon={<UserOutlined />}
-                    style={{ marginRight: 16 }}
-                  />
+                  <Avatar size="large" icon={<UserOutlined />} style={{ marginRight: 16 }} />
                   <div>
                     <Text strong style={{ fontSize: 16 }}>
                       {selectedGoal.employee?.fullName || "N/A"}
                     </Text>
                     <div>
-                      <Text type="secondary">
-                        {selectedGoal.employee?.email || "N/A"}
-                      </Text>
+                      <Text type="secondary">{selectedGoal.employee?.email || "N/A"}</Text>
                     </div>
                   </div>
                 </div>
@@ -531,11 +495,7 @@ const MonthlyPerformanceReview = () => {
                     },
                   ]}
                 >
-                  <DatePicker.MonthPicker
-                    format="MM/YYYY"
-                    style={{ width: "100%" }}
-                    disabled
-                  />
+                  <DatePicker.MonthPicker format="MM/YYYY" style={{ width: "100%" }} disabled />
                 </Form.Item>
               </Col>
 
@@ -552,18 +512,12 @@ const MonthlyPerformanceReview = () => {
                             </Form.Item>
                           </Col>
                           <Col span={6}>
-                            <Form.Item
-                              name={[name, "goalTitle"]}
-                              label="Mục tiêu"
-                            >
+                            <Form.Item name={[name, "goalTitle"]} label="Mục tiêu">
                               <Input disabled />
                             </Form.Item>
                           </Col>
                           <Col span={5}>
-                            <Form.Item
-                              name={[name, "targetValue"]}
-                              label="Chỉ tiêu"
-                            >
+                            <Form.Item name={[name, "targetValue"]} label="Chỉ tiêu">
                               <InputNumber disabled style={{ width: "100%" }} />
                             </Form.Item>
                           </Col>
@@ -592,11 +546,7 @@ const MonthlyPerformanceReview = () => {
                                 },
                               ]}
                             >
-                              <InputNumber
-                                min={0}
-                                max={10}
-                                style={{ width: "100%" }}
-                              />
+                              <InputNumber min={0} max={10} style={{ width: "100%" }} />
                             </Form.Item>
                           </Col>
                         </Row>
@@ -644,9 +594,7 @@ const MonthlyPerformanceReview = () => {
       </Modal>
 
       <Modal
-        title={`Chi tiết mục tiêu - ${
-          selectedEmployeeStats?.employee?.fullName || "N/A"
-        }`}
+        title={`Chi tiết mục tiêu - ${selectedEmployeeStats?.employee?.fullName || "N/A"}`}
         open={isStatsModalVisible}
         onCancel={() => setIsStatsModalVisible(false)}
         width={1000}
@@ -669,25 +617,16 @@ const MonthlyPerformanceReview = () => {
               </Col>
               <Col span={8}>
                 <ThreeDCard>
-                  <Statistic
-                    title="Số mục tiêu"
-                    value={selectedEmployeeStats.goals?.length || 0}
-                  />
+                  <Statistic title="Số mục tiêu" value={selectedEmployeeStats.goals?.length || 0} />
                 </ThreeDCard>
               </Col>
               <Col span={8}>
                 <ThreeDCard>
                   <Statistic
                     title="Trạng thái"
-                    value={
-                      selectedEmployeeStats.isReviewed
-                        ? "Đã đánh giá"
-                        : "Chờ đánh giá"
-                    }
+                    value={selectedEmployeeStats.isReviewed ? "Đã đánh giá" : "Chờ đánh giá"}
                     valueStyle={{
-                      color: selectedEmployeeStats.isReviewed
-                        ? "#52c41a"
-                        : "#faad14",
+                      color: selectedEmployeeStats.isReviewed ? "#52c41a" : "#faad14",
                     }}
                   />
                 </ThreeDCard>
@@ -723,9 +662,7 @@ const MonthlyPerformanceReview = () => {
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <Text strong>Họ tên: </Text>
-                  <Text>
-                    {selectedEmployeeStats.employee?.fullName || "N/A"}
-                  </Text>
+                  <Text>{selectedEmployeeStats.employee?.fullName || "N/A"}</Text>
                 </Col>
                 <Col span={12}>
                   <Text strong>Email: </Text>
@@ -737,11 +674,7 @@ const MonthlyPerformanceReview = () => {
                 </Col>
                 <Col span={12}>
                   <Text strong>Ngày tạo: </Text>
-                  <Text>
-                    {dayjs(selectedEmployeeStats.createdAt).format(
-                      "DD/MM/YYYY HH:mm"
-                    )}
-                  </Text>
+                  <Text>{dayjs(selectedEmployeeStats.createdAt).format("DD/MM/YYYY HH:mm")}</Text>
                 </Col>
               </Row>
             </Card>
