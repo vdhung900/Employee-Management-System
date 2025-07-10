@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Typography, Spin, message, Statistic, Divider, Table, Select } from "antd";
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
-import ManagerStatisticsService from "../../services/ManagerStatisticsService";
+import StatisticsService from "../../services/StatisticsService";
 import Employee_profile from '../../services/Employee_profile';
 
 const { Title } = Typography;
@@ -51,12 +51,12 @@ const ManagerStatistics = () => {
         }
 
         // Lấy danh sách nhân viên
-        const empRes = await ManagerStatisticsService.getEmployeesByDepartment(departmentId);
+        const empRes = await StatisticsService.getEmployeesByDepartment(departmentId);
         const empList = Array.isArray(empRes.data) ? empRes.data : empRes;
         setEmployees(empList);
 
         // Lấy danh sách đơn nghỉ phép
-        const leaveRes = await ManagerStatisticsService.getLeaveRequestsByDepartment(departmentId);
+        const leaveRes = await StatisticsService.getLeaveRequestsByDepartment(departmentId);
         const leaveList = Array.isArray(leaveRes.data) ? leaveRes.data : leaveRes;
         setLeaveRequests(leaveList);
 

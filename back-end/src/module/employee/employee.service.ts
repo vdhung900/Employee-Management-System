@@ -10,6 +10,10 @@ export class EmployeeService {
     ) {}
 
     async getEmployeeByDepartment(departmentId: string) {
-        return this.employeeModel.find({ departmentId: new Types.ObjectId(departmentId) });
+        return this.employeeModel.find({ departmentId: new Types.ObjectId(departmentId) })
+            .populate('departmentId')
+            .populate('positionId')
+            .populate('contractId')
+            .populate('salaryCoefficientId');
     }
 } 
