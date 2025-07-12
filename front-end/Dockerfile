@@ -18,8 +18,7 @@ WORKDIR /app
 RUN npm install -g serve
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/.env ./.env
 
 EXPOSE 3123
 
-CMD ["sh", "-c", "serve -s dist -l ${PORT:-3123}"] 
+CMD ["sh", "-c", "serve -s dist -l ${PORT:-3123}"] gui
