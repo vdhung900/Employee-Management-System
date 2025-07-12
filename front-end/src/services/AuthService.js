@@ -2,7 +2,7 @@ import { fetchWithAuth, handleApiError } from "../utils/FetchWithAuth";
 
 const AuthService = {
   async login(body) {
-    const loginUrl = "http://127.0.0.1:9123/auth/login";
+    const loginUrl = "http://63.141.253.242:9123/auth/login";
     try {
       return fetch(loginUrl, {
         method: "POST",
