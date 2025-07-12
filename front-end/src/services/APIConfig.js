@@ -1,4 +1,4 @@
-const API_LOCAL = 'http://63.141.253.242:9123';
+const API_LOCAL = 'https://api.ems.api-score.com';
 
 const headers = {
     'Content-Type': 'application/json',
