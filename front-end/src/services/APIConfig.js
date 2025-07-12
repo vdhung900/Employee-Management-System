@@ -1,4 +1,4 @@
-const API_LOCAL = 'https://api.ems.api-score.com';
+const API_LOCAL = 'https://ems-api.api-score.com';
 
 const headers = {
     'Content-Type': 'application/json',
