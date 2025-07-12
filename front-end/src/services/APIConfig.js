@@ -1,4 +1,4 @@
-const API_LOCAL = 'http://127.0.0.1:9123';
+const API_LOCAL = 'http://63.141.253.242:9123';
 
 const headers = {
     'Content-Type': 'application/json',
