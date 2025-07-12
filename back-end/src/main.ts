@@ -14,7 +14,8 @@ async function bootstrap() {
     origin: [
       "http://localhost:3123",
       "http://127.0.0.1:3123",
-      "http://63.141.253.242:3123"
+      "http://63.141.253.242:3123",
+      'https://ems.api-score.com'
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
