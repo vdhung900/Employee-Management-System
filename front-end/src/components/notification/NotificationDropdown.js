@@ -4,7 +4,7 @@ import { BellOutlined, CheckCircleTwoTone } from '@ant-design/icons';
 
 const { Text } = Typography;
 
-const NotificationDropdown = ({ notifications = [], onReadAll, onItemClick, loading }) => {
+const NotificationDropdown = ({ notifications = [], onReadAll, onDeleteAll, onItemClick, loading }) => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
@@ -48,6 +48,15 @@ const NotificationDropdown = ({ notifications = [], onReadAll, onItemClick, load
           />
         )}
       </div>
+      {notifications.length > 0 && (
+        <div style={{ height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafcff', margin: 0, padding: 0 }}>
+          <Tooltip title="Xóa tất cả thông báo">
+            <Button size="small" type="link" danger onClick={onDeleteAll} style={{ fontSize: 13, height: 20, lineHeight: '18px', padding: '0 6px', fontWeight: 400 }}>
+              Xóa tất cả
+            </Button>
+          </Tooltip>
+        </div>
+      )}
     </div>
   );
 };

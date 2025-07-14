@@ -23,4 +23,39 @@ export class NotificationService {
   async getEmployeeNotifications(employeeId: string) {
     return this.notificationModel.find({ employeeId: new Types.ObjectId(employeeId) }).sort({ createdAt: -1 }).exec();
   }
+
+  async markReadOne(notificationId: string, empId: string){
+    try{
+        const notification = await this.notificationModel.findOne({ _id: new Types.ObjectId(notificationId), employeeId: new Types.ObjectId(empId) }).exec();
+        if (!notification) {
+            throw new Error('Notification not found');
+        }
+        notification.read = true;
+        await notification.save();
+      return this.getEmployeeNotifications(empId);
+    }catch (e) {
+      throw e;
+    }
+  }
+
+    async markReadAll(employeeId: string) {
+        try {
+          await this.notificationModel.updateMany(
+              { employeeId: new Types.ObjectId(employeeId), read: false },
+              { $set: { read: true } }
+          );
+          return this.getEmployeeNotifications(employeeId);
+        } catch (e) {
+        throw e;
+        }
+    }
+
+    async deleteAllNotifications(employeeId: string) {
+        try {
+            await this.notificationModel.deleteMany({ employeeId: new Types.ObjectId(employeeId) });
+            return employeeId;
+        } catch (error) {
+            throw new Error('Error deleting notifications: ' + error.message);
+        }
+    }
 }
