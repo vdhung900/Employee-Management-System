@@ -10,6 +10,30 @@ const NotificationService = {
             throw handleApiError(error);
         }
     },
+    async markReadOne(body) {
+        try{
+            return await fetchWithAuth(`${endpointService}/mark-read-one`, 'POST', body);
+        }catch(error){
+            throw handleApiError(error);
+        }
+
+    },
+    async markReadAll(body) {
+        try{
+            return await fetchWithAuth(`${endpointService}/mark-read-all`, 'POST', body);
+        }catch(error){
+            throw handleApiError(error);
+        }
+
+    },
+    async deleteAll(body) {
+        try{
+            return await fetchWithAuth(`${endpointService}/delete-all`, 'POST', body);
+        }catch(error){
+            throw handleApiError(error);
+        }
+
+    }
 }
 
 export default NotificationService;

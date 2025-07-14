@@ -129,14 +129,53 @@ const MainLayout = () => {
     }
 
     const handleReadAllNotifications = async () => {
-        const updated = notificationItem.map(n => ({...n, read: true}));
-        setNotificationItem(updated);
-        message.success('Đã đánh dấu tất cả là đã đọc!');
+        try{
+            let body = {
+                employeeId: employeeId
+            }
+            const response = await NotificationService.markReadAll(body);
+            if(response.success){
+                const updated = notificationItem.map(n => ({...n, read: true}));
+                setNotificationItem(updated);
+            }else{
+                message.error(response.message || "Không thể đánh dấu tất cả thông báo là đã đọc");
+            }
+        }catch (e) {
+            message.error(e.message)
+        }
     };
 
-    const handleNotificationClick = (item) => {
-        setNotificationItem(prev => prev.map(n => n._id === item._id ? {...n, read: true} : n));
-        message.info(`Clicked on notification: ${item.message}`);
+    const handleDeleteAllNotification = async () => {
+        try{
+            let body = {
+                employeeId: employeeId
+            }
+            const response = await NotificationService.deleteAll(body);
+            if(response.success){
+                setNotificationItem([]);
+            }else{
+                message.error(response.message || "Không thể đánh dấu tất cả thông báo là đã đọc");
+            }
+        }catch (e) {
+            message.error(e.message)
+        }
+    };
+
+    const handleNotificationClick = async (item) => {
+        try{
+            let body = {
+                employeeId: employeeId,
+                notificationId: item._id
+            }
+            const response = await NotificationService.markReadOne(body);
+            if(response.success){
+                setNotificationItem(prev => prev.map(n => n._id === item._id ? {...n, read: true} : n));
+            }else{
+                message.error(response.message || "Không thể đánh dấu thông báo là đã đọc");
+            }
+        }catch (e) {
+            message.error(e.message);
+        }
     };
 
     const handleSocketNotification = (data) => {
@@ -537,6 +576,7 @@ const MainLayout = () => {
                                         notifications={notificationItem}
                                         loading={notificationLoading}
                                         onReadAll={handleReadAllNotifications}
+                                        onDeleteAll={handleDeleteAllNotification}
                                         onItemClick={handleNotificationClick}
                                     />
                                 </div>
