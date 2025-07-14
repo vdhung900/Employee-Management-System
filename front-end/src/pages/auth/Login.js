@@ -18,6 +18,7 @@ import {API_URL} from "../../config";
 import AuthService from "../../services/AuthService";
 import {jwtDecode} from "jwt-decode";
 import EmployeeProfile from "../../services/EmployeeProfile";
+import {useLoading} from "../../contexts/LoadingContext";
 
 const {Title, Text} = Typography;
 
@@ -28,6 +29,7 @@ const Login = () => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const location = useLocation();
+    const { showLoading, hideLoading } = useLoading();
 
     useEffect(() => {
         if (isAuthenticated()) {
@@ -43,7 +45,7 @@ const Login = () => {
     }, [navigate]);
 
     const handleLogin = async (values) => {
-        setLoading(true);
+        showLoading();
         setError("");
         try {
             const response = await AuthService.login(formData);
@@ -71,7 +73,7 @@ const Login = () => {
         } catch (err) {
             setError("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
         } finally {
-            setLoading(false);
+            hideLoading();
         }
     };
 
