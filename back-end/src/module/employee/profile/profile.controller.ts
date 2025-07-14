@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Param, Body, HttpStatus } from '@nestjs/common';
+import {Controller, Get, Put, Param, Body, HttpStatus, HttpException} from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { EditProfileDto } from './profile.dto';
 import { BaseResponse } from 'src/interfaces/response/base.response';
@@ -14,8 +14,12 @@ export class ProfileController {
     }
 
     @Get('profile/:id')
-    async getProfile(@Param('id') id: string) {
-        const employee = await this.profileService.getProfile(id);
-        return BaseResponse.success(employee, 'Profile fetched successfully', HttpStatus.OK);
+    async getProfile(@Param('id') id: string): Promise<BaseResponse> {
+        try {
+            const resData = await this.profileService.getProfile(id);
+            return BaseResponse.success(resData, 'Request retrieved successfully', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

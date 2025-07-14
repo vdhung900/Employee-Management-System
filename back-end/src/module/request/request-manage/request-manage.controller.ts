@@ -1,8 +1,13 @@
-import {Body, Controller, Get, HttpException, HttpStatus, Param, Post} from '@nestjs/common';
+import {Body, Controller, Get, HttpException, HttpStatus, Param, Post, UseGuards} from '@nestjs/common';
 import {RequestManageService} from "./request-manage.service";
 import {CreateRequestDto} from "../dto/createRequest.dto";
 import {BaseResponse} from "../../../interfaces/response/base.response";
+import {JwtAuthGuard} from "../../../common/guards/jwt-auth.guard";
+import {RolesGuard} from "../../../common/guards/roles.guard";
+import {Roles} from "../../../common/decorators/roles.decorator";
+import {USER_ROLE} from "../../../enum/role.enum";
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('request-manage')
 export class RequestManageController {
     constructor(
@@ -21,6 +26,7 @@ export class RequestManageController {
     }
 
     @Post('/get-by-filter-code')
+    @Roles(USER_ROLE.MANAGER)
     async getReqByFilterCode(@Body() req: CreateRequestDto){
         try {
             const resData = await this.hrRequestService.getRequestByFilter(req);
@@ -51,6 +57,7 @@ export class RequestManageController {
     }
 
     @Post('/approve')
+    @Roles(USER_ROLE.MANAGER, USER_ROLE.ADMIN, USER_ROLE.HR)
     async approveRequest(@Body() req: CreateRequestDto): Promise<BaseResponse>{
         try{
             const resData = await this.hrRequestService.approveRequest(req);

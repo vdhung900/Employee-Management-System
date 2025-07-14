@@ -71,7 +71,9 @@ const ApproveRequest = () => {
     const loadRequests = async (page = 1, size = 10) => {
         setLoading(true);
         try{
+            const employee = JSON.parse(localStorage.getItem('employee'));
             let body = {}
+            body.departmentId = employee?.departmentId?._id;
             body.page = page;
             body.limit = size;
             const response = await RequestService.getByFilterCode(body);
@@ -244,13 +246,16 @@ const ApproveRequest = () => {
                     }else{
                         message.error(`Không thể ${status === 'Approved' ? 'phê duyệt' : 'từ chối'} yêu cầu này.`);
                     }
-                    loadRequests();
                     closeDrawer();
-                    if(requests.typeRequest.code === STATUS.SALARY_INCREASE){
+                    if(requests?.typeRequest?.code === STATUS.SALARY_INCREASE){
                         handleStatsModalClose();
                     }
                 } catch (e) {
                     message.error(`Lỗi khi ${status === 'Approved' ? 'phê duyệt' : 'từ chối'} yêu cầu: ${e.message}`);
+                }finally {
+                    loadRequests(pagination.current, pagination.pageSize);
+                    closeDrawer();
+                    handleStatsModalClose();
                 }
             },
         });

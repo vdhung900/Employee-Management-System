@@ -10,6 +10,7 @@ import {Model, Types} from 'mongoose';
 import {SalaryRank} from "../../../schemas/salaryRank.schema";
 import {AttendanceRecords, AttendanceRecordsDocument} from "../../../schemas/attendanceRecords.schema";
 import {MonthlyReview, MonthlyReviewDocument} from "../../../schemas/performanceReview.schema";
+import {STATUS} from "../../../enum/status.enum";
 
 
 @Injectable()
@@ -144,9 +145,9 @@ export class UpdateEmployeeService {
                 date: { $gte: sixMonthsAgo, $lte: today }
             }).exec();
             const totalDays = attendanceRecords.length;
-            const presentDays = attendanceRecords.filter(record => record.status === 'present').length;
-            const absentDays = attendanceRecords.filter(record => record.status === 'leave').length;
-            const lateDays = attendanceRecords.filter(record => record.status === 'late').length;
+            const presentDays = attendanceRecords.filter(record => record.status === STATUS.PRESENT).length;
+            const absentDays = attendanceRecords.filter(record => record.status === STATUS.LEAVE).length;
+            const lateDays = attendanceRecords.filter(record => record.status === STATUS.LATE).length;
 
             const performanceReviews = await this.monthlyReviewModel.find({
                 employee_id: employee._id,

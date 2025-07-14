@@ -18,6 +18,8 @@ export class BaseRequestService {
 
     async create(requestData: CreateRequestDto) {
         const newRequest = new this.requestModel(requestData);
+        newRequest.employeeId = new Types.ObjectId(requestData.employeeId);
+        newRequest.departmentId = new Types.ObjectId(requestData.departmentId);
         newRequest.attachments = requestData.attachments ? requestData.attachments.map(item => item._id) : [];
         await newRequest.save()
         return this.findById(newRequest._id);
@@ -27,8 +29,8 @@ export class BaseRequestService {
         return await this.requestModel.find().populate('employeeId').populate('typeRequest').exec();
     }
 
-    async findByFilterCode(code: string){
-        return await this.requestModel.find().populate('employeeId').populate({
+    async findByFilterCode(departmentId: string, code: string){
+        return await this.requestModel.find({departmentId: new Types.ObjectId(departmentId)}).populate('employeeId').populate({
             path: 'typeRequest',
             match: {code: {$ne: code}}
         }).exec();
@@ -43,7 +45,7 @@ export class BaseRequestService {
     }
 
     async findByEmployeeId(employeeId: string) {
-        return await this.requestModel.find({employeeId: employeeId}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
+        return await this.requestModel.find({employeeId: new Types.ObjectId(employeeId)}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
     }
 
     async update(id: string, updateData: CreateRequestDto) {

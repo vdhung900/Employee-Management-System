@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import {Model, Types} from 'mongoose';
 import { EditProfileDto } from './profile.dto';
 import { Employees, EmployeesDocument } from 'src/schemas/employees.schema';
 import { Departments, DepartmentsDocument } from 'src/schemas/departments.schema';
@@ -23,7 +23,7 @@ export class ProfileService {
     }
 
     async getProfile(id: string) {
-        const employee = await this.employeeModel.findById(id).populate('departmentId').populate('positionId').populate('salaryCoefficientId');
+        const employee = await this.employeeModel.findById(new Types.ObjectId(id)).populate('departmentId').populate('positionId').populate('salaryCoefficientId');
         return employee;
     }
 }

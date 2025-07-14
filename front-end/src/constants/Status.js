@@ -18,6 +18,16 @@ export const STATUS = {
     TRAINING_PROPOSAL: 'TRAINING_PROPOSAL',
     PROFILE_UPDATE: 'PROFILE_UPDATE',
     LEAVE: 'leave',
+    PRESENT: 'present',
+    NGHI_THAI_SAN: 'leave_maternity',
+    NGHI_KHONG_LUONG: 'leave_unpaid',
+    NGHI_VO_SINH: 'leave_paternity',
+    NGHI_CUOI: 'leave_marriage',
+    NGHI_TANG: 'leave_funeral',
+    NGHI_LAM_TU_XA: 'leave_remote_work',
+    LATE: 'late',
+    NGHI_OM: 'leave_sick',
+    VE_SOM: 'leave_early',
     OVERTIME_REQUEST: 'OVERTIME_REQUEST',
     TARGET_REQUEST: 'TARGET_REQUEST',
     WORKING_TIME_SETTINGS: 'WORKING_TIME_SETTINGS',
@@ -31,5 +41,8 @@ export const STATUS = {
     FUNERAL_LEAVE: 'FUNERAL_LEAVE',           // Nghỉ tang
     COMPENSATORY_LEAVE: 'COMPENSATORY_LEAVE', // Nghỉ bù
     REMOTE_WORK: 'REMOTE_WORK',               // Làm việc từ xa
-    OTHER: 'OTHER'                            // Nghỉ lý do khác
+    OTHER: 'OTHER',                            // Nghỉ lý do khác
+    CHINH_THUC: 'Chính thức', // Full-time
+    THOI_VU: 'Thời vụ',       // Part-time
+    THU_VIEC: 'Thử việc',     // Probation
 };

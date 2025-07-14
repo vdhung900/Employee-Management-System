@@ -41,23 +41,14 @@ const AdminSettings = () => {
     const [currentEditingType, setCurrentEditingType] = useState(null);
     const [attendanceData, setAttendanceData] = useState([]);
     const [salaryData, setSalaryData] = useState([]);
-
-    const leaveData = [
-        {
-            key: '1',
-            annualLeave: 12,
-            sickLeave: 30,
-            personalLeave: 3,
-            maternityLeave: 180,
-            paternityLeave: 14,
-            carryOverDays: 5,
-            holidayWorkMultiplier: 3,
-            weekendWorkMultiplier: 2,
-        }
-    ];
+    const [leaveData, setLeaveData] = useState([]);
 
     useEffect(() => {
-        loadDataByCode(activeTab)
+        if(activeTab === STATUS.SALARY_SETTINGS || activeTab === STATUS.WORKING_TIME_SETTINGS){
+            loadDataByCode(activeTab)
+        }else{
+            loadLeaveSetting()
+        }
     }, [activeTab]);
 
     const loadDataByCode = async (activeTab) => {
@@ -89,6 +80,17 @@ const AdminSettings = () => {
                 }
             }
         } catch (e) {
+            message.error(e.message);
+        }
+    }
+
+    const loadLeaveSetting = async () => {
+        try{
+            const response = await SystemService.getLeaveSetting();
+            if(response.success){
+                setLeaveData(response.data);
+            }
+        }catch (e) {
             message.error(e.message);
         }
     }
@@ -181,18 +183,47 @@ const AdminSettings = () => {
     ];
 
     const leaveColumns = [
-        {title: 'Số ngày nghỉ phép năm', dataIndex: 'annualLeave', key: 'annualLeave'},
-        {title: 'Số ngày nghỉ ốm', dataIndex: 'sickLeave', key: 'sickLeave'},
-        {title: 'Số ngày nghỉ việc riêng', dataIndex: 'personalLeave', key: 'personalLeave'},
-        {title: 'Số ngày nghỉ thai sản', dataIndex: 'maternityLeave', key: 'maternityLeave'},
-        {title: 'Số ngày nghỉ cho nam giới khi vợ sinh', dataIndex: 'paternityLeave', key: 'paternityLeave'},
-        {title: 'Số ngày phép được chuyển sang năm sau', dataIndex: 'carryOverDays', key: 'carryOverDays'},
-        {title: 'Hệ số lương ngày lễ', dataIndex: 'holidayWorkMultiplier', key: 'holidayWorkMultiplier'},
-        {title: 'Hệ số lương ngày cuối tuần', dataIndex: 'weekendWorkMultiplier', key: 'weekendWorkMultiplier'},
+        {
+            title: 'Loại nghỉ phép',
+            dataIndex: 'name',
+            key: 'name',
+            width: '15%'
+        },
+        {
+            title: 'Mô tả',
+            dataIndex: 'description',
+            key: 'description',
+            width: '20%'
+        },
+        {
+            title: 'Số ngày tối đa/năm',
+            dataIndex: 'maxDaysPerYear',
+            key: 'maxDaysPerYear',
+            width: '15%',
+            render: (value) => value === null ? 'Không giới hạn' : `${value} ngày`
+        },
+        {
+            title: 'Hưởng lương',
+            dataIndex: 'isPaid',
+            key: 'isPaid',
+            width: '10%',
+            render: (isPaid) => (
+                <Tag color={isPaid ? 'success' : 'error'}>
+                    {isPaid ? 'Có' : 'Không'}
+                </Tag>
+            )
+        },
+        {
+            title: 'Ghi chú',
+            dataIndex: 'note',
+            key: 'note',
+            width: '30%'
+        },
         {
             title: 'Hành động',
             key: 'action',
-            render: () => (
+            width: '10%',
+            render: (_, record) => (
                 <Button 
                     type="primary" 
                     icon={<EditOutlined/>}
@@ -422,80 +453,65 @@ const AdminSettings = () => {
                         <Row gutter={24}>
                             <Col xs={24} md={12}>
                                 <Form.Item
-                                    label="Số ngày nghỉ phép năm"
-                                    name="annualLeave"
-                                    rules={[{required: true, message: 'Vui lòng nhập số ngày nghỉ phép năm'}]}
+                                    label="Tên loại nghỉ phép"
+                                    name="name"
+                                    rules={[{required: true, message: 'Vui lòng nhập tên loại nghỉ phép'}]}
                                 >
-                                    <InputNumber min={0} max={30} style={{width: '100%'}}/>
+                                    <Input />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} md={12}>
                                 <Form.Item
-                                    label="Số ngày nghỉ ốm"
-                                    name="sickLeave"
-                                    rules={[{required: true, message: 'Vui lòng nhập số ngày nghỉ ốm'}]}
+                                    label="Mã loại nghỉ phép"
+                                    name="code"
+                                    rules={[{required: true, message: 'Vui lòng nhập mã loại nghỉ phép'}]}
                                 >
-                                    <InputNumber min={0} max={60} style={{width: '100%'}}/>
+                                    <Input />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row gutter={24}>
+                            <Col span={24}>
+                                <Form.Item
+                                    label="Mô tả"
+                                    name="description"
+                                    rules={[{required: true, message: 'Vui lòng nhập mô tả'}]}
+                                >
+                                    <Input.TextArea rows={2} />
                                 </Form.Item>
                             </Col>
                         </Row>
                         <Row gutter={24}>
                             <Col xs={24} md={12}>
                                 <Form.Item
-                                    label="Số ngày nghỉ việc riêng"
-                                    name="personalLeave"
-                                    rules={[{required: true, message: 'Vui lòng nhập số ngày nghỉ việc riêng'}]}
+                                    label="Số ngày tối đa/năm"
+                                    name="maxDaysPerYear"
+                                    rules={[{required: false}]}
                                 >
-                                    <InputNumber min={0} max={10} style={{width: '100%'}}/>
+                                    <InputNumber 
+                                        min={0} 
+                                        style={{width: '100%'}}
+                                        placeholder="Để trống nếu không giới hạn"
+                                    />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} md={12}>
                                 <Form.Item
-                                    label="Số ngày nghỉ thai sản"
-                                    name="maternityLeave"
-                                    rules={[{required: true, message: 'Vui lòng nhập số ngày nghỉ thai sản'}]}
+                                    label="Hưởng lương"
+                                    name="isPaid"
+                                    valuePropName="checked"
                                 >
-                                    <InputNumber min={0} max={180} style={{width: '100%'}}/>
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Row gutter={24}>
-                            <Col xs={24} md={12}>
-                                <Form.Item
-                                    label="Số ngày nghỉ cho nam giới khi vợ sinh"
-                                    name="paternityLeave"
-                                    rules={[{required: true, message: 'Vui lòng nhập số ngày nghỉ cho nam giới'}]}
-                                >
-                                    <InputNumber min={0} max={30} style={{width: '100%'}}/>
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={12}>
-                                <Form.Item
-                                    label="Số ngày phép được chuyển sang năm sau"
-                                    name="carryOverDays"
-                                    rules={[{required: true, message: 'Vui lòng nhập số ngày được chuyển'}]}
-                                >
-                                    <InputNumber min={0} max={15} style={{width: '100%'}}/>
+                                    <Switch checkedChildren="Có" unCheckedChildren="Không" />
                                 </Form.Item>
                             </Col>
                         </Row>
                         <Row gutter={24}>
-                            <Col xs={24} md={12}>
+                            <Col span={24}>
                                 <Form.Item
-                                    label="Hệ số lương ngày lễ"
-                                    name="holidayWorkMultiplier"
-                                    rules={[{required: true, message: 'Vui lòng nhập hệ số lương ngày lễ'}]}
+                                    label="Ghi chú"
+                                    name="note"
                                 >
-                                    <InputNumber min={1} max={5} style={{width: '100%'}}/>
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={12}>
-                                <Form.Item
-                                    label="Hệ số lương ngày cuối tuần"
-                                    name="weekendWorkMultiplier"
-                                    rules={[{required: true, message: 'Vui lòng nhập hệ số lương ngày cuối tuần'}]}
-                                >
-                                    <InputNumber min={1} max={5} style={{width: '100%'}}/>
+                                    <Input.TextArea rows={3} />
                                 </Form.Item>
                             </Col>
                         </Row>

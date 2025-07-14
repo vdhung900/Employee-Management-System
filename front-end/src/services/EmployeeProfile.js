@@ -1,9 +1,10 @@
 import {fetchWithAuth, handleApiError} from "../utils/FetchWithAuth";
 
-const Employee_profile = {
+const EmployeeProfile = {
     async getEmployeeProfile(id) {
         try {
-            const response = await fetchWithAuth(`/employee/profile/${id}`, 'GET');
+            console.log(id)
+            const response = await fetchWithAuth(`/employee/profile/${id}`);
             return response;
         } catch (error) {
             throw handleApiError(error);
@@ -18,5 +19,5 @@ const Employee_profile = {
         }
     }   
 }
-export default Employee_profile;
+export default EmployeeProfile;
 
