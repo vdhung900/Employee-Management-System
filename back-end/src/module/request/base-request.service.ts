@@ -6,13 +6,17 @@ import {typeRequest, typeRequestDocument} from "../../schemas/typeRequestCategor
 import {CreateRequestDto} from "./dto/createRequest.dto";
 import {UploadService} from "../minio/minio.service";
 import {STATUS} from "../../enum/status.enum";
+import {NotificationService} from "../notification/notification.service";
+import {Departments, DepartmentsDocument} from "../../schemas/departments.schema";
 
 @Injectable()
 export class BaseRequestService {
     constructor(
         @InjectModel(Requests.name) private readonly requestModel: Model<RequestsDocument>,
         @InjectModel(typeRequest.name) private readonly typeRequestModel: Model<typeRequestDocument>,
-        private readonly uploadService: UploadService
+        @InjectModel(Departments.name) private readonly departmentModel: Model<DepartmentsDocument>,
+        private readonly uploadService: UploadService,
+        private readonly notificationService: NotificationService,
     ) {
     }
 
@@ -109,6 +113,18 @@ export class BaseRequestService {
         }
         else if (data.timeResolve > 0){
             throw new Error('Request is already resolved');
+        }
+    }
+
+    async sendNotification(data: CreateRequestDto, message: string){
+        try{
+            const department = await this.departmentModel.findById(data.departmentId).exec();
+            if (!department) {
+                throw new Error('Department not found');
+            }
+            await this.notificationService.notifyEmployee(department.managerId.toString(), message);
+        }catch (e) {
+            throw e;
         }
     }
 }
