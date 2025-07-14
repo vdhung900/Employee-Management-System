@@ -35,7 +35,7 @@ import {
     GiftOutlined,
     CheckCircleOutlined,
     CalculatorOutlined,
-    BarChartOutlined
+    BarChartOutlined, FieldTimeOutlined
 } from '@ant-design/icons';
 import {logout, getCurrentUser} from '../utils/auth';
 import ThreeDButton from '../components/3d/ThreeDButton';
@@ -337,6 +337,12 @@ const MainLayout = () => {
             icon: <BarChartOutlined />,
             label: "Thống kê nhân viên",
             permission: "EMPLOYEE_MANAGER_STATISTICS",
+        },
+        {
+            key: "/employee/leave-balance",
+            icon: <FieldTimeOutlined />,
+            label: "Quỹ ngày nghỉ nhân viên",
+            permission: "EMPLOYEE_LEAVE_BALANCE",
         },
     ];
 
