@@ -355,7 +355,7 @@ export class AdminAccountService {
                 throw new NotFoundException('Không tìm thấy cài đặt nghỉ phép');
             }
             const leaveBalances = leaveSetting.map((type) => ({
-                employeeId: employeeId,
+                employeeId: new Types.ObjectId(employeeId),
                 leaveTypeCode: type.code,
                 totalAllocated: type.maxDaysPerYear || 0,
                 used: 0,

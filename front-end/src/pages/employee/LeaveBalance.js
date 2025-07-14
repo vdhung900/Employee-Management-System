@@ -1,16 +1,17 @@
-import React from "react";
-import { Card, Row, Col, Progress, Typography, Tag, Space, Avatar } from "antd";
+import React, {useEffect, useState} from "react";
+import {Table, Typography, Tag, Space, message} from "antd";
 import {
   CoffeeOutlined,
   HeartTwoTone,
-  SmileTwoTone,
   WomanOutlined,
   ManOutlined,
   GiftOutlined,
   HomeOutlined,
   CloudOutlined,
-  UserOutlined, FieldTimeOutlined,
+  FieldTimeOutlined,
 } from "@ant-design/icons";
+import {useLoading} from "../../contexts/LoadingContext";
+import LeaveBalanceService from "../../services/LeaveBalanceService";
 
 const { Title, Text } = Typography;
 
@@ -88,58 +89,133 @@ const leaveTypes = [
   },
 ];
 
+const leaveTypeMeta = {
+  LEAVE_REQUEST: {
+    icon: <CoffeeOutlined style={{ color: "#faad14" }} />,
+    color: "#faad14",
+    tag: <Tag color="gold">Phép năm</Tag>,
+  },
+  SICK_LEAVE: {
+    icon: <HeartTwoTone twoToneColor="#eb2f96" />,
+    color: "#eb2f96",
+    tag: <Tag color="magenta">Ốm</Tag>,
+  },
+  MATERNITY_LEAVE: {
+    icon: <WomanOutlined style={{ color: "#d46b08" }} />,
+    color: "#d46b08",
+    tag: <Tag color="volcano">Thai sản</Tag>,
+  },
+  PATERNITY_LEAVE: {
+    icon: <ManOutlined style={{ color: "#1890ff" }} />,
+    color: "#1890ff",
+    tag: <Tag color="blue">Vợ sinh</Tag>,
+  },
+  MARRIAGE_LEAVE: {
+    icon: <GiftOutlined style={{ color: "#722ed1" }} />,
+    color: "#722ed1",
+    tag: <Tag color="purple">Cưới</Tag>,
+  },
+  FUNERAL_LEAVE: {
+    icon: <HomeOutlined style={{ color: "#595959" }} />,
+    color: "#595959",
+    tag: <Tag color="gray">Tang</Tag>,
+  },
+  UNPAID_LEAVE: {
+    icon: <CloudOutlined style={{ color: "#bfbfbf" }} />,
+    color: "#bfbfbf",
+    tag: <Tag color="default">Không lương</Tag>,
+  },
+};
+
+const columns = [
+  {
+    title: "Loại ngày nghỉ",
+    dataIndex: "name",
+    key: "name",
+    render: (text, record) => {
+      const meta = leaveTypeMeta[record.leaveTypeCode] || {};
+      return (
+        <Space>
+          <span style={{ fontSize: 22 }}>{meta.icon || <FieldTimeOutlined style={{ color: '#1976d2' }} />}</span>
+          <span style={{ fontWeight: 600 }}>{text}</span>
+          {meta.tag}
+        </Space>
+      );
+    },
+  },
+  {
+    title: "Đã dùng",
+    dataIndex: "used",
+    key: "used",
+    render: (used, record) => {
+      const meta = leaveTypeMeta[record.leaveTypeCode] || {};
+      return <Text strong style={{ color: meta.color || '#1976d2' }}>{used}</Text>;
+    },
+    align: "center",
+  },
+  {
+    title: "Tổng cộng",
+    dataIndex: "totalAllocated",
+    key: "totalAllocated",
+    align: "center",
+  },
+  {
+    title: "Còn lại",
+    dataIndex: "remaining",
+    key: "remaining",
+    render: (remaining) => (
+      <Text type="success" style={{ fontWeight: 500 }}>{remaining}</Text>
+    ),
+    align: "center",
+  },
+];
+
 const LeaveBalance = () => {
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const {showLoading, hideLoading} = useLoading();
+
+  useEffect(() => {
+    loadLeaveBalance()
+  }, []);
+
+  const loadLeaveBalance = async () => {
+    try{
+      showLoading()
+      const employee = JSON.parse(localStorage.getItem("employee"));
+      const response = await LeaveBalanceService.getLeaveBalanceByEmpId(employee?._id);
+      if(response.success){
+        setLeaveTypes(response.data)
+      }else{
+        message.error(response.message || "Không thể tải dữ liệu ngày nghỉ");
+      }
+    }catch (e) {
+      message.error(e.message);
+    }finally {
+      hideLoading()
+    }
+  }
+
   return (
     <div style={{ background: "white", minHeight: "80vh", padding: 24 }}>
-      <Row justify="center" style={{ marginBottom: 32 }}>
-        <Col>
-          <Space align="center" size={16}>
-            <Avatar size={48} icon={<FieldTimeOutlined />} style={{ background: "#1976d2" }} />
-            <div>
-              <Title level={2} style={{ margin: 0, color: "#222", fontWeight: 600, letterSpacing: 1 }}>
-                Quỹ ngày nghỉ còn lại
-              </Title>
-              <Text style={{ fontSize: 16, color: "#666" }}>
-                Theo dõi số ngày nghỉ còn lại của bạn trong năm
-              </Text>
-            </div>
-          </Space>
-        </Col>
-      </Row>
-      <Row gutter={[24, 24]} justify="center">
-        {leaveTypes.map((type) => (
-          <Col xs={24} sm={12} md={8} lg={6} key={type.key}>
-            <Card
-              hoverable
-              style={{ borderRadius: 16, boxShadow: "0 4px 24px #0001", minHeight: 220 }}
-              bodyStyle={{ padding: 24 }}
-            >
-              <Space direction="vertical" size={8} style={{ width: "100%" }}>
-                <Space align="center" size={12}>
-                  <span style={{ fontSize: 32 }}>{type.icon}</span>
-                  <span style={{ fontWeight: 600, fontSize: 18 }}>{type.name}</span>
-                  {type.tag}
-                </Space>
-                <Progress
-                  percent={Math.round((type.used / type.total) * 100)}
-                  status="active"
-                  strokeColor={type.color}
-                  showInfo={false}
-                  style={{ margin: "8px 0" }}
-                />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <Text strong style={{ color: type.color }}>
-                    Đã dùng: {type.used} / {type.total} ngày
-                  </Text>
-                  <Text type="success" style={{ fontWeight: 500 }}>
-                    Còn lại: {type.remaining} ngày
-                  </Text>
-                </div>
-              </Space>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
+        <FieldTimeOutlined style={{ fontSize: 36, color: "#1976d2" }} />
+        <div>
+          <Title level={2} style={{ margin: 0, color: "#222", fontWeight: 600, letterSpacing: 1 }}>
+            Quỹ ngày nghỉ còn lại
+          </Title>
+          <Text style={{ fontSize: 16, color: "#666" }}>
+            Theo dõi số ngày nghỉ còn lại của bạn trong năm
+          </Text>
+        </div>
+      </div>
+      <Table
+        columns={columns}
+        dataSource={leaveTypes}
+        rowKey="_id"
+        pagination={false}
+        bordered
+        style={{ background: "#fff", borderRadius: 12 }}
+      />
     </div>
   );
 };

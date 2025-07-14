@@ -120,8 +120,9 @@ export class RequestManageService {
                 req.attachments = [];
             }
             req.typeRequest = new Types.ObjectId(typeRequest?.id);
-            req.status = "Pending";
-
+            req.status = STATUS.PENDING;
+            const employee = await this.employeeModel.findById(req.employeeId).exec();
+            await this.requestService.sendNotification(req, `Yêu cầu ${typeRequest?.name} gửi từ nhân viên ${employee?.fullName}!`);
             return await this.requestService.create(req);
         } catch (error) {
             throw new Error(error);
@@ -204,7 +205,6 @@ export class RequestManageService {
                 typeRequest?.code === STATUS.MARRIAGE_LEAVE ||
                 typeRequest?.code === STATUS.PATERNITY_LEAVE ||
                 typeRequest?.code === STATUS.UNPAID_LEAVE ||
-                typeRequest?.code === STATUS.REMOTE_WORK ||
                 typeRequest?.code === STATUS.FUNERAL_LEAVE ||
                 typeRequest?.code === STATUS.SICK_LEAVE) {
                 try {
@@ -249,7 +249,6 @@ export class RequestManageService {
                             if (newTotalBalance < 0) {
                                 newTotalBalance = 0;
                             }
-                            leaveBalanceData.totalAllocated = newTotalBalance;
                             leaveBalanceData.used = leavePackage.paidDates.length;
                             leaveBalanceData.remaining = newTotalBalance;
                             await leaveBalanceData.save();
@@ -436,9 +435,6 @@ export class RequestManageService {
                 break;
             case STATUS.UNPAID_LEAVE:
                 status = STATUS.NGHI_KHONG_LUONG;
-                break;
-            case STATUS.REMOTE_WORK:
-                status = STATUS.NGHI_LAM_TU_XA;
                 break;
             case STATUS.FUNERAL_LEAVE:
                 status = STATUS.NGHI_TANG;

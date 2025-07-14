@@ -12,7 +12,7 @@ const getAuthHeaders = (token) => ({
 
 // khi code thi doi thanh local
 const APIConfig = {
-    baseUrl: API_LOCAL_PROD,
+    baseUrl: API_LOCAL,
     headers,
     getAuthHeaders,
 };

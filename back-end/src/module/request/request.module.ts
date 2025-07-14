@@ -17,6 +17,7 @@ import {SalaryCoefficient, SalaryCoefficientSchema} from "../../schemas/salaryCo
 import {SalaryRank, SalaryRankSchema} from "../../schemas/salaryRank.schema";
 import {Employees, EmployeesSchema} from "../../schemas/employees.schema";
 import {LeaveBalance, LeaveBalanceSchema} from "../../schemas/leaveBalance.schema";
+import {NotificationModule} from "../notification/notification.module";
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import {LeaveBalance, LeaveBalanceSchema} from "../../schemas/leaveBalance.schem
       ]),
       AdminAccountModule,
       MailModule,
-      UploadModule
+      UploadModule,
+      NotificationModule
   ],
   providers: [BaseRequestService, RequestManageService],
   controllers: [RequestManageController]

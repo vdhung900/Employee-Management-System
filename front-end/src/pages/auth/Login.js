@@ -19,6 +19,7 @@ import AuthService from "../../services/AuthService";
 import {jwtDecode} from "jwt-decode";
 import EmployeeProfile from "../../services/EmployeeProfile";
 import {useLoading} from "../../contexts/LoadingContext";
+import {PATH, USER_ROLE} from "../../constants/UserRole";
 
 const {Title, Text} = Typography;
 
@@ -35,10 +36,10 @@ const Login = () => {
         if (isAuthenticated()) {
             const role = localStorage.getItem("role");
 
-            let redirectTo = "/employee/dashboard";
-            if (role === "admin") redirectTo = "/admin/dashboard";
-            else if (role === "hr") redirectTo = "/employee/dashboard";
-            else if (role === "manager") redirectTo = "/employee/dashboard";
+            let redirectTo = PATH.EMPLOYEE_PATH;
+            if (role === USER_ROLE.ADMIN) redirectTo = PATH.ADMIN_PATH;
+            else if (role === USER_ROLE.HR) redirectTo = PATH.EMPLOYEE_PATH;
+            else if (role === USER_ROLE.MANAGER) redirectTo = PATH.EMPLOYEE_PATH;
 
             navigate(redirectTo, {replace: true});
         }
