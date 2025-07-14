@@ -34,91 +34,95 @@ export class AdminAccountService {
             if (check) throw new BadRequestException(`Email: ${createAccount.email} đã tồn tại`);
 
 
-            const roleId = createAccount.role ? new Types.ObjectId(createAccount.role) : null;
-            const code = await this.generateUserName(createAccount.fullName);
-            // Tạo thông tin nhân viên mới
-            const newEmployee = await this.employeeModel.create({
-                fullName: createAccount.fullName,
-                email: createAccount.email,
-                dob: createAccount.dob || null,
-                gender: createAccount.gender || null,
-                phone: createAccount.phone || null,
-                departmentId: null,
-                positionId: null,
-                joinDate: new Date(),
-                resignDate: null,
-                bankAccount: null,
-                bankName: null,
-                document: null,
-                contractId: null,
-                salaryCoefficientId: null
-            });
 
-            if (!newEmployee) {
-                throw new BadRequestException('Không thể tạo thông tin nhân viên');
-            }
+      const name = await this.generateUserName(createAccount.fullName);
+      const roleId = createAccount.role ? new Types.ObjectId(createAccount.role) : null;
+      // Tạo thông tin nhân viên mới
+      const newEmployee = await this.employeeModel.create({
+        fullName: createAccount.fullName,
+        email: createAccount.email,
+        dob: createAccount.dob || null,
+        gender: createAccount.gender || null,
+        phone: createAccount.phone || null,
+        departmentId: null,
+        positionId: null,
+        joinDate: new Date(),
+        resignDate: null,
+        bankAccount: null,
+        bankName: null,
+        document: null,
+        contractId: null,
+        code: name,
+        salaryCoefficientId: null,
+        address: createAccount.address || null,
+        avatar: null
+      });
+
+      if (!newEmployee) {
+        throw new BadRequestException('Không thể tạo thông tin nhân viên');
+      }
 
 
-            // Tạo tài khoản với thông tin nhân viên vừa tạo
-            const hash = await this.generateRandomPassword(8);
-            const name = await this.generateUserName(createAccount.fullName);
-            const account = await this.accountModel.create({
-                username: name,
-                password: hash,
-                role: roleId,
-                status: createAccount.status,
-                employeeId: newEmployee._id
-            });
+      // Tạo tài khoản với thông tin nhân viên vừa tạo
+      const hash = await this.generateRandomPassword(8);
 
-            if (!account) {
-                // Nếu tạo account thất bại, xóa employee đã tạo
-                throw new BadRequestException('Không thể tạo tài khoản');
-            }
+      const account = await this.accountModel.create({
+        username: name,
+        password: hash,
+        role: roleId,
+        status: createAccount.status,
+        employeeId: newEmployee._id
+      });
 
-            return {
-                account,
-                employee: newEmployee,
-                message: 'Tạo tài khoản và thông tin nhân viên thành công'
-            };
-        } catch (error) {
-            throw new BadRequestException(error.message || 'Có lỗi xảy ra khi tạo tài khoản');
-        }
+      if (!account) {
+        // Nếu tạo account thất bại, xóa employee đã tạo
+        throw new BadRequestException('Không thể tạo tài khoản');
+      }
+
+      return {
+        account,
+        employee: newEmployee,
+        message: 'Tạo tài khoản và thông tin nhân viên thành công'
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message || 'Có lỗi xảy ra khi tạo tài khoản');
     }
+  }
 
-    async findAll(query?: any) {
-        return this.accountModel.find()
+  async findAll(query?: any) {
+    return this.accountModel.find()
 
-            .populate({
-                path: 'employeeId',
-                select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName'
-            })
-            .populate({
-                path: 'role',
-                select: 'name'
-            })
+      .populate({
+        path: 'employeeId',
+        select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName code address avatar'
+      })
+      .populate({
+        path: 'role',
+        select: 'name'
+      })
 
-            .exec();
-    }
+      .exec();
+  }
 
-    async findOne(id: string) {
-        const admin = await this.accountModel.findById(id)
-            .populate({
-                path: 'employeeId',
-                select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName',
-                populate: [
-                    {
-                        path: 'departmentId',
-                        select: 'name'
-                    },
-                    {
-                        path: 'positionId',
-                        select: 'name'
-                    }
-                ]
-            })
-            .populate({
-                path: 'role',
-                select: 'name'
+  async findOne(id: string) {
+    const admin = await this.accountModel.findById(id)
+      .populate({
+        path: 'employeeId',
+        select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName code address avatar',
+        populate: [
+          {
+            path: 'departmentId',
+            select: 'name'
+          },
+          {
+            path: 'positionId',
+            select: 'name'
+          }
+        ]
+      })
+      .populate({
+        path: 'role',
+        select: 'name'
 
             })
             .exec();
@@ -129,35 +133,41 @@ export class AdminAccountService {
     async update(id: string, updateAdminDto: UpdateAccount) {
         try {
 
-            // Lấy thông tin tài khoản hiện tại
-            const currentAccount = await this.accountModel.findById(id).populate({
-                path: 'employeeId',
-                select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName'
-            }).exec();
-            if (!currentAccount) throw new NotFoundException('Không tìm thấy tài khoản');
+      // Lấy thông tin tài khoản hiện tại
+      const currentAccount = await this.accountModel.findById(id).populate({
+        path: 'employeeId',
+        select: 'fullName email phone dob gender departmentId positionId joinDate bankAccount bankName address'
+      }).exec();
+      if (!currentAccount) throw new NotFoundException('Không tìm thấy tài khoản');
 
             // Cập nhật thông tin nhân viên
             if (currentAccount.employeeId) {
 
-                const updateEmployee: any = {};
-                if (updateAdminDto.fullName) {
-                    updateEmployee.fullName = updateAdminDto.fullName;
-                }
-                if (updateAdminDto.email) {
-                    updateEmployee.email = updateAdminDto.email;
-                }
-                if (updateAdminDto.dob) {
-                    updateEmployee.dob = updateAdminDto.dob;
-                }
-                if (updateAdminDto.gender) {
-                    updateEmployee.gender = updateAdminDto.gender;
-                }
-                if (updateAdminDto.phone) {
-                    updateEmployee.phone = updateAdminDto.phone;
-                }
-                if (updateAdminDto.document) {
-                    updateEmployee.document = updateAdminDto.document;
-                }
+        const updateEmployee: any = {};
+        if (updateAdminDto.fullName) {
+          updateEmployee.fullName = updateAdminDto.fullName;
+        }
+        if (updateAdminDto.email) {
+          updateEmployee.email = updateAdminDto.email;
+        }
+        if (updateAdminDto.dob) {
+          updateEmployee.dob = updateAdminDto.dob;
+        }
+        if (updateAdminDto.gender) {
+          updateEmployee.gender = updateAdminDto.gender;
+        }
+        if (updateAdminDto.phone) {
+          updateEmployee.phone = updateAdminDto.phone;
+        }
+        if (updateAdminDto.document) {
+          updateEmployee.document = updateAdminDto.document;
+        }
+        if (updateAdminDto.address) {
+          updateEmployee.address = updateAdminDto.address;
+        }
+        // if (updateAdminDto.avatar) {
+        //   updateEmployee.avatar = updateAdminDto.avatar;
+        // }
 // Them ho t cai logic attachments vao nha, cu them vao update gi gi day la dc
                 // attachments: employeeData.document || null,
                 // Cập nhật thông tin nhân viên
@@ -253,53 +263,56 @@ export class AdminAccountService {
         }
     }
 
-    async createByInfo(info: any, files: any) {
-        try {
-            if (!info.fullName || !info.email || !info.department || !info.position) {
-                throw new Error('Thông tin không đầy đủ');
-            }
-            const username = await this.generateUserName(info.fullName);
-            const password = this.generateRandomPassword(8);
-            const hashPassword = await bcrypt.hash(password, 10);
-            const isValidEmail = await this.employeeModel.findOne({email: info.email}).exec();
-            if (isValidEmail) {
-                throw new Error('Email đã tồn tại');
-            }
-            const role = await this.rolePermissionService.getRoleByCode(USER_ROLE.EMPLOYEE);
-            if (!role) {
-                throw new Error('Role không tồn tại');
-            }
-            const newEmployee = await this.employeeModel.create({
-                fullName: info.fullName,
-                email: info.email,
-                phone: info.phone || null,
-                departmentId: new Types.ObjectId(info.department),
-                positionId: new Types.ObjectId(info.position),
-                joinDate: new Date(info.startDate) || new Date(),
-                dob: null,
-                gender: null,
-                resignDate: null,
-                bankAccount: null,
-                bankName: null,
-                contractId: null,
-                attachments: files
-            });
-            if (!newEmployee) {
-                throw new Error('Không thể tạo thông tin nhân viên');
-            }
-            await this.initLeaveBalance(newEmployee._id);
-            const newAccount = await this.accountModel.create({
-                username: username,
-                password: hashPassword,
-                role: role._id,
-                employeeId: newEmployee._id,
-                status: STATUS.ACTIVE,
-            })
-            return {newAccount, newEmployee, password};
-        } catch (e) {
-            throw e;
+  async createByInfo(info: any, files: any){
+    try{
+      if(!info.fullName || !info.email || !info.department || !info.position) {
+        throw new Error('Thông tin không đầy đủ');
+      }
+      const username = await this.generateUserName(info.fullName);
+      const password = this.generateRandomPassword(8);
+      const hashPassword = await bcrypt.hash(password, 10);
+      const isValidEmail = await this.employeeModel.findOne({ email: info.email }).exec();
+      if(isValidEmail) {
+        throw new Error('Email đã tồn tại');
+      }
+      const role = await this.rolePermissionService.getRoleByCode(USER_ROLE.EMPLOYEE);
+        if(!role) {
+            throw new Error('Role không tồn tại');
         }
+        const code = await this.generateUserName(info.fullName);
+      const newEmployee = await this.employeeModel.create({
+        fullName: info.fullName,
+        email: info.email,
+        phone: info.phone || null,
+        departmentId: new Types.ObjectId(info.department),
+        positionId: new Types.ObjectId(info.position),
+        joinDate: new Date(info.startDate) || new Date(),
+        dob: null,
+        gender: null,
+        resignDate: null,
+        bankAccount: null,
+        bankName: null,
+        contractId:  null,
+        code: code,
+        address: null,
+        attachments: files
+      });
+      if (!newEmployee) {
+        throw new Error('Không thể tạo thông tin nhân viên');
+      }
+      await this.initLeaveBalance(newEmployee._id);
+      const newAccount = await this.accountModel.create({
+        username: username,
+        password: hashPassword,
+        role: role._id,
+        employeeId: newEmployee._id,
+        status: STATUS.ACTIVE,
+      })
+      return {newAccount, newEmployee};
+    }catch (e) {
+      throw e;
     }
+  }
 
     async generateUserName(fullName: string): Promise<string> {
         const parts = fullName.trim().toLowerCase().split(/\s+/);

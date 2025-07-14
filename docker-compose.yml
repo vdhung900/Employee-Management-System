@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: ./back-end
+    container_name: backend
+    restart: always
+    environment:
+      DB_URL: mongodb+srv://admin:khongnoi123@fptdatabase.32ym4us.mongodb.net/employee_db
+      DB_URL_LOCAL: mongodb://127.0.0.1:27017/employee_db
+      PORT: 9123
+      JWT_SECRET: IOHIf2819789@h89&*@R289Qdu@*
+      JWT_EXPIRES_IN:
+      JWT_COOKIE_EXPIRES_IN:
+      EMAIL_USERNAME: employee.system.work@gmail.com
+      EMAIL_PASSWORD: kpec gyie kqsj ugyx
+      EMAIL_HOST:
+      EMAIL_PORT:
+      EMAIL_FROM:
+      MINIO_ENDPOINT: http://16.176.103.213:9000
+      MINIO_USERNAME: minioadmin
+      MINIO_PASSWORD: minioadmin
+      NODE_ENV: dev
+    ports:
+      - "9123:9123"
+    networks:
+      - ems-net
+
+  frontend:
+    build:
+      context: ./front-end
+    container_name: frontend
+    restart: always
+    environment:
+      - PORT=3123
+    depends_on:
+      - backend
+    ports:
+      - "3123:3123"
+    networks:
+      - ems-net
+
+networks:
+  ems-net:
+    driver: bridge

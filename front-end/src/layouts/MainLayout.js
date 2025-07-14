@@ -332,6 +332,12 @@ const MainLayout = () => {
             label: "Thống kê nhân viên",
             permission: "EMPLOYEE_EMPLOYEE_STATISTICS",
         },
+        {
+            key: "/employee/manager-statistics",
+            icon: <BarChartOutlined />,
+            label: "Thống kê nhân viên",
+            permission: "EMPLOYEE_MANAGER_STATISTICS",
+        },
     ];
 
     const getMenuItems = () => {

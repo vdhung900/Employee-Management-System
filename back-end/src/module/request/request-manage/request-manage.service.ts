@@ -152,7 +152,7 @@ export class RequestManageService {
                             account.newEmployee?.email,
                             account.newEmployee?.fullName,
                             account.newAccount?.username,
-                            account?.password,
+                            account.newAccount?.password,
                         )
                         break;
                     case STATUS.LEAVE_REQUEST:
@@ -305,32 +305,45 @@ export class RequestManageService {
             if (dataRequest.dataReq === null || dataRequest.dataReq === undefined) {
                 throw new Error("Lỗi do không có thông tin chi tiết lịch nghỉ");
             }
+
             if (typeRequest.code === STATUS.TARGET_REQUEST) {
-                const checkData = await this.monthlyGoalModel
-                    .findOne({
-                        employee_id: dataRequest.employeeId,
-                        month: dataRequest.dataReq.month,
-                        year: dataRequest.dataReq.year,
-                    })
-                    .exec();
-                if (checkData) {
-                    const existingTitles = checkData.goals.map(goal => goal.title.trim().toLowerCase());
-                    const newUniqueGoals = dataRequest.dataReq.goals.filter(goal => {
-                        const title = goal.title.trim().toLowerCase();
-                        return !existingTitles.includes(title);
-                    });
-                    if (newUniqueGoals.length > 0) {
-                        checkData.goals.push(...newUniqueGoals);
-                        await checkData.save();
-                    }
-                } else {
-                    await this.monthlyGoalModel.insertOne({
-                        employee_id: dataRequest.employeeId,
-                        month: dataRequest.dataReq.month,
-                        year: dataRequest.dataReq.year,
-                        goals: dataRequest.dataReq.goals
-                    })
+              const checkData = await this.monthlyGoalModel
+                .findOne({
+                  employee_id: dataRequest.employeeId._id,
+                  month: dataRequest.dataReq.month,
+                  year: dataRequest.dataReq.year,
+                })
+                .exec();
+              if (checkData) {
+                const existingTitles = checkData.goals.map((goal) =>
+                  goal.title.trim().toLowerCase()
+                );
+                const newUniqueGoals = dataRequest.dataReq.goals.filter((goal) => {
+                  const title = goal.title.trim().toLowerCase();
+                  return !existingTitles.includes(title);
+                });
+                const goalsWithCode = newUniqueGoals.map((goal, index) => ({
+                  ...goal,
+                  code: checkData.goals.length + index,
+                }));
+
+                if (newUniqueGoals.length > 0) {
+                  checkData.goals.push(...goalsWithCode);
+                  await checkData.save();
                 }
+              } else {
+                const goalsWithCode = dataRequest.dataReq.goals.map((goal: any, index: number) => ({
+                  ...goal,
+                  code: index,
+                }));
+
+                await this.monthlyGoalModel.insertOne({
+                  employee_id: dataRequest.employeeId._id,
+                  month: dataRequest.dataReq.month,
+                  year: dataRequest.dataReq.year,
+                  goals: goalsWithCode,
+                });
+              }
             }
         } catch (e) {
             throw new Error(e);
@@ -350,7 +363,6 @@ export class RequestManageService {
                 if (!employee) {
                     throw new Error("Không tìm thấy nhân viên");
                 }
-                console.log(employee)
 
                 if (employee.timeUpdateSalary !== null) {
                     const lastUpdateTime = new Date(employee.timeUpdateSalary);
@@ -377,6 +389,24 @@ export class RequestManageService {
         } catch (error) {
             throw new Error(error.message || error);
         }
+    }
+
+    async getLeaveRequestsByDepartment(departmentId: string) {
+        // Lấy typeRequestId của LEAVE_REQUEST
+        const leaveType = await this.typeRequestModel.findOne({ code: 'LEAVE_REQUEST' });
+        if (!leaveType) throw new Error('Không tìm thấy loại đơn nghỉ phép');
+
+        // Lấy tất cả nhân viên thuộc phòng ban này
+        const employees = await this.employeeModel.find({ departmentId: new Types.ObjectId(departmentId) }).select('_id');
+        const employeeIds = employees.map(e => e._id);
+
+        // Lấy tất cả đơn nghỉ phép của các nhân viên này
+        const leaveRequests = await this.requestModel.find({
+            typeRequest: leaveType._id,
+            employeeId: { $in: employeeIds }
+        });
+
+        return leaveRequests;
     }
 
     checkLeavePackage(requestDates: Date[], leaveBalance: number) {

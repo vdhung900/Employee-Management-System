@@ -39,9 +39,13 @@ export class AttendanceController {
       }
 
       //Attach data to the DTO
+      const now = new Date();
       createAttendanceDto.employeeId = req.user.userId; // Set employeeId from the authenticated user
-      createAttendanceDto.date = new Date(); // Set the current date
-      createAttendanceDto.firstCheckIn = new Date(); // Set the check-in time to now
+      createAttendanceDto.date = now; // Set the current date
+      createAttendanceDto.firstCheckIn = now; // Set the check-in time to now
+
+      const eightAM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+      createAttendanceDto.isLate = createAttendanceDto.firstCheckIn > eightAM;
 
       // Create a new attendance record
       const savedRecord = await this.attendanceRecordService.create(createAttendanceDto);

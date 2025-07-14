@@ -24,6 +24,9 @@ import { SalaryCoeficientModule } from "./module/hr/salary_Coeficient/salary_coe
 import { ProfileModule } from "./module/employee/profile/profile.module";
 import { UploadModule } from "./module/minio/minio.module";
 import {DocumentManageModule} from "./module/hr/documentManage/documentManage.module";
+import { EmployeeModule } from "./module/employee/employee.module";
+import { PerformanceReviewModule } from "./module/performance-review/performance-review.module";
+import { MonthlyGoalModule } from "./module/monthly-goal/monthly-goal.module";
 
 @Module({
   imports: [
@@ -49,7 +52,10 @@ import {DocumentManageModule} from "./module/hr/documentManage/documentManage.mo
     UpdateEmployeeModule,
     SalaryCoeficientModule,
     ProfileModule,
-    DocumentManageModule
+    DocumentManageModule,
+    PerformanceReviewModule,
+    MonthlyGoalModule,
+    EmployeeModule
   ],
   controllers: [],
   providers: [

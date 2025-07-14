@@ -25,3 +25,9 @@ export class EditProfileDto extends BaseReq {
     email?: string;
 
 }
+
+export class ResetPasswordDto extends BaseReq {
+    @IsNotEmpty()
+    @IsString()
+    password: string;
+}

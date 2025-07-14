@@ -1,8 +1,9 @@
 import { fetchWithAuth, handleApiError } from "../utils/FetchWithAuth";
+import APIConfig from "./APIConfig";
 
 const AuthService = {
   async login(body) {
-    const loginUrl = "http://127.0.0.1:9123/auth/login";
+    const loginUrl = APIConfig.baseUrl + "/auth/login";
     try {
       return fetch(loginUrl, {
         method: "POST",
@@ -12,11 +13,6 @@ const AuthService = {
         },
         body: JSON.stringify(body),
       }).then((response) => response.json());
-
-      // .then((data) => console.log(data))
-      // .catch((err) => {
-      //   console.log(err);
-      // });
     } catch (error) {
       throw handleApiError(error);
     }
