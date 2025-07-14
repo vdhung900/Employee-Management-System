@@ -26,9 +26,6 @@ export class AttendanceRecords extends BaseSchema {
   @Prop()
   totalWorkingHours: number;
 
-  @Prop({ type: Types.ObjectId, ref: typeRequest.name })
-  leaveType: Types.ObjectId;
-
   @Prop()
   status: string;
 
@@ -46,6 +43,9 @@ export class AttendanceRecords extends BaseSchema {
 
   @Prop({ default: false })
   isEarlyTime: Boolean;
+
+  @Prop({ default: true })
+  isPaid: Boolean;
 
   @Prop()
   reason: string;

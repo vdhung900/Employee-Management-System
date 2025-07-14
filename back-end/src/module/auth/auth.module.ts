@@ -8,6 +8,7 @@ import {JwtModule} from "@nestjs/jwt";
 import {JwtStrategy} from "../../common/strategies/jwt.strategy";
 import {ConfigModule} from "@nestjs/config";
 import {RolePermissionModule} from "./role_permission/role_permission.module";
+import {NotificationModule} from "../notification/notification.module";
 
 @Module({
     imports: [
@@ -21,7 +22,8 @@ import {RolePermissionModule} from "./role_permission/role_permission.module";
         JwtModule.register({
             global: true,
         }),
-        RolePermissionModule
+        RolePermissionModule,
+        NotificationModule
     ],
     controllers: [AuthController],
     providers: [AuthService, JwtStrategy],

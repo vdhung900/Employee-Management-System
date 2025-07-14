@@ -23,6 +23,7 @@ import { UpdateEmployeeModule } from "./module/hr/update_Employees/update_Employ
 import { SalaryCoeficientModule } from "./module/hr/salary_Coeficient/salary_coeficient.module";
 import { ProfileModule } from "./module/employee/profile/profile.module";
 import { UploadModule } from "./module/minio/minio.module";
+import {DocumentManageModule} from "./module/hr/documentManage/documentManage.module";
 import { EmployeeModule } from "./module/employee/employee.module";
 import { PerformanceReviewModule } from "./module/performance-review/performance-review.module";
 import { MonthlyGoalModule } from "./module/monthly-goal/monthly-goal.module";
@@ -51,6 +52,7 @@ import { MonthlyGoalModule } from "./module/monthly-goal/monthly-goal.module";
     UpdateEmployeeModule,
     SalaryCoeficientModule,
     ProfileModule,
+    DocumentManageModule,
     PerformanceReviewModule,
     MonthlyGoalModule,
     EmployeeModule

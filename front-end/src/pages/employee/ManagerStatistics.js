@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Typography, Spin, message, Statistic, Divider, Table, Select } from "antd";
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import StatisticsService from "../../services/StatisticsService";
-import Employee_profile from '../../services/Employee_profile';
+import EmployeeProfile from "../../services/EmployeeProfile";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -42,7 +42,7 @@ const ManagerStatistics = () => {
       try {
         // Lấy departmentId từ user (giả sử lưu trong localStorage)
         const user = JSON.parse(localStorage.getItem("user"));
-        const response = await Employee_profile.getEmployeeProfile(user.employeeId);
+        const response = await EmployeeProfile.getEmployeeProfile(user.employeeId);
         const departmentId = response.data?.departmentId?._id;
         if (!departmentId) {
           message.error("Không tìm thấy phòng ban của bạn!");

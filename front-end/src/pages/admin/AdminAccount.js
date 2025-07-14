@@ -50,8 +50,8 @@ import Admin_account from '../../services/Admin_account';
 import RolePermissionService from '../../services/RolePermissionService';
 
 import moment from 'moment';
-import Employee_profile from '../../services/Employee_profile';
 import UploadFileComponent from '../../components/file-list/FileList';
+import EmployeeProfile from "../../services/EmployeeProfile";
 
 const { Title, Text } = Typography;
 
@@ -90,7 +90,7 @@ const AdminAccount = () => {
   useEffect(() => {
     if (fileResponse[0]?.key) {
       const data = async () => {
-        const data = await Employee_profile.updatefileimage(fileResponse[0]?.key);
+        const data = await EmployeeProfile.updatefileimage(fileResponse[0]?.key);
         setUrlImage(data.data);
       }
       data();

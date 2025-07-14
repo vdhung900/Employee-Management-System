@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {InjectModel} from "@nestjs/mongoose";
 import {Requests, RequestsDocument} from "../../../schemas/requests.schema";
 import {Model, Types} from "mongoose";
@@ -18,6 +18,7 @@ import {MonthlyGoal, MonthlyGoalDocument} from "../../../schemas/monthGoals.sche
 import {Employees, EmployeesDocument} from "../../../schemas/employees.schema";
 import {SalaryCoefficient, SalaryCoefficientDocument} from "../../../schemas/salaryCoefficents.schema";
 import {SalaryRank, SalaryRankDocument} from "../../../schemas/salaryRank.schema";
+import {LeaveBalance, LeaveBalanceDocument} from "../../../schemas/leaveBalance.schema";
 
 @Injectable()
 export class RequestManageService {
@@ -31,6 +32,7 @@ export class RequestManageService {
         @InjectModel(Employees.name) private employeeModel: Model<EmployeesDocument>,
         @InjectModel(SalaryCoefficient.name) private salaryCoefficientModel: Model<SalaryCoefficientDocument>,
         @InjectModel(SalaryRank.name) private salaryRankModel: Model<SalaryRankDocument>,
+        @InjectModel(LeaveBalance.name) private leaveBalanceModel: Model<LeaveBalanceDocument>,
         private readonly requestService: BaseRequestService,
         private readonly adminAccountService: AdminAccountService,
         private readonly mailService: MailService,
@@ -38,10 +40,10 @@ export class RequestManageService {
     ) {
     }
 
-    async getRequestByCode(code: string){
-        try{
+    async getRequestByCode(code: string) {
+        try {
             const typeRequest = await this.typeRequestModel.findOne({code: code});
-            if(!typeRequest){
+            if (!typeRequest) {
                 throw new Error("Type Request not found");
             }
             const data = await this.requestService.findByTypeCode(new Types.ObjectId(typeRequest.id));
@@ -52,91 +54,98 @@ export class RequestManageService {
             if (code === STATUS.ACCOUNT_CREATE_REQUEST || code === STATUS.LEAVE_REQUEST) {
                 response = await Promise.all(
                     data
+                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                         .filter(item => item.status !== 'Cancelled')
                         .map(async (item) => {
-                        const department = await this.departmentModel.findById(new Types.ObjectId(item.dataReq.department)).exec();
-                        const position = await this.positionModel.findById(new Types.ObjectId(item.dataReq.position)).exec();
-                        return {
-                            ...item.toObject(),
-                            dataReq: {
-                                ...item.dataReq,
-                                departmentName: department?.name,
-                                positionName: position?.name,
-                            }
-                        };
-                    })
+                            const department = await this.departmentModel.findById(new Types.ObjectId(item.dataReq.department)).exec();
+                            const position = await this.positionModel.findById(new Types.ObjectId(item.dataReq.position)).exec();
+                            return {
+                                ...item.toObject(),
+                                dataReq: {
+                                    ...item.dataReq,
+                                    departmentName: department?.name,
+                                    positionName: position?.name,
+                                }
+                            };
+                        })
                 );
             }
             return response;
-        }catch (e) {
+        } catch (e) {
             throw new Error(e);
         }
     }
 
-    async getRequestByFilter(req: CreateRequestDto){
-        try{
-            const data = await this.requestService.findByFilterCode(STATUS.ACCOUNT_CREATE_REQUEST);
-            const resData = data.filter(item => item.typeRequest !== null);
+    async getRequestByFilter(req: CreateRequestDto) {
+        try {
+            if (!req.departmentId) {
+                throw new Error("Phòng ban không hợp lệ");
+            }
+            const data = await this.requestService.findByFilterCode(req.departmentId.toString(), STATUS.ACCOUNT_CREATE_REQUEST);
+            const resData = data
+                .filter(item => item.typeRequest !== null)
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
             return paginate(resData, req?.page, req?.limit);
-        }catch (e) {
+        } catch (e) {
             throw new Error(e);
         }
     }
 
-    async getRequestByAccountId(req: CreateRequestDto){
-        try{
+    async getRequestByAccountId(req: CreateRequestDto) {
+        try {
             const requests = await this.requestService.findByEmployeeId(req.employeeId.toString());
-            if(!requests || requests.length === 0){
+            if (!requests || requests.length === 0) {
                 throw new Error("No requests found for this employee");
             }
-            return requests;
-        }catch (e) {
+            const sorted = requests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            return sorted;
+        } catch (e) {
             throw new Error(e)
         }
     }
 
-    async createRequest(req: CreateRequestDto){
-        try{
-            if(!req.typeCode){
+    async createRequest(req: CreateRequestDto) {
+        try {
+            if (!req.typeCode) {
                 throw new Error("Type Code is required");
             }
             const typeRequest = await this.typeRequestModel.findOne({code: req.typeCode});
-            if(!typeRequest){
+            if (!typeRequest) {
                 throw new Error("Type Request not found");
             }
-            if(req.attachments.length > 0){
+            if (req.attachments.length > 0) {
                 const dataRes = await this.uploadService.saveAndReplace(req.attachments);
                 req.attachments = dataRes;
-            }else{
+            } else {
                 req.attachments = [];
             }
             req.typeRequest = new Types.ObjectId(typeRequest?.id);
             req.status = "Pending";
 
             return await this.requestService.create(req);
-        }catch(error){
+        } catch (error) {
             throw new Error(error);
         }
     }
 
-    async updateRequest(req: CreateRequestDto){
-        try{
+    async updateRequest(req: CreateRequestDto) {
+        try {
             return await this.requestService.update(req.requestId, req);
-        }catch(error){
+        } catch (error) {
             throw new Error(error);
         }
     }
 
-    async approveRequest(req: CreateRequestDto){
-        try{
+    async approveRequest(req: CreateRequestDto) {
+        try {
             await this.requestService.approve(req.requestId, req.status, req.reason);
             const data = await this.requestService.findById(req.requestId);
             const typeRequest = await this.typeRequestModel.findById(data?.typeRequest).exec();
-            if(typeRequest && data?.status === STATUS.APPROVED){
-                switch(typeRequest?.code){
+            if (typeRequest && data?.status === STATUS.APPROVED) {
+                switch (typeRequest?.code) {
                     case STATUS.ACCOUNT_CREATE_REQUEST:
                         const account = await this.adminAccountService.createByInfo(data?.dataReq, data.attachments);
-                        if(!account){
+                        if (!account) {
                             throw new Error("Failed to create account");
                         }
                         await this.mailService.sendMail(
@@ -147,6 +156,13 @@ export class RequestManageService {
                         )
                         break;
                     case STATUS.LEAVE_REQUEST:
+                    case STATUS.MATERNITY_LEAVE:
+                    case STATUS.MARRIAGE_LEAVE:
+                    case STATUS.SICK_LEAVE:
+                    case STATUS.UNPAID_LEAVE:
+                    case STATUS.PATERNITY_LEAVE:
+                    case STATUS.REMOTE_WORK:
+                    case STATUS.FUNERAL_LEAVE:
                         await this.createAttendanceRecords(req);
                         break;
                     case STATUS.OVERTIME_REQUEST:
@@ -163,68 +179,105 @@ export class RequestManageService {
                 }
             }
             return data;
-        }catch(error){
-            try{
+        } catch (error) {
+            try {
                 await this.requestService.approve(req.requestId, STATUS.REJECTED, error.message);
-            }catch (e) {
+            } catch (e) {
                 console.log(e)
             }
             throw error;
         }
     }
 
-    async createAttendanceRecords(data: CreateRequestDto){
-        try{
+    async createAttendanceRecords(data: CreateRequestDto) {
+        try {
             const dataRequest = await this.requestService.findById(data.requestId);
             const typeRequest = await this.typeRequestModel.findById(dataRequest?.typeRequest).exec();
-            if(!dataRequest){
+            if (!dataRequest) {
                 throw new Error("Không tìm thấy dữ liệu cần sửa")
             }
-            if(dataRequest.dataReq === null || dataRequest.dataReq === undefined){
+            if (dataRequest.dataReq === null || dataRequest.dataReq === undefined) {
                 throw new Error("Lỗi do không có thông tin chi tiết lịch nghỉ");
             }
-            if(typeRequest?.code === STATUS.LEAVE_REQUEST){
+            if (typeRequest?.code === STATUS.LEAVE_REQUEST ||
+                typeRequest?.code === STATUS.MATERNITY_LEAVE ||
+                typeRequest?.code === STATUS.MARRIAGE_LEAVE ||
+                typeRequest?.code === STATUS.PATERNITY_LEAVE ||
+                typeRequest?.code === STATUS.UNPAID_LEAVE ||
+                typeRequest?.code === STATUS.REMOTE_WORK ||
+                typeRequest?.code === STATUS.FUNERAL_LEAVE ||
+                typeRequest?.code === STATUS.SICK_LEAVE) {
                 try {
+                    let status = this.getStatusAttendance(typeRequest.code);
                     const dates: Date[] = getAllWorkingDatesBetween(dataRequest.dataReq.startDate, dataRequest.dataReq.endDate);
                     const checkData = await this.attendanceRecordModel.find({
                         employeeId: dataRequest.employeeId,
-                        date: { $in: dates }
+                        date: {$in: dates}
                     }).exec();
-
                     if (checkData.length === 0) {
-                        const recordsToInsert = dates.map(date => ({
-                            employeeId: dataRequest.employeeId,
-                            date: date,
-                            isLeave: true,
-                            reason: dataRequest.dataReq.reason,
-                            note: dataRequest.dataReq.reason,
-                            status: STATUS.LEAVE,
-                            firstCheckIn: null,
-                            lastCheckIn: null,
-                        }));
-
-                        await this.attendanceRecordModel.insertMany(recordsToInsert);
+                        const leaveBalanceData = await this.leaveBalanceModel.findOne({
+                            employeeId: new Types.ObjectId(dataRequest.employeeId),
+                            leaveTypeCode: typeRequest.code
+                        }).exec();
+                        if(leaveBalanceData){
+                            const leavePackage = this.checkLeavePackage(dates, leaveBalanceData?.totalAllocated);;
+                            const recordsToInsert = [
+                                ...leavePackage.paidDates.map(date => ({
+                                    employeeId: dataRequest.employeeId,
+                                    date: date,
+                                    isLeave: true,
+                                    reason: dataRequest.dataReq.reason,
+                                    note: dataRequest.dataReq.reason,
+                                    status: status,
+                                    firstCheckIn: null,
+                                    lastCheckIn: null,
+                                    isPaid: true,
+                                })),
+                                ...leavePackage.unpaidDates.map(date => ({
+                                    employeeId: dataRequest.employeeId,
+                                    date: date,
+                                    isLeave: true,
+                                    reason: dataRequest.dataReq.reason,
+                                    note: dataRequest.dataReq.reason,
+                                    status: status,
+                                    firstCheckIn: null,
+                                    lastCheckIn: null,
+                                    isPaid: false,
+                                })),
+                            ];
+                            let newTotalBalance = leaveBalanceData.totalAllocated - leavePackage.paidDates.length;
+                            if (newTotalBalance < 0) {
+                                newTotalBalance = 0;
+                            }
+                            leaveBalanceData.totalAllocated = newTotalBalance;
+                            leaveBalanceData.used = leavePackage.paidDates.length;
+                            leaveBalanceData.remaining = newTotalBalance;
+                            await leaveBalanceData.save();
+                            await this.attendanceRecordModel.insertMany(recordsToInsert);
+                        }else{
+                            throw new Error("Không tìm thấy dữ liệu số ngày nghỉ phép cho loại yêu cầu này");
+                        }
                     } else {
                         console.warn('Đã tồn tại dữ liệu chấm công trong khoảng ngày nghỉ');
                     }
                 } catch (error) {
                     throw new Error(`Lỗi xử lý ngày nghỉ: ${error.message}`);
                 }
-            }else if(typeRequest?.code === STATUS.OVERTIME_REQUEST){
-                try{
+            } else if (typeRequest?.code === STATUS.OVERTIME_REQUEST) {
+                try {
                     const checkData = await this.attendanceRecordModel.findOne({
                         employeeId: dataRequest.employeeId,
                         date: new Date(dataRequest.dataReq.startDate),
                     }).exec();
-                    if(checkData){
-                        if(checkData.isLeave){
+                    if (checkData) {
+                        if (checkData.isLeave) {
                             throw new Error("Không thể làm thêm giờ ngày này do bạn đã xin nghỉ phép ngày này!");
                         }
                         checkData.isOvertime = true;
                         checkData.overtimeRange = dataRequest.dataReq.hours;
                         checkData.reason = dataRequest.dataReq.reason;
                         await checkData.save();
-                    }else{
+                    } else {
                         await this.attendanceRecordModel.insertOne({
                             employeeId: dataRequest.employeeId,
                             date: dataRequest.dataReq.startDate,
@@ -235,21 +288,21 @@ export class RequestManageService {
                             status: STATUS.OVERTIME,
                         })
                     }
-                }catch (e) {
+                } catch (e) {
                     throw new Error(e);
                 }
             }
-        }catch(error){
+        } catch (error) {
             throw new Error(error.message || error);
         }
     }
 
-    async createMonthGoals(data: CreateRequestDto, dataRequest: any, typeRequest: any){
-        try{
-            if(!dataRequest){
+    async createMonthGoals(data: CreateRequestDto, dataRequest: any, typeRequest: any) {
+        try {
+            if (!dataRequest) {
                 throw new Error("Không tìm thấy dữ liệu cần sửa")
             }
-            if(dataRequest.dataReq === null || dataRequest.dataReq === undefined){
+            if (dataRequest.dataReq === null || dataRequest.dataReq === undefined) {
                 throw new Error("Lỗi do không có thông tin chi tiết lịch nghỉ");
             }
 
@@ -292,41 +345,41 @@ export class RequestManageService {
                 });
               }
             }
-        }catch (e) {
+        } catch (e) {
             throw new Error(e);
         }
     }
 
     async updateCoefficient(req: CreateRequestDto, dataRequest: any, typeRequest: any) {
         try {
-            if(!dataRequest){
+            if (!dataRequest) {
                 throw new Error("Không tìm thấy dữ liệu cần sửa")
             }
-            if(dataRequest.dataReq === null || dataRequest.dataReq === undefined){
+            if (dataRequest.dataReq === null || dataRequest.dataReq === undefined) {
                 throw new Error("Lỗi do không có thông tin chi tiết kế hoạch tăng lương");
             }
-            if(typeRequest.code === STATUS.SALARY_INCREASE){
-                const employee = await this.employeeModel.findById(dataRequest.dataReq?.employeeId).exec();
-                if(!employee){
+            if (typeRequest.code === STATUS.SALARY_INCREASE) {
+                const employee = await this.employeeModel.findById(dataRequest.dataReq.employeeId).exec();
+                if (!employee) {
                     throw new Error("Không tìm thấy nhân viên");
                 }
 
-                if (employee.timeUpdateSalary) {
+                if (employee.timeUpdateSalary !== null) {
                     const lastUpdateTime = new Date(employee.timeUpdateSalary);
                     const currentTime = new Date();
-                    const monthsSinceLastUpdate = (currentTime.getFullYear() - lastUpdateTime.getFullYear()) * 12 + 
+                    const monthsSinceLastUpdate = (currentTime.getFullYear() - lastUpdateTime.getFullYear()) * 12 +
                         (currentTime.getMonth() - lastUpdateTime.getMonth());
-                    
+
                     if (monthsSinceLastUpdate < 6) {
                         throw new Error("Nhân viên chưa đến kỳ được đề xuất tăng lương");
                     }
                 }
 
                 const salaryCoefficient = await this.salaryCoefficientModel.findById(new Types.ObjectId(dataRequest.dataReq?.salaryCoefficientsId)).exec();
-                if(!salaryCoefficient){
+                if (!salaryCoefficient) {
                     throw new Error("Không tìm thấy hệ số lương");
                 }
-                if(dataRequest.dataReq?.proposedCoefficient !== salaryCoefficient.salary_coefficient){
+                if (dataRequest.dataReq?.proposedCoefficient !== salaryCoefficient.salary_coefficient) {
                     throw new Error("Hệ số lương đề xuất không hợp lệ");
                 }
                 employee.salaryCoefficientId = new Types.ObjectId(salaryCoefficient.id);
@@ -354,5 +407,48 @@ export class RequestManageService {
         });
 
         return leaveRequests;
+    }
+
+    checkLeavePackage(requestDates: Date[], leaveBalance: number) {
+        try {
+            const paidDates = requestDates.slice(0, leaveBalance);
+            const unpaidDates = requestDates.slice(leaveBalance);
+            return { paidDates, unpaidDates };
+        } catch (e) {
+            throw new Error(e.message || e);
+        }
+    }
+
+    getStatusAttendance(typeRequest: string){
+        let status = '';
+        switch (typeRequest) {
+            case STATUS.LEAVE_REQUEST:
+                status = STATUS.LEAVE;
+                break;
+            case STATUS.MATERNITY_LEAVE:
+                status = STATUS.NGHI_THAI_SAN;
+                break;
+            case STATUS.MARRIAGE_LEAVE:
+                status = STATUS.NGHI_CUOI;
+                break;
+            case STATUS.PATERNITY_LEAVE:
+                status = STATUS.NGHI_VO_SINH;
+                break;
+            case STATUS.UNPAID_LEAVE:
+                status = STATUS.NGHI_KHONG_LUONG;
+                break;
+            case STATUS.REMOTE_WORK:
+                status = STATUS.NGHI_LAM_TU_XA;
+                break;
+            case STATUS.FUNERAL_LEAVE:
+                status = STATUS.NGHI_TANG;
+                break;
+            case STATUS.SICK_LEAVE:
+                status = STATUS.NGHI_OM;
+                break;
+            default:
+                status = '';
+        }
+        return status;
     }
 }

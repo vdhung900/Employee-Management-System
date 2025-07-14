@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, message } from 'antd';
-import { LockOutlined, ExclamationCircleOutlined } from '@ant-design/icons'; // Thêm icon cảnh báo
-import Employee_profile from '../../services/Employee_profile';
+import { LockOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import EmployeeProfile from "../../services/EmployeeProfile"; // Thêm icon cảnh báo
 
 const ChangePasswordModal = ({ visible, onCancel, onSave }) => {
   const [form] = Form.useForm();
@@ -17,7 +17,7 @@ const ChangePasswordModal = ({ visible, onCancel, onSave }) => {
         onCancel(); // Đóng modal nếu không có thông tin người dùng
         throw new Error("Bạn chưa đăng nhập !!!");
       }
-      const response = await Employee_profile.getEmployeeProfile(user.employeeId);
+      const response = await EmployeeProfile.getEmployeeProfile(user.employeeId);
       if (response.success) {
         setUserData(response.data);
       } else {

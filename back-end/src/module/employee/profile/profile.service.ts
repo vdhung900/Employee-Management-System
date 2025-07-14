@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { EditProfileDto, ResetPasswordDto } from './profile.dto';
+import {Model, Types} from 'mongoose';
 import { Employees, EmployeesDocument } from 'src/schemas/employees.schema';
 import { Account, AccountDocument } from 'src/schemas/account.schema';
 import { Departments, DepartmentsDocument } from 'src/schemas/departments.schema';
