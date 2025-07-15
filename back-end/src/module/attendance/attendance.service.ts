@@ -161,7 +161,7 @@ export class AttendanceRecordService {
     return await this.attendanceRecordModel
       .find(filter)
       .populate("employeeId", "name employeeId department position")
-      .sort({ date: -1 })
+      .sort({ date: 1 })
       .exec();
   }
 

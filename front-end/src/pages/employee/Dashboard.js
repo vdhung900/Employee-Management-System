@@ -75,9 +75,39 @@ const EmployeeDashboard = () => {
   const fetchWeeklyAttendance = async () => {
     try {
       const response = await AttendanceService.getWeeklyAttendance();
-      if (response.success) {
-        setWeeklyAttendance(response.data || []);
+
+      if (!response.success) {
+        console.log(" getWeeklyAttendance failed");
+        return;
       }
+
+      const attendances = response.data;
+
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Chủ nhật
+
+      // const endOfWeek = new Date(startOfWeek);
+      // endOfWeek.setDate(startOfWeek.getDate() + 6); // Thứ 7
+
+      //Not Saturday & Sunday
+      const weeklyAttendance = [];
+      for (let i = 1; i < 6; i++) {
+        const tmpDate = new Date();
+        tmpDate.setDate(startOfWeek.getDate() + i);
+        const tmpDateString = tmpDate.toISOString();
+
+        const record = attendances.find((a) => a.date.slice(0, 10) === tmpDateString.slice(0, 10));
+
+        weeklyAttendance.push(
+          record
+            ? record
+            : {
+                date: tmpDateString,
+              }
+        );
+      }
+
+      setWeeklyAttendance(weeklyAttendance);
     } catch (error) {
       console.log("Không thể tải dữ liệu tuần hiện tại");
     }
@@ -125,13 +155,17 @@ const EmployeeDashboard = () => {
     });
   };
 
+  //Kiểm tra ngày tương lai
+  const isFutureDate = (dateString) => {
+    const now = new Date();
+    return dateString.slice(0, 10) > now.toISOString().slice(0, 10);
+  };
+
   // Tính giờ dự kiến check-out (8 tiếng sau check-in)
   const getExpectedCheckOut = () => {
     if (!todayAttendance?.firstCheckIn) return "-";
     const checkInTime = new Date(todayAttendance.firstCheckIn);
-    const expectedCheckOut = new Date(
-      checkInTime.getTime() + 8 * 60 * 60 * 1000
-    );
+    const expectedCheckOut = new Date(checkInTime.getTime() + 8 * 60 * 60 * 1000);
     return expectedCheckOut.toLocaleTimeString("vi-VN", {
       hour: "2-digit",
       minute: "2-digit",
@@ -258,9 +292,7 @@ const EmployeeDashboard = () => {
           >
             <div>
               <Title level={3} style={{ margin: 0, fontWeight: "700" }}>
-                <span className="blue-gradient-text">
-                  Chào, {user?.name || "Nhân viên"}!
-                </span>
+                <span className="blue-gradient-text">Chào, {user?.name || "Nhân viên"}!</span>
               </Title>
               <Text style={{ fontSize: "16px", color: "rgba(0, 0, 0, 0.65)" }}>
                 Hôm nay:{" "}
@@ -354,11 +386,7 @@ const EmployeeDashboard = () => {
                   </Col>
                   <Col span={12}>
                     <Statistic
-                      title={
-                        todayAttendance?.lastCheckOut
-                          ? "Giờ ra"
-                          : "Giờ ra (dự kiến)"
-                      }
+                      title={todayAttendance?.lastCheckOut ? "Giờ ra" : "Giờ ra (dự kiến)"}
                       value={
                         todayAttendance?.lastCheckOut
                           ? formatTime(todayAttendance.lastCheckOut)
@@ -391,17 +419,11 @@ const EmployeeDashboard = () => {
                     Check-out
                   </ThreeDButton>
                 ) : (
-                  <ThreeDButton
-                    type="default"
-                    icon={<CheckCircleOutlined />}
-                    disabled
-                  >
+                  <ThreeDButton type="default" icon={<CheckCircleOutlined />} disabled>
                     Hoàn thành
                   </ThreeDButton>
                 )}
-                <ThreeDButton icon={<CoffeeOutlined />}>
-                  Đăng ký nghỉ phép
-                </ThreeDButton>
+                <ThreeDButton icon={<CoffeeOutlined />}>Đăng ký nghỉ phép</ThreeDButton>
               </Space>
             </div>
           </ThreeDCard>
@@ -580,13 +602,10 @@ const EmployeeDashboard = () => {
                           }}
                         >
                           {record.firstCheckIn
-                            ? new Date(record.firstCheckIn).toLocaleTimeString(
-                                "vi-VN",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
+                            ? new Date(record.firstCheckIn).toLocaleTimeString("vi-VN", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             : "-"}
                         </td>
                         <td
@@ -597,28 +616,21 @@ const EmployeeDashboard = () => {
                           }}
                         >
                           {record.lastCheckOut
-                            ? new Date(record.lastCheckOut).toLocaleTimeString(
-                                "vi-VN",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
+                            ? new Date(record.lastCheckOut).toLocaleTimeString("vi-VN", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             : "-"}
                         </td>
                         <td
                           style={{
                             padding: "12px 8px",
                             borderBottom: "1px solid #f0f0f0",
-                            color: !record.totalWorkingHours
-                              ? "#bfbfbf"
-                              : "inherit",
+                            color: !record.totalWorkingHours ? "#bfbfbf" : "inherit",
                           }}
                         >
                           {record.totalWorkingHours
-                            ? `${Math.floor(
-                                record.totalWorkingHours
-                              )}h${Math.round(
+                            ? `${Math.floor(record.totalWorkingHours)}h${Math.round(
                                 (record.totalWorkingHours % 1) * 60
                               )
                                 .toString()
@@ -631,7 +643,9 @@ const EmployeeDashboard = () => {
                             borderBottom: "1px solid #f0f0f0",
                           }}
                         >
-                          {!record.firstCheckIn ? (
+                          {isFutureDate(record.date) ? (
+                            <Badge status="default" text="Tương lai" />
+                          ) : !record.firstCheckIn ? (
                             <Badge status="error" text="Vắng mặt" />
                           ) : record.isLate ? (
                             <Badge status="warning" text="Đi muộn" />
@@ -677,11 +691,7 @@ const EmployeeDashboard = () => {
               }))}
             />
             <div style={{ textAlign: "center", marginTop: "20px" }}>
-              <ThreeDButton
-                type="primary"
-                icon={<TeamOutlined />}
-                className="btn-blue-theme"
-              >
+              <ThreeDButton type="primary" icon={<TeamOutlined />} className="btn-blue-theme">
                 Xem lịch phòng ban
               </ThreeDButton>
             </div>
