@@ -19,23 +19,23 @@ export class PerformanceReviewController {
     return this.performanceReviewService.create(createPerformanceReviewDto);
   }
 
-  @Get()
-  findAll() {
-    return this.performanceReviewService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.performanceReviewService.findAll();
+  // }
 
-  @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.performanceReviewService.findOne(+id);
-  }
+  // @Get(":id")
+  // findOne(@Param("id") id: string) {
+  //   return this.performanceReviewService.findOne(+id);
+  // }
 
-  @Patch(":id")
-  update(@Param("id") id: string, @Body() updatePerformanceReviewDto: UpdatePerformanceReviewDto) {
-    return this.performanceReviewService.update(+id, updatePerformanceReviewDto);
-  }
+  // @Patch(":id")
+  // update(@Param("id") id: string, @Body() updatePerformanceReviewDto: UpdatePerformanceReviewDto) {
+  //   return this.performanceReviewService.update(+id, updatePerformanceReviewDto);
+  // }
 
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.performanceReviewService.remove(+id);
-  }
+  // @Delete(":id")
+  // remove(@Param("id") id: string) {
+  //   return this.performanceReviewService.remove(+id);
+  // }
 }

@@ -239,19 +239,19 @@ export class PerformanceReviewService {
     return savedReview;
   }
 
-  findAll() {
-    return `This action returns all performanceReview`;
-  }
+  // findAll() {
+  //   return `This action returns all performanceReview`;
+  // }
 
-  findOne(id: number) {
-    return `This action returns a #${id} performanceReview`;
-  }
+  // findOne(id: number) {
+  //   return `This action returns a #${id} performanceReview`;
+  // }
 
-  update(id: number, updatePerformanceReviewDto: UpdatePerformanceReviewDto) {
-    return `This action updates a #${id} performanceReview`;
-  }
+  // update(id: number, updatePerformanceReviewDto: UpdatePerformanceReviewDto) {
+  //   return `This action updates a #${id} performanceReview`;
+  // }
 
-  remove(id: number) {
-    return `This action removes a #${id} performanceReview`;
-  }
+  // remove(id: number) {
+  //   return `This action removes a #${id} performanceReview`;
+  // }
 }

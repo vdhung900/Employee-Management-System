@@ -8,10 +8,12 @@ import {
   Delete,
   Req,
   BadRequestException,
+  Query,
 } from "@nestjs/common";
 import { AttendanceRecordService } from "./attendance.service";
 import { CreateAttendanceRecordDto } from "./dto/create-attendance.dto";
 import { UpdateAttendanceRecordDto } from "./dto/update-attendance.dto";
+import { SearchAttendanceDto } from "./dto/search-attendance.dto";
 import { BaseResponse } from "src/interfaces/response/base.response";
 import { InjectModel } from "@nestjs/mongoose";
 import { EmployeesDocument } from "src/schemas/employees.schema";
@@ -30,7 +32,7 @@ export class AttendanceController {
       // Check if attendance record already exists for today
       // const employee =
       const existingRecord = await this.attendanceRecordService.findByEmployeeIdToday(
-        req.user.userId
+        req.user.employeeId
       );
       if (existingRecord) {
         throw new BadRequestException(
@@ -40,7 +42,7 @@ export class AttendanceController {
 
       //Attach data to the DTO
       const now = new Date();
-      createAttendanceDto.employeeId = req.user.userId; // Set employeeId from the authenticated user
+      createAttendanceDto.employeeId = req.user.employeeId; // Set employeeId from the authenticated user
       createAttendanceDto.date = now; // Set the current date
       createAttendanceDto.firstCheckIn = now; // Set the check-in time to now
 
@@ -63,7 +65,7 @@ export class AttendanceController {
 
       // Check if the employee has an existing attendance record for today
       const existingRecord = await this.attendanceRecordService.findByEmployeeIdToday(
-        req.user.userId
+        req.user.employeeId
       );
 
       if (!existingRecord) {
@@ -88,18 +90,92 @@ export class AttendanceController {
   @Get("today")
   async getTodayAttendance(@Req() req: any): Promise<BaseResponse> {
     try {
-
       const todayRecord = await this.attendanceRecordService.findByEmployeeIdToday(
-        req.user.userId
+        req.user.employeeId
       );
 
       if (!todayRecord) {
         return BaseResponse.success(null, "No attendance record found for today", 200);
       }
 
-      return BaseResponse.success(todayRecord, "Today attendance record retrieved successfully", 200);
+      return BaseResponse.success(
+        todayRecord,
+        "Today attendance record retrieved successfully",
+        200
+      );
     } catch (error) {
       console.error("Error retrieving today attendance record:", error);
+      throw error;
+    }
+  }
+
+  @Get("search")
+  async searchAttendance(@Query() searchDto: SearchAttendanceDto): Promise<BaseResponse> {
+    try {
+      const result = await this.attendanceRecordService.searchAttendance(searchDto);
+      return BaseResponse.success(result, "Attendance records retrieved successfully", 200);
+    } catch (error) {
+      console.error("Error searching attendance records:", error);
+      throw error;
+    }
+  }
+
+  @Get("weekly")
+  async getWeeklyAttendance(
+    @Req() req: any,
+    @Query("weekStart") weekStart?: string
+  ): Promise<BaseResponse> {
+    try {
+      const weekStartDate = weekStart ? new Date(weekStart) : undefined;
+      const result = await this.attendanceRecordService.getWeeklyAttendance(
+        req?.user?.employeeId,
+        weekStartDate
+      );
+      return BaseResponse.success(result, "Weekly attendance retrieved successfully", 200);
+    } catch (error) {
+      console.error("Error retrieving weekly attendance:", error);
+      throw error;
+    }
+  }
+
+  @Get("monthly")
+  async getMonthlyAttendance(
+    @Req() req: any,
+    @Query("year") year?: string,
+    @Query("month") month?: string
+  ): Promise<BaseResponse> {
+    try {
+      const currentDate = new Date();
+      const targetYear = year ? parseInt(year) : currentDate.getFullYear();
+      const targetMonth = month ? parseInt(month) : currentDate.getMonth() + 1;
+
+      const result = await this.attendanceRecordService.getMonthlyAttendance(
+        req.user.employeeId,
+        targetYear,
+        targetMonth
+      );
+      return BaseResponse.success(result, "Monthly attendance retrieved successfully", 200);
+    } catch (error) {
+      console.error("Error retrieving monthly attendance:", error);
+      throw error;
+    }
+  }
+
+  @Get("employee/:employeeId")
+  async getAttendanceByEmployee(
+    @Param("employeeId") employeeId: string,
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string
+  ): Promise<BaseResponse> {
+    try {
+      const result = await this.attendanceRecordService.getAttendanceByEmployee(
+        employeeId,
+        startDate,
+        endDate
+      );
+      return BaseResponse.success(result, "Employee attendance retrieved successfully", 200);
+    } catch (error) {
+      console.error("Error retrieving employee attendance:", error);
       throw error;
     }
   }
