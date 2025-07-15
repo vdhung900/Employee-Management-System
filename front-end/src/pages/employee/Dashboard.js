@@ -29,6 +29,7 @@ import ThreeDCard from "../../components/3d/ThreeDCard";
 import ThreeDButton from "../../components/3d/ThreeDButton";
 import ThreeDStatCard from "../../components/3d/ThreeDStatCard";
 import ThreeDContainer from "../../components/3d/ThreeDContainer";
+import AttendanceHistoryModal from "../../components/attendance/AttendanceHistoryModal";
 import { getCurrentUser } from "../../utils/auth";
 import AttendanceService from "../../services/AttendanceService";
 
@@ -40,10 +41,13 @@ const EmployeeDashboard = () => {
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [weeklyAttendance, setWeeklyAttendance] = useState([]);
+  const [historyModalVisible, setHistoryModalVisible] = useState(false);
   const user = getCurrentUser();
 
   useEffect(() => {
     fetchTodayAttendance();
+    fetchWeeklyAttendance();
   }, []);
 
   // Lấy thông tin điểm danh hôm nay
@@ -64,6 +68,18 @@ const EmployeeDashboard = () => {
       setTodayAttendance(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Lấy dữ liệu điểm danh tuần hiện tại
+  const fetchWeeklyAttendance = async () => {
+    try {
+      const response = await AttendanceService.getWeeklyAttendance();
+      if (response.success) {
+        setWeeklyAttendance(response.data || []);
+      }
+    } catch (error) {
+      console.log("Không thể tải dữ liệu tuần hiện tại");
     }
   };
 
@@ -206,45 +222,6 @@ const EmployeeDashboard = () => {
     { day: "Thứ 6", hours: "08:00 - 17:00", type: "Ca hành chính" },
     { day: "Thứ 7", hours: "-", type: "Nghỉ" },
     { day: "Chủ nhật", hours: "-", type: "Nghỉ" },
-  ];
-
-  // Thông tin lịch sử điểm danh
-  const attendanceHistory = [
-    {
-      date: "15/11/2023",
-      checkIn: "07:58",
-      checkOut: "17:05",
-      hours: "9h07m",
-      status: "success",
-    },
-    {
-      date: "14/11/2023",
-      checkIn: "08:05",
-      checkOut: "17:15",
-      hours: "9h10m",
-      status: "success",
-    },
-    {
-      date: "13/11/2023",
-      checkIn: "08:25",
-      checkOut: "17:30",
-      hours: "9h05m",
-      status: "warning",
-    },
-    {
-      date: "12/11/2023",
-      checkIn: "-",
-      checkOut: "-",
-      hours: "-",
-      status: "error",
-    },
-    {
-      date: "11/11/2023",
-      checkIn: "07:50",
-      checkOut: "17:00",
-      hours: "9h10m",
-      status: "success",
-    },
   ];
 
   // Thông báo công việc
@@ -513,11 +490,18 @@ const EmployeeDashboard = () => {
         {/* Attendance History */}
         <Col xs={24} lg={12}>
           <ThreeDCard
-            title="Lịch sử điểm danh"
+            title="Lịch sử điểm danh - Tuần hiện tại"
             extra={
-              <ThreeDButton type="link" style={{ color: "#1890ff" }}>
-                Xem tất cả
-              </ThreeDButton>
+              <Space>
+                <CalendarOutlined style={{ color: "#1890ff" }} />
+                <ThreeDButton
+                  type="link"
+                  style={{ color: "#1890ff" }}
+                  onClick={() => setHistoryModalVisible(true)}
+                >
+                  Xem tất cả
+                </ThreeDButton>
+              </Space>
             }
             className="card-blue-theme"
           >
@@ -573,62 +557,104 @@ const EmployeeDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {attendanceHistory.map((record, index) => (
-                    <tr key={index}>
+                  {weeklyAttendance.length > 0 ? (
+                    weeklyAttendance.map((record, index) => (
+                      <tr key={index}>
+                        <td
+                          style={{
+                            padding: "12px 8px",
+                            borderBottom: "1px solid #f0f0f0",
+                          }}
+                        >
+                          {new Date(record.date).toLocaleDateString("vi-VN")}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 8px",
+                            borderBottom: "1px solid #f0f0f0",
+                            color: !record.firstCheckIn
+                              ? "#bfbfbf"
+                              : record.isLate
+                              ? "#ff4d4f"
+                              : "#52c41a",
+                          }}
+                        >
+                          {record.firstCheckIn
+                            ? new Date(record.firstCheckIn).toLocaleTimeString(
+                                "vi-VN",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )
+                            : "-"}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 8px",
+                            borderBottom: "1px solid #f0f0f0",
+                            color: !record.lastCheckOut ? "#bfbfbf" : "inherit",
+                          }}
+                        >
+                          {record.lastCheckOut
+                            ? new Date(record.lastCheckOut).toLocaleTimeString(
+                                "vi-VN",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )
+                            : "-"}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 8px",
+                            borderBottom: "1px solid #f0f0f0",
+                            color: !record.totalWorkingHours
+                              ? "#bfbfbf"
+                              : "inherit",
+                          }}
+                        >
+                          {record.totalWorkingHours
+                            ? `${Math.floor(
+                                record.totalWorkingHours
+                              )}h${Math.round(
+                                (record.totalWorkingHours % 1) * 60
+                              )
+                                .toString()
+                                .padStart(2, "0")}m`
+                            : "-"}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px 8px",
+                            borderBottom: "1px solid #f0f0f0",
+                          }}
+                        >
+                          {!record.firstCheckIn ? (
+                            <Badge status="error" text="Vắng mặt" />
+                          ) : record.isLate ? (
+                            <Badge status="warning" text="Đi muộn" />
+                          ) : (
+                            <Badge status="success" text="Đúng giờ" />
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
                       <td
+                        colSpan={5}
                         style={{
-                          padding: "12px 8px",
-                          borderBottom: "1px solid #f0f0f0",
+                          padding: "20px",
+                          textAlign: "center",
+                          color: "#bfbfbf",
                         }}
                       >
-                        {record.date}
-                      </td>
-                      <td
-                        style={{
-                          padding: "12px 8px",
-                          borderBottom: "1px solid #f0f0f0",
-                          color: record.checkIn === "-" ? "#bfbfbf" : "inherit",
-                        }}
-                      >
-                        {record.checkIn}
-                      </td>
-                      <td
-                        style={{
-                          padding: "12px 8px",
-                          borderBottom: "1px solid #f0f0f0",
-                          color:
-                            record.checkOut === "-" ? "#bfbfbf" : "inherit",
-                        }}
-                      >
-                        {record.checkOut}
-                      </td>
-                      <td
-                        style={{
-                          padding: "12px 8px",
-                          borderBottom: "1px solid #f0f0f0",
-                          color: record.hours === "-" ? "#bfbfbf" : "inherit",
-                        }}
-                      >
-                        {record.hours}
-                      </td>
-                      <td
-                        style={{
-                          padding: "12px 8px",
-                          borderBottom: "1px solid #f0f0f0",
-                        }}
-                      >
-                        {record.status === "success" && (
-                          <Badge status="success" text="Đúng giờ" />
-                        )}
-                        {record.status === "warning" && (
-                          <Badge status="warning" text="Đi muộn" />
-                        )}
-                        {record.status === "error" && (
-                          <Badge status="error" text="Vắng mặt" />
-                        )}
+                        Chưa có dữ liệu điểm danh tuần này
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -662,6 +688,12 @@ const EmployeeDashboard = () => {
           </ThreeDCard>
         </Col>
       </Row>
+
+      {/* Attendance History Modal */}
+      <AttendanceHistoryModal
+        visible={historyModalVisible}
+        onClose={() => setHistoryModalVisible(false)}
+      />
     </ThreeDContainer>
   );
 };

@@ -53,6 +53,66 @@ const AttendanceService = {
       throw error;
     }
   },
+
+  // Search attendance với filters
+  searchAttendance: async (params) => {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const response = await fetchWithAuth(
+        `/attendance/search?${queryString}`,
+        "GET"
+      );
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Lấy điểm danh theo tuần
+  getWeeklyAttendance: async (weekStart) => {
+    try {
+      const queryString = weekStart ? `?weekStart=${weekStart}` : "";
+      const response = await fetchWithAuth(
+        `/attendance/weekly${queryString}`,
+        "GET"
+      );
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Lấy điểm danh theo tháng
+  getMonthlyAttendance: async (year, month) => {
+    try {
+      const queryString = new URLSearchParams();
+      if (year) queryString.append("year", year);
+      if (month) queryString.append("month", month);
+      const response = await fetchWithAuth(
+        `/attendance/monthly?${queryString.toString()}`,
+        "GET"
+      );
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Lấy điểm danh theo employee ID
+  getAttendanceByEmployee: async (employeeId, startDate, endDate) => {
+    try {
+      const queryString = new URLSearchParams();
+      if (startDate) queryString.append("startDate", startDate);
+      if (endDate) queryString.append("endDate", endDate);
+      const response = await fetchWithAuth(
+        `/attendance/employee/${employeeId}?${queryString.toString()}`,
+        "GET"
+      );
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default AttendanceService;
