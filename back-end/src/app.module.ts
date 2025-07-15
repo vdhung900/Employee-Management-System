@@ -24,6 +24,7 @@ import { SalaryCoeficientModule } from "./module/hr/salary_Coeficient/salary_coe
 import { ProfileModule } from "./module/employee/profile/profile.module";
 import { UploadModule } from "./module/minio/minio.module";
 import { EmployeeModule } from "./module/employee/employee.module";
+import { SalaryCalculationModule } from "./module/hr/salary_calculation.module";
 
 @Module({
   imports: [
@@ -49,7 +50,8 @@ import { EmployeeModule } from "./module/employee/employee.module";
     UpdateEmployeeModule,
     SalaryCoeficientModule,
     ProfileModule,
-    EmployeeModule
+    EmployeeModule,
+    SalaryCalculationModule
   ],
   controllers: [],
   providers: [
