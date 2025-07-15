@@ -68,7 +68,8 @@ export class Employees extends BaseSchema{
     @Prop()
     code: string;
 
-
+    @Prop()
+    childDependents: Number;
 
 }
 

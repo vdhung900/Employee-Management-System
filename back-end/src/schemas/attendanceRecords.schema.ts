@@ -44,6 +44,9 @@ export class AttendanceRecords extends BaseSchema {
   @Prop({ default: false })
   isEarlyTime: Boolean;
 
+  @Prop({ default: false })
+  isPaid: Boolean;
+
   @Prop()
   reason: string;
 }
