@@ -3,6 +3,24 @@ import APIConfig from "../services/APIConfig";
 import {Navigate} from "react-router-dom";
 import React from "react";
 
+let API_GET_IP = process.env.REACT_APP_PUBLIC_IP_API;
+
+let cachedClientIP = null;
+
+const getClientIP = async () => {
+  if (cachedClientIP) return cachedClientIP;
+
+  try {
+    const res = await fetch(API_GET_IP);
+    const data = await res.json();
+    cachedClientIP = data.ip;
+    return cachedClientIP;
+  } catch (error) {
+    console.warn("Không lấy được IP client:", error);
+    return "unknown";
+  }
+};
+
 /**
  * Utility function for making authenticated API requests
  * @param {string} endpoint - API endpoint (without base URL)
@@ -42,10 +60,13 @@ export const fetchWithAuth = async (
       url = `${APIConfig.baseUrl}${endpoint}${endpoint.endsWith("/") ? "" : "/"}${decode.userId}`;
     }
 
+    const clientIP = await getClientIP();
+
     const options = {
       method,
       headers: {
         ...APIConfig.getAuthHeaders(token),
+        "X-Client-IP": clientIP,
         ...customHeaders,
       },
     };

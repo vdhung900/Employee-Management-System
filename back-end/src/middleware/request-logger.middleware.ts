@@ -18,6 +18,12 @@ export class RequestLoggerMiddleware implements NestMiddleware {
       const { method, originalUrl, ip, body, query, headers } = req;
       const { statusCode } = res;
 
+      const clientIpHeader = req.headers['x-client-ip'] as string | undefined;
+
+      const fallbackIp =
+          (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || req.ip;
+
+      const finalIp = clientIpHeader || fallbackIp;
 
       const userId = (req as any).user ? (req as any).user.userId : null; 
 
@@ -28,7 +34,7 @@ export class RequestLoggerMiddleware implements NestMiddleware {
         method,
         url: originalUrl,
         statusCode,
-        ipAddress: ip,
+        ipAddress: finalIp,
         userId,
         body: method === 'POST' || method === 'PUT' ? body : undefined,
         query,
