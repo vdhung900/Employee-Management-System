@@ -17,10 +17,11 @@ services:
       EMAIL_HOST:
       EMAIL_PORT:
       EMAIL_FROM:
-      MINIO_ENDPOINT: http://16.176.103.213:9000
+      MINIO_ENDPOINT: http://52:62:162:252:9000
       MINIO_USERNAME: minioadmin
       MINIO_PASSWORD: minioadmin
       NODE_ENV: dev
+      TZ: Asia/Ho_Chi_Minh
     ports:
       - "9123:9123"
     networks:
@@ -33,6 +34,8 @@ services:
     restart: always
     environment:
       - PORT=3123
+      - GENERATE_SOURCEMAP=false
+      - REACT_APP_PUBLIC_IP_API=https://api.ipify.org?format=json
     depends_on:
       - backend
     ports:
