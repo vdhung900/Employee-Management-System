@@ -28,6 +28,7 @@ import { EmployeeModule } from "./module/employee/employee.module";
 import { PerformanceReviewModule } from "./module/performance-review/performance-review.module";
 import { MonthlyGoalModule } from "./module/monthly-goal/monthly-goal.module";
 import {LeaveBalanceModule} from "./module/leave-balance/leaveBalance.module";
+import { SalaryCalculationModule } from "./module/hr/salary_calculation.module";
 
 @Module({
   imports: [
@@ -57,7 +58,8 @@ import {LeaveBalanceModule} from "./module/leave-balance/leaveBalance.module";
     PerformanceReviewModule,
     MonthlyGoalModule,
     EmployeeModule,
-    LeaveBalanceModule
+    LeaveBalanceModule,
+    SalaryCalculationModule
   ],
   controllers: [],
   providers: [
