@@ -42,6 +42,8 @@ import DocumentManagement from "./pages/employee/DocumentManagement";
 import SalaryCoefficient from './pages/hr/SalaryCoefficient';
 import EmployeeStatistics from './pages/hr/EmployeeStatistics';
 import ManagerStatistics from "./pages/employee/ManagerStatistics";
+import LeaveBalance from "./pages/employee/LeaveBalance";
+import AppWrapper from "./components/loading/AppWrapper";
 
 const router = createBrowserRouter(
   [
@@ -111,7 +113,8 @@ const router = createBrowserRouter(
             { path: "documents", element: <DocumentManagement /> },
             { path: "salary-coefficient", element: <SalaryCoefficient /> },
             { path: "employee-statistics", element: <EmployeeStatistics /> },
-            { path: "manager-statistics", element: <ManagerStatistics />}
+            { path: "manager-statistics", element: <ManagerStatistics />},
+            { path: "leave-balance", element: <LeaveBalance />},
           ],
         },
       ],
@@ -136,7 +139,9 @@ const router = createBrowserRouter(
 function App() {
   return (
     <LoadingProvider>
-      <RouterProvider router={router} />
+      <AppWrapper>
+        <RouterProvider router={router} />
+      </AppWrapper>
     </LoadingProvider>
   );
 

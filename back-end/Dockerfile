@@ -16,7 +16,6 @@ WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.env ./.env
 COPY package*.json ./
 
 EXPOSE 9123

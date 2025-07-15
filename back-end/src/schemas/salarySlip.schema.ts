@@ -1,54 +1,53 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { BaseSchema } from "./base.schema";
-import { Document, Types } from "mongoose";
-import { SalaryCoefficient } from "./salaryCoefficents.schema";
-import { Employees } from "./employees.schema";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
 
-export type SalarySlipDocument = SalarySlip & Document;
+@Schema({ timestamps: true })
+export class SalarySlip extends Document {
+  @Prop({ type: Types.ObjectId, ref: 'Employee', required: true })
+  employeeId: Types.ObjectId;
 
-@Schema()
-export class SalarySlip extends BaseSchema {
-    @Prop({type: Types.ObjectId, ref: Employees.name})
-    employeeId: Types.ObjectId;
+  @Prop({ required: true })
+  month: number;
 
-    @Prop({type: Types.ObjectId, ref: SalaryCoefficient.name})
-    salaryCoefficientId: Types.ObjectId;
+  @Prop({ required: true })
+  year: number;
 
-    @Prop()
-    month: Date;
+  @Prop() 
+  baseSalary: number;
 
-    @Prop()
-    year: Date;
+  @Prop() 
+  salaryCoefficient: number;
 
-    @Prop()
-    baseSalary: number;
+  @Prop() 
+  totalBaseSalary: number;
 
-    @Prop()
-    allowances: number;
+  @Prop()
+  unpaidLeave: number;
 
-    @Prop()
-    insurance: number;
+  @Prop()
+  latePenalty: number;
 
-    @Prop()
-    tax: number;
+  @Prop()
+  otWeekday: number;
 
-    @Prop()
-    leaveDeduction: number;
+  @Prop()
+  otWeekend: number;
 
-    @Prop()
-    benefitTotal: number;
+  @Prop()
+  otHoliday: number;
 
-    @Prop()
-    performanceBonus: number;
+  @Prop()
+  insurance: number;
 
-    @Prop()
-    otherBonus: number;
+  @Prop()
+  personalIncomeTax: number;
 
-    @Prop()
-    totalSalary: number;
+  @Prop()
+  familyDeduction: number;
 
-    @Prop()
-    pdfUrl: string;
+  @Prop()
+  totalSalary: number;
+  
 }
 
 export const SalarySlipSchema = SchemaFactory.createForClass(SalarySlip);

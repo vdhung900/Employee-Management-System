@@ -1,117 +1,73 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Table, Button, Modal, Form, Input, message, Popconfirm, Space, Typography, Tag, Avatar, Row, Col } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, FileTextOutlined, UserOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  FileTextOutlined,
+  UserOutlined,
+  FolderOpenOutlined,
+  DownloadOutlined,
+  EyeOutlined
+} from '@ant-design/icons';
+import Hr_Employee from "../../services/Hr_Employee";
+import {STATUS} from "../../constants/Status";
+import UploadFileComponent from "../../components/file-list/FileList";
+import DocumentService from "../../services/DocumentService";
+import FileService from "../../services/FileService";
 
 const { Title, Text } = Typography;
 
-// Sample employee data (copy từ StaffManagement)
-const employeesSample = [
-  {
-    id: 1,
-    name: 'Nguyễn Văn A',
-    employeeId: 'EMP001',
-    email: 'nguyenvana@example.com',
-    phone: '0912345678',
-    position: 'Frontend Developer',
-    department: 'Engineering',
-    joinDate: '2021-05-01',
-    status: 'active',
-    contractType: 'Full-time',
-    contractEnd: '2024-05-01',
-  },
-  {
-    id: 2,
-    name: 'Trần Thị B',
-    employeeId: 'EMP002',
-    email: 'tranthib@example.com',
-    phone: '0923456789',
-    position: 'UI/UX Designer',
-    department: 'Design',
-    joinDate: '2021-06-15',
-    status: 'active',
-    contractType: 'Full-time',
-    contractEnd: '2023-06-15',
-  },
-  {
-    id: 3,
-    name: 'Lê Văn C',
-    employeeId: 'EMP003',
-    email: 'levanc@example.com',
-    phone: '0934567890',
-    position: 'Project Manager',
-    department: 'Management',
-    joinDate: '2020-10-01',
-    status: 'active',
-    contractType: 'Full-time',
-    contractEnd: '2023-10-01',
-  },
-  {
-    id: 4,
-    name: 'Phạm Thị D',
-    employeeId: 'EMP004',
-    email: 'phamthid@example.com',
-    phone: '0945678901',
-    position: 'Accountant',
-    department: 'Finance',
-    joinDate: '2022-01-15',
-    status: 'leave',
-    contractType: 'Part-time',
-    contractEnd: '2023-01-15',
-  },
-  {
-    id: 5,
-    name: 'Hoàng Văn E',
-    employeeId: 'EMP005',
-    email: 'hoangvane@example.com',
-    phone: '0956789012',
-    position: 'Receptionist',
-    department: 'Admin',
-    joinDate: '2022-03-01',
-    status: 'inactive',
-    contractType: 'Contract',
-    contractEnd: '2023-06-01',
-  },
-];
-
 const statusColor = {
-  active: 'green',
-  leave: 'orange',
-  inactive: 'red',
+  'Chính thức': 'green',
+  'Thời vụ': 'orange',
+  'Thử việc': 'red',
 };
 
 function getStatusLabel(status) {
   switch (status) {
-    case 'active': return 'Đang làm việc';
-    case 'leave': return 'Nghỉ phép';
-    case 'inactive': return 'Nghỉ việc';
+    case STATUS.CHINH_THUC: return STATUS.CHINH_THUC;
+    case STATUS.THOI_VU: return STATUS.THOI_VU;
+    case STATUS.THU_VIEC: return STATUS.THU_VIEC;
     default: return 'Không xác định';
   }
 }
 
-// Fake document data per employee (local state)
-function getInitialDocs() {
-  return {
-    1: [
-      { id: 101, name: 'Hợp đồng lao động.pdf', createdAt: '2023-12-01' },
-      { id: 102, name: 'Bảng lương tháng 5.xlsx', createdAt: '2024-05-31' },
-    ],
-    2: [
-      { id: 201, name: 'Giấy khen.jpg', createdAt: '2024-04-15' },
-    ],
-    3: [],
-    4: [],
-    5: [],
-  };
-}
-
 const DocumentManagement = () => {
-  const [selectedEmp, setSelectedEmp] = useState(employeesSample[0]);
-  const [docs, setDocs] = useState(getInitialDocs());
+  const [selectedEmp, setSelectedEmp] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDoc, setEditingDoc] = useState(null);
+  const [employees, setEmployees] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchDocTerm, setSearchDocTerm] = useState("");
   const [form] = Form.useForm();
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
 
-  // Bảng nhân viên
+  useEffect(() => {
+    loadDataEmployees()
+  }, []);
+
+  useEffect(() => {
+    if (selectedEmp && employees.length > 0) {
+      const updatedEmp = employees.find(emp => emp._id === selectedEmp._id);
+      if (updatedEmp) setSelectedEmp(updatedEmp);
+    }
+  }, [employees]);
+
+  const loadDataEmployees = async () => {
+    try{
+      const response = await DocumentService.getAllEmployeesDocument();
+      if(response.success){
+        setEmployees(response.data);
+      }
+    }catch (e) {
+      message.error(e.message);
+    }
+  }
+
   const empColumns = [
     {
       title: '',
@@ -121,26 +77,25 @@ const DocumentManagement = () => {
     },
     {
       title: 'Tên nhân viên',
-      dataIndex: 'name',
+      dataIndex: 'fullName',
       render: (text, r) => <b>{text}</b>,
     },
     {
       title: 'Phòng ban',
-      dataIndex: 'department',
+      dataIndex: ['departmentId', 'name'],
       render: (text) => <Tag color="blue">{text}</Tag>,
     },
     {
       title: 'Chức vụ',
-      dataIndex: 'position',
+      dataIndex: ['positionId', 'name'],
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'status',
+      dataIndex: ['contractId', 'contract_type'],
       render: (status) => <Tag color={statusColor[status]}>{getStatusLabel(status)}</Tag>,
     },
   ];
 
-  // Bảng tài liệu
   const docColumns = [
     {
       title: 'STT',
@@ -151,7 +106,7 @@ const DocumentManagement = () => {
     },
     {
       title: 'Tên tài liệu',
-      dataIndex: 'name',
+      dataIndex: 'originalName',
       render: (text) => (
         <a href="#" onClick={e => { e.preventDefault(); message.info('Chức năng tải file sẽ có khi kết nối API!'); }}>
           <FileTextOutlined style={{ marginRight: 6 }} />{text}
@@ -169,59 +124,120 @@ const DocumentManagement = () => {
       align: 'center',
       render: (_, record) => (
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => showEditModal(record)} size="small" type="primary" ghost>
-            Sửa
-          </Button>
-          <Popconfirm title="Bạn chắc chắn muốn xóa?" onConfirm={() => handleDeleteDoc(record.id)} okText="Xóa" cancelText="Hủy">
-            <Button icon={<DeleteOutlined />} danger size="small">Xóa</Button>
-          </Popconfirm>
+          <Button icon={<EyeOutlined />} onClick={() => handlePreviewDoc(record)} size="small"></Button>
+          <Button icon={<DownloadOutlined />} onClick={() => handleDownloadDoc(record)} size="small" type="primary" ghost></Button>
+          <Button icon={<DeleteOutlined />} onClick={() => handleDeleteDoc(record)} danger size="small"></Button>
         </Space>
       ),
     },
   ];
 
-  // Thao tác tài liệu
   const showAddModal = () => {
     setEditingDoc(null);
     form.resetFields();
+    setFiles([])
     setModalVisible(true);
-  };
-  const showEditModal = (doc) => {
-    setEditingDoc(doc);
-    form.setFieldsValue({ name: doc.name });
-    setModalVisible(true);
-  };
-  const handleModalOk = async () => {
-    try {
-      const values = await form.validateFields();
-      let newDocs = { ...docs };
-      if (editingDoc) {
-        // Sửa
-        newDocs[selectedEmp.id] = newDocs[selectedEmp.id].map(d => d.id === editingDoc.id ? { ...d, name: values.name } : d);
-        message.success('Cập nhật thành công');
-      } else {
-        // Thêm mới
-        const newId = Date.now();
-        const newDoc = { id: newId, name: values.name, createdAt: new Date().toISOString().slice(0, 10) };
-        newDocs[selectedEmp.id] = [...(newDocs[selectedEmp.id] || []), newDoc];
-        message.success('Thêm mới thành công');
-      }
-      setDocs(newDocs);
-      setModalVisible(false);
-      setEditingDoc(null);
-    } catch (e) {
-      message.error('Vui lòng nhập tên tài liệu');
-    }
-  };
-  const handleDeleteDoc = (id) => {
-    let newDocs = { ...docs };
-    newDocs[selectedEmp.id] = newDocs[selectedEmp.id].filter(d => d.id !== id);
-    setDocs(newDocs);
-    message.success('Xóa thành công');
   };
 
+  const handleModalOk = async () => {
+    try{
+      if(files.length === 0) {
+        message.error('Vui lòng tải lên ít nhất một tệp tin');
+        return;
+      }
+      let body = {
+        employeeId: selectedEmp?._id,
+        attachments: files
+      };
+      const response = await DocumentService.addDocumentForEmployee(body);
+      if(response.success){
+        message.success(editingDoc ? 'Cập nhật tài liệu thành công' : 'Thêm tài liệu thành công');
+      }else {
+        message.error(response.message || 'Có lỗi xảy ra khi thêm tài liệu');
+      }
+    }catch (e) {
+      message.error(e.message);
+    }finally {
+      loadDataEmployees();
+      setFiles([])
+      setModalVisible(false);
+      setEditingDoc(null);
+    }
+  };
+
+  const handleDownloadDoc = async (doc) => {
+    try {
+      const blob = await FileService.getFile(doc.key)
+      if(blob){
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = doc ? doc.originalName : 'downloadFile';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        message.success('Tải file thành công')
+      }else{
+        message.error('Tải file thất bại')
+      }
+    } catch (error) {
+      message.error('Tải file thất bại');
+    }
+  };
+
+  const handleDeleteDoc = (doc) => {
+    try{
+      Modal.confirm({
+        title: 'Xác nhận xóa tài liệu',
+        content: `Bạn có chắc chắn muốn xóa tài liệu "${doc.originalName}"?`,
+        okText: 'Xóa',
+        cancelText: 'Hủy',
+        onOk: async () => {
+          let body = {
+            employeeId: selectedEmp?._id,
+            attachments: [doc]
+          }
+          const response = await DocumentService.deleteDocumentForEmployee(body);
+          if(response.success){
+            message.success('Xóa tài liệu thành công');
+          }else {
+            message.error(response.message || 'Có lỗi xảy ra khi xóa tài liệu');
+          }
+        loadDataEmployees();
+        }
+      })
+    }catch (e) {
+        message.error(e.message);
+    }
+  };
+
+  const handlePreviewDoc = async (doc) => {
+    try {
+      const blob = await FileService.getFile(doc.key);
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
+        setPreviewFile(doc);
+        setPreviewUrl(url);
+        setPreviewVisible(true);
+      } else {
+        message.error('Không thể xem trước file');
+      }
+    } catch (e) {
+      message.error('Không thể xem trước file');
+    }
+  };
+
+  const filteredEmployees = employees.filter(emp =>
+    emp.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredDocs = (selectedEmp?.attachments || []).filter(doc =>
+    doc.originalName?.toLowerCase().includes(searchDocTerm.toLowerCase())
+  );
+
   return (
-    <div style={{ background: '#f4f8fb', minHeight: '100vh', padding: 0 }}>
+    <div style={{ background: 'white', minHeight: '80vh', padding: 10 }}>
       <div style={{
         textAlign: 'left',
       }}>
@@ -235,50 +251,68 @@ const DocumentManagement = () => {
           </div>
         </div>
       </div>
-      <Row gutter={32} style={{ margin: 0, minHeight: '80vh', padding: 32 }}>
-        <Col span={9}>
+      <Row gutter={32} style={{ margin: 0, minHeight: '80vh', padding: 10, display: 'flex', alignItems: 'stretch' }}>
+        <Col span={11}>
           <Card
             title={<Title level={4} style={{ margin: 0 }}>Danh sách nhân viên</Title>}
             bordered={false}
-            style={{ borderRadius: 16, boxShadow: '0 4px 24px #0001', minHeight: 500 }}
+            style={{ borderRadius: 16, boxShadow: '0 4px 24px #0001', height: '100%', overflow: 'hidden' }}
           >
-            <Table
-              columns={empColumns}
-              dataSource={employeesSample}
-              rowKey="id"
-              pagination={false}
-              rowClassName={(r) => r.id === selectedEmp.id ? 'ant-table-row-selected' : ''}
-              onRow={r => ({ onClick: () => setSelectedEmp(r) })}
-              style={{ cursor: 'pointer' }}
-              size="middle"
+            <Input
+              placeholder="Tìm kiếm theo tên nhân viên"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ marginBottom: 12 }}
+              allowClear
             />
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <Table
+                  columns={empColumns}
+                  dataSource={filteredEmployees}
+                  rowKey="_id"
+                  pagination={false}
+                  rowClassName={(r) => r._id === selectedEmp?._id ? 'ant-table-row-selected' : ''}
+                  onRow={r => ({ onClick: () => setSelectedEmp(r) })}
+                  style={{ cursor: 'pointer' }}
+                  size="middle"
+              />
+            </div>
           </Card>
         </Col>
-        <Col span={15}>
+        <Col span={13}>
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Avatar icon={<UserOutlined />} style={{ background: '#1976d2' }} />
                 <div>
-                  <b>{selectedEmp.name}</b> <Tag color="blue">{selectedEmp.department}</Tag>
-                  <div style={{ fontSize: 13, color: '#888' }}>{selectedEmp.position}</div>
+                  <b>{selectedEmp?.fullName}</b> <Tag color="blue">{selectedEmp?.departmentId?.name}</Tag>
+                  <div style={{ fontSize: 13, color: '#888' }}>{selectedEmp?.positionId?.name}</div>
                 </div>
               </div>
             }
             bordered={false}
-            style={{ borderRadius: 16, boxShadow: '0 4px 24px #0001', minHeight: 500 }}
+            style={{ borderRadius: 16, boxShadow: '0 4px 24px #0001', height: '100%', overflow: 'hidden' }}
             extra={<Button icon={<PlusOutlined />} type="primary" onClick={showAddModal}>Thêm tài liệu</Button>}
           >
-            <Table
-              columns={docColumns}
-              dataSource={docs[selectedEmp.id] || []}
-              rowKey="id"
-              pagination={false}
-              bordered
-              style={{ background: '#fff', borderRadius: 8 }}
-              locale={{ emptyText: 'Chưa có tài liệu nào' }}
-              size="middle"
+            <Input
+              placeholder="Tìm kiếm theo tên tài liệu"
+              value={searchDocTerm}
+              onChange={e => setSearchDocTerm(e.target.value)}
+              style={{ marginBottom: 12 }}
+              allowClear
             />
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <Table
+                columns={docColumns}
+                dataSource={filteredDocs}
+                rowKey="_id"
+                pagination={false}
+                bordered
+                style={{ background: '#fff', borderRadius: 8 }}
+                locale={{ emptyText: 'Chưa có tài liệu nào' }}
+                size="middle"
+              />
+            </div>
           </Card>
         </Col>
         <Modal
@@ -289,14 +323,34 @@ const DocumentManagement = () => {
           okText={editingDoc ? 'Cập nhật' : 'Thêm mới'}
           cancelText="Hủy"
           destroyOnClose
+          okButtonProps={{ disabled: files.length === 0 }}
         >
           <Form form={form} layout="vertical" preserve={false}>
-            <Form.Item name="name" label="Tên tài liệu" rules={[{ required: true, message: 'Nhập tên tài liệu' }]}> 
-              <Input placeholder="Nhập tên tài liệu (ví dụ: Hợp đồng lao động.pdf)" />
+            <Form.Item name="attachments" label="Tệp đính kèm" rules={[{ required: true, message: 'Vui lòng upload tệp đính kèm' }]}>
+              <UploadFileComponent isSingle={true} files={files} uploadFileSuccess={setFiles}/>
             </Form.Item>
           </Form>
         </Modal>
       </Row>
+      <Modal
+        open={previewVisible}
+        title={`Xem trước: ${previewFile?.originalName}`}
+        footer={null}
+        onCancel={() => {
+          setPreviewVisible(false);
+          setPreviewUrl('');
+          setPreviewFile(null);
+        }}
+        width={800}
+      >
+        {previewUrl && (
+          previewFile?.originalName?.toLowerCase().endsWith('.pdf') ? (
+            <iframe src={previewUrl} width="100%" height="600px" title="preview" />
+          ) : (
+            <img src={previewUrl} alt="preview" style={{ maxWidth: '100%', maxHeight: 600 }} />
+          )
+        )}
+      </Modal>
     </div>
   );
 };

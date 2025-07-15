@@ -27,8 +27,8 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons';
 import StatisticsService from "../../services/StatisticsService";
-import Employee_profile from '../../services/Employee_profile';
 import moment from 'moment';
+import EmployeeProfile from "../../services/EmployeeProfile";
 
 const { Title, Text } = Typography;
 
@@ -63,7 +63,7 @@ const TeamManagement = () => {
       setLoading(true);
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-        const response = await Employee_profile.getEmployeeProfile(user.employeeId);
+        const response = await EmployeeProfile.getEmployeeProfile(user.employeeId);
         const departmentId = response.data?.departmentId?._id;
         setDepartmentName(response.data?.departmentId?.name || "");
         if (!departmentId) {

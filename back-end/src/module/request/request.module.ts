@@ -16,6 +16,8 @@ import {MonthlyGoal, MonthlyGoalSchema} from "../../schemas/monthGoals.schema";
 import {SalaryCoefficient, SalaryCoefficientSchema} from "../../schemas/salaryCoefficents.schema";
 import {SalaryRank, SalaryRankSchema} from "../../schemas/salaryRank.schema";
 import {Employees, EmployeesSchema} from "../../schemas/employees.schema";
+import {LeaveBalance, LeaveBalanceSchema} from "../../schemas/leaveBalance.schema";
+import {NotificationModule} from "../notification/notification.module";
 
 @Module({
   imports: [
@@ -29,10 +31,12 @@ import {Employees, EmployeesSchema} from "../../schemas/employees.schema";
           {name: SalaryCoefficient.name, schema: SalaryCoefficientSchema },
           {name: SalaryRank.name, schema: SalaryRankSchema },
           {name: Employees.name, schema: EmployeesSchema },
+          {name: LeaveBalance.name, schema: LeaveBalanceSchema },
       ]),
       AdminAccountModule,
       MailModule,
-      UploadModule
+      UploadModule,
+      NotificationModule
   ],
   providers: [BaseRequestService, RequestManageService],
   controllers: [RequestManageController]

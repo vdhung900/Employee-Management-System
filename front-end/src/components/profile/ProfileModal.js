@@ -7,9 +7,9 @@ import {
   TeamOutlined, IdcardOutlined, DollarOutlined, ClockCircleOutlined, PushpinOutlined, NumberOutlined
 } from '@ant-design/icons'; // Bỏ UploadOutlined
 import ChangePasswordModal from './ChangePasswordModal';
-import Employee_profile from '../../services/Employee_profile';
 import Hr_ManageEmployee from '../../services/Hr_ManageEmployee';
 import moment from 'moment';
+import EmployeeProfile from "../../services/EmployeeProfile";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -33,7 +33,7 @@ const ProfileModal = ({ visible, onCancel, onSave }) => {
         onCancel();
         return;
       }
-      const response = await Employee_profile.getEmployeeProfile(user.employeeId);
+      const response = await EmployeeProfile.getEmployeeProfile(user.employeeId);
       if (response.success) {
         setUserData(response.data);
         if (response.data.avatar) {

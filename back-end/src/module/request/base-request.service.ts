@@ -6,18 +6,24 @@ import {typeRequest, typeRequestDocument} from "../../schemas/typeRequestCategor
 import {CreateRequestDto} from "./dto/createRequest.dto";
 import {UploadService} from "../minio/minio.service";
 import {STATUS} from "../../enum/status.enum";
+import {NotificationService} from "../notification/notification.service";
+import {Departments, DepartmentsDocument} from "../../schemas/departments.schema";
 
 @Injectable()
 export class BaseRequestService {
     constructor(
         @InjectModel(Requests.name) private readonly requestModel: Model<RequestsDocument>,
         @InjectModel(typeRequest.name) private readonly typeRequestModel: Model<typeRequestDocument>,
-        private readonly uploadService: UploadService
+        @InjectModel(Departments.name) private readonly departmentModel: Model<DepartmentsDocument>,
+        private readonly uploadService: UploadService,
+        private readonly notificationService: NotificationService,
     ) {
     }
 
     async create(requestData: CreateRequestDto) {
         const newRequest = new this.requestModel(requestData);
+        newRequest.employeeId = new Types.ObjectId(requestData.employeeId);
+        newRequest.departmentId = new Types.ObjectId(requestData.departmentId);
         newRequest.attachments = requestData.attachments ? requestData.attachments.map(item => item._id) : [];
         await newRequest.save()
         return this.findById(newRequest._id);
@@ -27,8 +33,8 @@ export class BaseRequestService {
         return await this.requestModel.find().populate('employeeId').populate('typeRequest').exec();
     }
 
-    async findByFilterCode(code: string){
-        return await this.requestModel.find().populate('employeeId').populate({
+    async findByFilterCode(departmentId: string, code: string){
+        return await this.requestModel.find({departmentId: new Types.ObjectId(departmentId)}).populate('employeeId').populate({
             path: 'typeRequest',
             match: {code: {$ne: code}}
         }).exec();
@@ -43,7 +49,7 @@ export class BaseRequestService {
     }
 
     async findByEmployeeId(employeeId: string) {
-        return await this.requestModel.find({employeeId: employeeId}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
+        return await this.requestModel.find({employeeId: new Types.ObjectId(employeeId)}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
     }
 
     async update(id: string, updateData: CreateRequestDto) {
@@ -107,6 +113,18 @@ export class BaseRequestService {
         }
         else if (data.timeResolve > 0){
             throw new Error('Request is already resolved');
+        }
+    }
+
+    async sendNotification(data: CreateRequestDto, message: string){
+        try{
+            const department = await this.departmentModel.findById(data.departmentId).exec();
+            if (!department) {
+                throw new Error('Department not found');
+            }
+            await this.notificationService.notifyEmployee(department.managerId.toString(), message);
+        }catch (e) {
+            throw e;
         }
     }
 }

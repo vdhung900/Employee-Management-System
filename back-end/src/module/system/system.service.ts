@@ -78,7 +78,7 @@ export class SystemService {
                     $gte: dateRange.startDate,
                     $lte: dateRange.endDate
                 }
-            });
+            }).sort({ createdAt: -1 });
 
             if (dataLog.length < 1) {
                 throw new Error("No data log found for the selected period.");
@@ -124,6 +124,8 @@ export class SystemService {
                 statusCode: log.statusCode,
                 ipAddress: log.ipAddress,
                 responseTime: log.responseTime,
+                body: log.body,
+                headers: log.headers,
                 createdAt: log.createdAt,
                 userId: log.userId
             }));

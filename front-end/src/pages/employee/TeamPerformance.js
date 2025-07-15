@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Row,
@@ -39,8 +39,9 @@ import ThreeDCard from "../../components/3d/ThreeDCard";
 import * as XLSX from "xlsx";
 import GoalService from "../../services/GoalService";
 import PerformanceReviewService from "../../services/PerformanceReviewService";
-import Employee_profile from "../../services/Employee_profile";
+
 import { getCurrentUser } from "../../utils/auth";
+import EmployeeProfile from "../../services/EmployeeProfile";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -86,7 +87,7 @@ const MonthlyPerformanceReview = () => {
         // Lấy thông tin employee profile để có departmentId
         console.log("try to fetch : CALL profile");
 
-        const profileResponse = await Employee_profile.getEmployeeProfile(currentUser.employeeId);
+        const profileResponse = await EmployeeProfile.getEmployeeProfile(currentUser.employeeId);
         departmentId = profileResponse?.data?.departmentId?._id;
       }
 

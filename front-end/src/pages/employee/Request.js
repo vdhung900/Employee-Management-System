@@ -66,6 +66,17 @@ const {Option} = Select;
 const {TabPane} = Tabs;
 const {RangePicker} = DatePicker;
 
+const LEAVE_TYPES = [
+    STATUS.LEAVE_REQUEST,
+    STATUS.MARRIAGE_LEAVE,
+    STATUS.MATERNITY_LEAVE,
+    STATUS.SICK_LEAVE,
+    STATUS.UNPAID_LEAVE,
+    STATUS.PATERNITY_LEAVE,
+    STATUS.REMOTE_WORK,
+    STATUS.FUNERAL_LEAVE,
+];
+
 const RequestTypeForm = ({form, requestType, departments = [], positions = [], employees = [], coefficients = []}) => {
     const formFields = {
         LEAVE_REQUEST: {
@@ -210,7 +221,15 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 label="Phòng ban"
                                 rules={[{required: true, message: 'Vui lòng chọn phòng ban'}]}
                             >
-                                <Select placeholder="Chọn phòng ban">
+                                <Select
+                                    placeholder="Chọn phòng ban"
+                                    onChange={(value) => {
+                                    const department = departments.find(dep => dep._id === value);
+                                    const matched = positions.find(pos =>
+                                        pos.name.toLowerCase().includes(department?.name.toLowerCase())
+                                    );
+                                    form.setFieldValue(['dataReq', 'position'], matched?._id);
+                                }}>
                                     {departments.map(department => (
                                         <Option key={department._id} value={department._id}>
                                             {department.name}
@@ -370,7 +389,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                     showSearch
                                     optionFilterProp="children"
                                     onChange={(value) => {
-                                        const selectedEmployee = employees.find(emp => emp._id === value);
+                                        const selectedEmployee = employees.find(emp => emp?._id === value);
                                         if (selectedEmployee) {
                                             const nextCoefficient = coefficients.find(coef => coef.rank === (selectedEmployee.salaryCoefficientId?.rank + 1));
                                             if(!nextCoefficient) {
@@ -384,8 +403,8 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                                     currentSalary: formatNumber(selectedEmployee.salaryCoefficientId?.salary_coefficient * selectedEmployee.salaryCoefficientId?.salary_rankId?.salary_base) || 0,
                                                     proposedCoefficient: nextCoefficient ? nextCoefficient.salary_coefficient : 0,
                                                     proposedSalary: nextCoefficient ? formatNumber(nextCoefficient.salary_coefficient * nextCoefficient.salary_rankId?.salary_base) : 0,
-                                                    salaryCoefficientsId: nextCoefficient._id,
-                                                    employeeSalaryIncreaseId: selectedEmployee._id
+                                                    salaryCoefficientsId: nextCoefficient?._id,
+                                                    employeeSalaryIncreaseId: selectedEmployee?._id
                                                 }
                                             });
                                         }
@@ -529,8 +548,66 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
         }
     };
 
-    const selectedForm = formFields[requestType];
+    const selectedType = LEAVE_TYPES.includes(requestType) ? 'LEAVE_REQUEST' : requestType;
+    const selectedForm = formFields[selectedType];
     if (!selectedForm) return null;
+
+    // Nếu là MATERNITY_LEAVE, thêm logic tự động set endDate
+    if (requestType === 'MATERNITY_LEAVE') {
+        return (
+            <>
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item
+                            name={['dataReq', 'startDate']}
+                            label="Ngày bắt đầu nghỉ"
+                            rules={[{required: true, message: 'Vui lòng chọn ngày bắt đầu'}]}
+                        >
+                            <DatePicker
+                                style={{width: '100%'}}
+                                onChange={date => {
+                                    if (date) {
+                                        const endDate = date.clone().add(180, 'days');
+                                        form.setFieldsValue({
+                                            dataReq: {
+                                                ...form.getFieldValue('dataReq'),
+                                                startDate: date,
+                                                endDate: endDate
+                                            }
+                                        });
+                                    } else {
+                                        form.setFieldsValue({
+                                            dataReq: {
+                                                ...form.getFieldValue('dataReq'),
+                                                startDate: null,
+                                                endDate: null
+                                            }
+                                        });
+                                    }
+                                }}
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item
+                            name={['dataReq', 'endDate']}
+                            label="Ngày kết thúc nghỉ"
+                            rules={[{required: true, message: 'Vui lòng chọn ngày kết thúc'}]}
+                        >
+                            <DatePicker style={{width: '100%'}}/>
+                        </Form.Item>
+                    </Col>
+                </Row>
+                <Form.Item
+                    name={['dataReq', 'reason']}
+                    label="Lý do nghỉ phép"
+                    rules={[{required: true, message: 'Vui lòng nhập lý do nghỉ phép'}]}
+                >
+                    <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép"/>
+                </Form.Item>
+            </>
+        );
+    }
 
     return selectedForm.fields;
 };
@@ -709,6 +786,7 @@ const Requests = () => {
             form.setFieldsValue({
                 requestId: request._id,
                 employeeId: request.employeeId,
+                departmentId: request.departmentId,
                 typeCode: request.typeRequest.code,
                 priority: request.priority,
                 note: request.note,
@@ -810,7 +888,9 @@ const Requests = () => {
                 }
             } else {
                 const user = JSON.parse(localStorage.getItem("user"));
+                const employee = JSON.parse(localStorage.getItem("employee"));
                 body.employeeId = user.employeeId;
+                body.departmentId = employee.departmentId._id;
                 const response = await requestService.createRequest(body);
                 if(response.success) {
                     message.success(response.message);
@@ -905,16 +985,23 @@ const Requests = () => {
             okType: 'danger',
             cancelText: 'Đóng',
             async onOk() {
-                let body = request;
-                body.requestId = request._id;
-                body.status = "Cancelled";
-                const response = await requestService.approveRequest(body);
-                if (response.success) {
-                    loadDataReq();
-                    Modal.success({
-                        title: 'Yêu cầu đã được hủy',
-                        content: `Yêu cầu ${request.typeRequest.name} đã được hủy thành công.`,
-                    });
+                try{
+                    let body = request;
+                    body.requestId = request._id;
+                    body.status = "Cancelled";
+                    const response = await requestService.approveRequest(body);
+                    if (response.success) {
+                        loadDataReq();
+                        Modal.success({
+                            title: 'Yêu cầu đã được hủy',
+                            content: `Yêu cầu ${request.typeRequest.name} đã được hủy thành công.`,
+                        });
+                    }else{
+                        message.error(response.message);
+                    }
+                }catch (e) {
+                    console.log(e)
+                    message.error("Lỗi khi hủy yêu cầu");
                 }
             },
         });
@@ -1294,6 +1381,11 @@ const Requests = () => {
                     </Form.Item>
                     <Form.Item
                         name="employeeId"
+                        hidden={true}
+                    >
+                    </Form.Item>
+                    <Form.Item
+                        name="departmentId"
                         hidden={true}
                     >
                     </Form.Item>

@@ -47,7 +47,7 @@ export class Employees extends BaseSchema{
     @Prop()
     bankName: string;
 
-    @Prop({default: new Date()})
+    @Prop()
     timeUpdateSalary: Date;
 
     @Prop({ type: [{ type: Types.ObjectId, ref: Documents.name }] })
@@ -68,7 +68,8 @@ export class Employees extends BaseSchema{
     @Prop()
     code: string;
 
-
+    @Prop()
+    childDependents: Number;
 
 }
 
