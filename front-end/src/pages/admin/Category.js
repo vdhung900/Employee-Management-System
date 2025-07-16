@@ -15,6 +15,8 @@ import {
 } from "antd";
 import { TeamOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import APIConfig from "../../services/APIConfig";
+import CategoryService from "../../services/CategoryService";
+import {useLoading} from "../../contexts/LoadingContext";
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -26,47 +28,44 @@ const DepartmentTab = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState(null);
+  const {showLoading, hideLoading} = useLoading();
   const [form] = Form.useForm();
 
   const fetchManagers = async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(`${APIConfig.baseUrl}/departments/managers`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) {
-        setManagers(data.data);
+      const response = await CategoryService.getManage();
+      if (response.success) {
+        setManagers(response.data);
       }
-      else message.error(data.message || "Lỗi khi tải danh sách quản lý");
+      else message.error(response.message || "Lỗi khi tải danh sách quản lý");
     } catch (err) {
       message.error("Không thể tải danh sách quản lý");
     }
   };
 
   const fetchDepartments = async () => {
-    setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(`${APIConfig.baseUrl}/departments`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) setDepartments(data.data);
-      else message.error(data.message || "Lỗi khi tải phòng ban");
+      const response = await CategoryService.getDepartments();
+      if (response.success) setDepartments(response.data);
+      else message.error(response.message || "Lỗi khi tải phòng ban");
     } catch (err) {
       message.error("Không thể tải phòng ban");
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      await fetchManagers();
-      await fetchDepartments();
-    };
-    fetchData();
+    try{
+      showLoading();
+      const fetchData = async () => {
+        await fetchManagers();
+        await fetchDepartments();
+      };
+      fetchData();
+    }catch (e) {
+      message.error(e.message);
+    }finally {
+      hideLoading();
+    }
   }, []);
 
   const handleAdd = () => {
@@ -85,51 +84,42 @@ const DepartmentTab = () => {
 
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(`${APIConfig.baseUrl}/departments/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) {
+      showLoading();
+      const response = await CategoryService.deleteDepartment(id);
+      if (response.success) {
         message.success("Xóa phòng ban thành công");
         fetchDepartments();
       } else {
-        message.error(data.message || "Xóa thất bại");
+        message.error(response.message || "Xóa thất bại");
       }
     } catch (err) {
       message.error("Không thể xóa phòng ban");
+    }finally {
+      hideLoading();
     }
   };
 
   const handleOk = async () => {
     try {
+      showLoading();
       const values = await form.validateFields();
-      const token = localStorage.getItem("accessToken");
-      let url = `${APIConfig.baseUrl}/departments`;
-      let method = "POST";
+      let response;
       if (editing) {
-        url = `${APIConfig.baseUrl}/departments/${editing._id}`;
-        method = "PATCH";
+        response = await CategoryService.saveDepartment(values, editing._id);
+      }else{
+        response = await CategoryService.addDepartment(values);
       }
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-      if (data.success) {
+      if (response.success) {
         message.success(editing ? "Cập nhật thành công" : "Thêm thành công");
         setModalVisible(false);
         fetchDepartments();
       } else {
-        message.error(data.message || "Lỗi");
+        message.error(response.message || "Lỗi");
       }
     } catch (err) {
-      // validation error
+      message.error(err.message || "Lỗi khi lưu phòng ban");
+    }finally {
+      hideLoading()
     }
   };
 
@@ -138,17 +128,8 @@ const DepartmentTab = () => {
     { title: "Mô tả", dataIndex: "description", key: "description" },
     {
       title: "Quản lý",
-      dataIndex: "managerId",
+      dataIndex: ["managerId", "fullName"],
       key: "managerId",
-      render: (managerId) => {
-        if (!managerId) return 'Chưa có quản lý';
-        if (typeof managerId === 'object' && managerId !== null) {
-          return `${managerId.username} (${managerId.employeeId?.fullName || 'N/A'})`;
-        }
-        const managerObj = managers.find(m => m._id === managerId);
-        if (!managerObj) return 'Chưa có quản lý';
-        return `${managerObj.username} (${managerObj.employeeId?.fullName || 'N/A'})`;
-      }
     },
     {
       title: "Hành động",

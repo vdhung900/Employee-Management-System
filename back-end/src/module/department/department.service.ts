@@ -30,12 +30,7 @@ export class DepartmentService {
         return this.departmentModel.find()
             .populate({
                 path: 'managerId',
-                model: 'Account',
-                select: 'username role employeeId',
-                populate: {
-                    path: 'employeeId',
-                    select: 'fullName email'
-                }
+                select: 'fullName',
             })
             .exec();
     }

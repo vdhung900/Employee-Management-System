@@ -7,6 +7,14 @@ import {SystemSetting, SystemSettingDocument} from "../../schemas/systemSetting.
 import {LeaveSettingDocument, LeaveSettings} from "../../schemas/leaveSettings.schema";
 import {SystemSettingDto} from "./dto/systemSetting.dto";
 import {LeaveSettingDto} from "./dto/leaveSetting.dto";
+import {Employees, EmployeesDocument} from "../../schemas/employees.schema";
+import {Departments, DepartmentsDocument} from "../../schemas/departments.schema";
+import {Position, PositionDocument} from "../../schemas/position.schema";
+import {Contract, ContractDocument} from "../../schemas/contracts.schema";
+import {Requests, RequestsDocument} from "../../schemas/requests.schema";
+import {AttendanceRecords, AttendanceRecordsDocument} from "../../schemas/attendanceRecords.schema";
+import {MonthlyGoal, MonthlyGoalDocument} from "../../schemas/monthGoals.schema";
+import {Notification, NotificationDocument} from "../../schemas/notification.schema";
 
 interface RequestStats {
     totalRequests: number;
@@ -20,6 +28,14 @@ export class SystemService {
         @InjectModel(RequestLog.name) private requestModel: Model<RequestLogDocument>,
         @InjectModel(SystemSetting.name) private systemSettingModel: Model<SystemSettingDocument>,
         @InjectModel(LeaveSettings.name) private leaveSettingModel: Model<LeaveSettingDocument>,
+        @InjectModel(Employees.name) private employeeModel: Model<EmployeesDocument>,
+        @InjectModel(Departments.name) private departmentModel: Model<DepartmentsDocument>,
+        @InjectModel(Position.name) private positionModel: Model<PositionDocument>,
+        @InjectModel(Contract.name) private contractModel: Model<ContractDocument>,
+        @InjectModel(Requests.name) private requestUserModel: Model<RequestsDocument>,
+        @InjectModel(AttendanceRecords.name) private attendanceRecordModel: Model<AttendanceRecordsDocument>,
+        @InjectModel(MonthlyGoal.name) private monthlyGoalModel: Model<MonthlyGoalDocument>,
+        @InjectModel(Notification.name) private notificationModel: Model<NotificationDocument>,
     ) {
     }
 
@@ -241,6 +257,86 @@ export class SystemService {
             return await this.leaveSettingModel.findByIdAndDelete(dto.leaveSettingId).exec();
         }catch (e) {
             throw new Error(e)
+        }
+    }
+
+    async analyzeSystem() {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+
+            const totalEmployees = await this.employeeModel.countDocuments({});
+
+            const attendanceToday = await this.attendanceRecordModel.find({
+                date: { $gte: today, $lt: tomorrow }
+            }).populate('employeeId').exec();
+            const presentToday = attendanceToday.filter(a => a.status === 'present').length;
+            const absentToday = attendanceToday.filter(a => a.status === 'leave').length;
+            const lateToday = attendanceToday.filter(a => a.isLate === true).length;
+
+            const totalDepartments = await this.departmentModel.countDocuments({});
+
+            const pendingRequests = await this.requestUserModel.countDocuments({ status: 'pending' });
+
+            const attendanceList = attendanceToday.slice(0, 10).map(a => {
+                const emp = a.employeeId as any;
+                return {
+                    id: emp?._id,
+                    name: emp?.fullName,
+                    department: emp?.departmentId?.name || '',
+                    checkIn: a.firstCheckIn ? a.firstCheckIn.toTimeString().slice(0,5) : '',
+                    checkOut: a.lastCheckOut ? a.lastCheckOut.toTimeString().slice(0,5) : '',
+                    status: a.status,
+                    avatarUrl: emp?.avatar || ''
+                }
+            });
+
+            const employees = await this.employeeModel.find({}).populate('departmentId').exec();
+            const employeeByDepartmentMap = new Map();
+            employees.forEach(emp => {
+                const dep = (emp.departmentId as any)?.name || 'Unknown';
+                if (!employeeByDepartmentMap.has(dep)) employeeByDepartmentMap.set(dep, 0);
+                employeeByDepartmentMap.set(dep, employeeByDepartmentMap.get(dep) + 1);
+            });
+            const employeeByDepartment = Array.from(employeeByDepartmentMap.entries()).map(([departmentName, employeeCount]) => ({ departmentName, employeeCount }));
+
+            const requestStatusAgg = await this.requestUserModel.aggregate([
+                { $group: { _id: '$status', count: { $sum: 1 } } }
+            ]).exec();
+            const requestStatusData = requestStatusAgg.map(r => ({ status: r._id, count: r.count }));
+
+            const month = today.getMonth() + 1;
+            const year = today.getFullYear();
+            const goals = await this.monthlyGoalModel.find({ month, year, status: 'Approved' }).exec();
+            let goalProgress = 0;
+            if (goals.length > 0) {
+                goalProgress = Math.round((goals.length / totalEmployees) * 100);
+            }
+
+            const notifications = await this.notificationModel.find({}).sort({ createdAt: -1 }).limit(5);
+            const notificationList = notifications.map(n => ({
+                id: n._id,
+                content: n.message,
+                createdAt: n.createdAt
+            }));
+
+            return {
+                totalEmployees,
+                presentToday,
+                absentToday,
+                lateToday,
+                totalDepartments,
+                pendingRequests,
+                attendanceList,
+                employeeByDepartment,
+                requestStatusData,
+                goalProgress,
+                notifications: notificationList
+            };
+        } catch (e) {
+            throw e;
         }
     }
 }
