@@ -33,9 +33,9 @@ services:
     container_name: frontend
     restart: always
     environment:
-      - PORT=3123
-      - GENERATE_SOURCEMAP=false
-      - REACT_APP_PUBLIC_IP_API=https://api.ipify.org?format=json
+      PORT: 3123
+      GENERATE_SOURCEMAP: false
+      REACT_APP_PUBLIC_IP_API: https://api.ipify.org?format=json
     depends_on:
       - backend
     ports:
