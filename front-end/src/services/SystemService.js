@@ -17,6 +17,13 @@ const SystemService = {
             throw handleApiError(error);
         }
     },
+    async getDashboardAdmin(){
+        try{
+            return await fetchWithAuth(`${endpointService}/analyze-admin`);
+        }catch(error){
+            throw handleApiError(error);
+        }
+    }
 }
 
 export default SystemService;

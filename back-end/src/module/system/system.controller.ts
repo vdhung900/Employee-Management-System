@@ -99,4 +99,14 @@ export class SystemController {
             throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @Get('analyze-admin')
+    async getAnalyzeAdmin(): Promise<BaseResponse>{
+        try{
+            const resData = await this.requestManageService.analyzeSystem();
+            return BaseResponse.success(resData, "Lấy dữ liệu thành công", HttpStatus.OK);
+        }catch (e) {
+            throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
