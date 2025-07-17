@@ -380,7 +380,7 @@ const MainLayout = () => {
         {
             key: "/employee/leave-balance",
             icon: <FieldTimeOutlined />,
-            label: "Quỹ ngày nghỉ nhân viên",
+            label: "Quỹ ngày nghỉ",
             permission: "EMPLOYEE_LEAVE_BALANCE",
         },
     ];
