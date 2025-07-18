@@ -56,6 +56,9 @@ export class SalarySlip extends Document {
 
   @Prop()
   totalOtHour: number;
+
+  @Prop()
+  totalTaxableIncome: number;
   
 }
 
