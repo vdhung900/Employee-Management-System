@@ -1,0 +1,42 @@
+/* Custom style cho bảng phiếu lương */
+.salary-slip-table .ant-table-thead > tr > th {
+  font-weight: bold;
+  text-align: center;
+  font-size: 15px;
+}
+.salary-slip-table .ant-table-tbody > tr > td {
+  padding: 10px 12px;
+  font-size: 15px;
+  vertical-align: middle;
+}
+.salary-slip-table .ant-table-tbody > tr:hover > td {
+  background: #f0f7ff !important;
+}
+.salary-slip-table .ant-table {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+.salary-slip-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #e6f0fa;
+}
+.salary-slip-table .ant-table-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+.salary-slip-table .ant-table-tbody > tr > td {
+  text-align: right;
+}
+.salary-slip-table .ant-table-tbody > tr > td:nth-child(1),
+.salary-slip-table .ant-table-tbody > tr > td:nth-child(2),
+.salary-slip-table .ant-table-tbody > tr > td:nth-child(3) {
+  text-align: center;
+}
+/* Chỉ custom màu số ở 2 cột đặc biệt, giữ nguyên header mặc định của Antd */
+.salary-slip-table .ant-table-tbody > tr > td:nth-child(5),
+.salary-slip-table .ant-table-tbody > tr > td:nth-child(14) {
+  font-weight: bold;
+  color: #1677ff;
+}
+
+.salary-slip-table {
+  overflow-x: auto;
+} 
