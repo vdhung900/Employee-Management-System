@@ -110,9 +110,11 @@ export class SalaryCalculationService {
 
       // Tính OT ngày thường và cuối tuần
       let otWeekday = 0, otWeekend = 0;
+      let totalOtHours = 0;
       for (const a of attendances) {
         if (a.status === 'overtime' || a.isOvertime) {
           const otHours = getTotalOtHours(a.overtimeRange);
+          totalOtHours += otHours;
           const date = new Date(a.date);
           const day = date.getDay();
           if (day === 0 || day === 6) {
@@ -122,9 +124,10 @@ export class SalaryCalculationService {
           }
         }
       }
+      const totalOtAmount = otWeekday + otWeekend;
 
       // Tổng các khoản trước bảo hiểm
-      const gross = totalBaseSalary - unpaidLeave - latePenalty + otWeekday + otWeekend;
+      const gross = totalBaseSalary - unpaidLeave - latePenalty + totalOtAmount;
 
       // Tiền bảo hiểm
       const insurance = totalBaseSalary * 0.105;
@@ -150,7 +153,7 @@ export class SalaryCalculationService {
       }
 
       // Tổng lương thực nhận
-      const totalSalary = gross - insurance - personalIncomeTax;
+      const netSalary = gross - insurance - personalIncomeTax;
 
       // Lưu vào salarySlip: update nếu đã có, insert nếu chưa có
       await this.salarySlipModel.updateOne(
@@ -164,15 +167,17 @@ export class SalaryCalculationService {
             salaryCoefficient,
             totalBaseSalary,
             unpaidLeave,
-            latePenalty,
             otWeekday,
             otWeekend,
             otHoliday: 0, // Không tính ngày lễ
+            totalOtHour: totalOtHours, // Tổng số giờ OT
+            totalOtSalary: totalOtAmount, // Tổng tiền OT
             insurance,
             personalIncomeTax,
             familyDeduction: totalFamilyDeduction,
-            totalSalary,
+            netSalary,
             status: '00',
+            latePenalty, //Đúng giờ
           },
         },
         { upsert: true }
