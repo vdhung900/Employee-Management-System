@@ -42,6 +42,13 @@ export class DepartmentController {
         return BaseResponse.success(data, 'OK', 200);
     }
 
+    @Get('employees')
+    @ApiOperation({ summary: 'Get all employees (accounts) with fullName' })
+    async getAllEmployees() {
+        const employees = await this.departmentService.findAllEmployeesWithFullName();
+        return BaseResponse.success(employees, 'OK', 200);
+    }
+
     @Get(':id')
     @ApiOperation({ summary: 'Get department by id' })
     @ApiResponse({ status: 200, description: 'Department detail', type: BaseResponse })

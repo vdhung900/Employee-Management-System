@@ -75,4 +75,11 @@ export class DepartmentService {
         if (!deleted) throw new NotFoundException('Department not found');
         return deleted;
     }
+
+    async findAllEmployeesWithFullName() {
+        return this.accountModel.find({ status: 'active' })
+            .select('username employeeId')
+            .populate('employeeId', 'fullName')
+            .exec();
+    }
 } 
