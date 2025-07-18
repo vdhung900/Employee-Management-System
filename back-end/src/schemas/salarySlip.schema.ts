@@ -47,6 +47,9 @@ export class SalarySlip extends Document {
 
   @Prop()
   totalSalary: number;
+
+  @Prop()
+  status: string;
   
 }
 

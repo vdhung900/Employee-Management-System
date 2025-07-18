@@ -172,6 +172,7 @@ export class SalaryCalculationService {
             personalIncomeTax,
             familyDeduction: totalFamilyDeduction,
             totalSalary,
+            status: '00',
           },
         },
         { upsert: true }
