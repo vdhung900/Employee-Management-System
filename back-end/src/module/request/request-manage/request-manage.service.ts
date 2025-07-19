@@ -1,7 +1,7 @@
 import {Injectable} from '@nestjs/common';
 import {InjectModel} from "@nestjs/mongoose";
 import {Requests, RequestsDocument} from "../../../schemas/requests.schema";
-import {Model, Types} from "mongoose";
+import {Model, ObjectId, Types} from "mongoose";
 import {typeRequest, typeRequestDocument} from "../../../schemas/typeRequestCategory.schema";
 import {BaseRequestService} from "../base-request.service";
 import {CreateRequestDto} from "../dto/createRequest.dto";
@@ -184,6 +184,8 @@ export class RequestManageService {
                         throw new Error("Trạng thái đơn không hợp lệ!");
                 }
             }
+            req.employeeId = data?.employeeId._id as Types.ObjectId;
+            await this.requestService.sendNotificationForEmpReq(req, `Yêu cầu ${typeRequest?.name} của bạn đã được phê duyệt!`);
             return data;
         } catch (error) {
             try {
@@ -207,27 +209,44 @@ export class RequestManageService {
             }
             if (typeRequest?.code === STATUS.SALARY_APPROVED) {
                 const salarySlipIds = dataRequest.dataReq as string[];
-                for (const slipId of salarySlipIds) {
-                    const slip = await this.salarySlipModel.findByIdAndUpdate(
-                        slipId,
-                        {status: STATUS.DA_DUYET},
-                        {new: true}
-                    ).exec();
-                    if (!slip) {
-                        throw new Error(`Không tìm thấy phiếu lương với ID: ${slipId}`);
-                    }
-                    const employee = await this.employeeModel.findById(slip?.employeeId).exec();
-                    if (slip && slip.employeeId && employee) {
-                        await this.mailService.sendSalarySlipMail(
-                            employee?.email,
-                            employee?.fullName,
-                            slip
-                        );
-                    }
+                const slips = await this.salarySlipModel.find({
+                    _id: { $in: salarySlipIds }
+                }).exec();
+                const allApproved = slips.every(slip => slip.status === STATUS.DA_DUYET);
+                if (allApproved) {
+                    throw new Error('Lương của tháng này đã được phê duyệt rồi.');
                 }
+                const tasks = slips.map(async slip => {
+                    if (slip.status === STATUS.DA_DUYET) return;
+
+                    const updated = await this.updateSlipStatus(slip._id as string);
+                    if (!updated) throw new Error(`Không tìm thấy phiếu lương với ID: ${slip._id}`);
+
+                    await this.sendSlipMail(updated);
+                });
+                await Promise.all(tasks);
             }
         } catch (e) {
             throw e;
+        }
+    }
+
+    private async updateSlipStatus(slipId: string) {
+        return this.salarySlipModel.findByIdAndUpdate(
+            new Types.ObjectId(slipId),
+            { status: STATUS.DA_DUYET },
+            { new: true }
+        ).exec();
+    }
+
+    private async sendSlipMail(slip: SalarySlip) {
+        const employee = await this.employeeModel.findById(slip.employeeId).exec();
+        if (employee) {
+            await this.mailService.sendSalarySlipMail(
+                employee.email,
+                employee.fullName,
+                slip
+            );
         }
     }
 

@@ -1178,11 +1178,15 @@ const Requests = () => {
             key: 'note',
         },
         {
-            title: 'Lý do',
-            key: 'dataReq',
-            render: status => (
-                <div>{status.dataReq !== null ? status.dataReq.reason : ""}</div>
-            ),
+            title: 'Lí do',
+            key: 'reason',
+            render: (value: any, record: any) => {
+                if (record.status === STATUS.REJECTED) {
+                    return record.reason || '—';
+                } else {
+                    return record.dataReq?.reason || '—';
+                }
+            }
         },
         {
             title: 'Trạng thái',
@@ -1742,7 +1746,8 @@ function getDynamicSalarySlipColumns(salarySlips) {
                 if (key === 'employeeId') {
                     return record.employeeId?.fullName || '';
                 }
-                return value;
+                // Format tất cả các cột số (trừ employeeId)
+                return typeof value === 'number' ? formatNumber(value) : value;
             }
         }))
     ];

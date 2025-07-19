@@ -2,11 +2,11 @@
 .salary-slip-table .ant-table-thead > tr > th {
   font-weight: bold;
   text-align: center;
-  font-size: 15px;
+  font-size: 13px;
 }
 .salary-slip-table .ant-table-tbody > tr > td {
   padding: 10px 12px;
-  font-size: 15px;
+  font-size: 13px;
   vertical-align: middle;
 }
 .salary-slip-table .ant-table-tbody > tr:hover > td {

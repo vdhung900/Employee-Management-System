@@ -41,4 +41,14 @@ export class AuthController {
       throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @Get('reset')
+  async resetPassword(): Promise<BaseResponse> {
+    try {
+      const resData = await this.authService.resetPass();
+        return BaseResponse.success(resData, "Reset password successfully", HttpStatus.OK);
+    } catch (e) {
+      throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

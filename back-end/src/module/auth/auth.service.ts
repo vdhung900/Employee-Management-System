@@ -45,8 +45,8 @@ export class AuthService {
     try {
       const account = await this.findUserByUsername(req.username);
 
-      const isPasswordValid = account && account.password === req.password;
-      // const isPasswordValid = account && await bcrypt.compare(req.password, account.password);
+      // const isPasswordValid = account && account.password === req.password;
+      const isPasswordValid = account && await bcrypt.compare(req.password, account.password);
 
       if (!account || !isPasswordValid) {
         throw new Error("Invalid username or password");
@@ -75,4 +75,29 @@ export class AuthService {
       throw new Error(error.message);
     }
   }
+
+  async resetPass() {
+    try {
+      const defaultPassword = '123456aA';
+      const hashedPass = await bcrypt.hash(defaultPassword, 10);
+
+      const users = await this.accountModel.find().exec();
+
+      const resetPromises = users.map(user =>
+          this.accountModel.findByIdAndUpdate(
+              user._id,
+              { password: hashedPass },
+              { new: true }
+          ).exec()
+      );
+
+      await Promise.all(resetPromises);
+
+      console.log(`✅ Reset mật khẩu cho ${users.length} tài khoản thành công.`);
+    } catch (e) {
+      console.error('❌ Lỗi khi reset mật khẩu:', e);
+      throw new Error('Reset mật khẩu thất bại');
+    }
+  }
+
 }

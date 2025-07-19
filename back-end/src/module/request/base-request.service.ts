@@ -100,7 +100,7 @@ export class BaseRequestService {
                 throw new Error('Request is not pending or approved');
             }
             data.status = 'Rejected';
-            data.dataReq.reason = reason || 'No reason provided';
+            data.reason = reason || 'No reason provided';
             data.timeResolve = 1;
             await data.save();
         }else if (status === "Cancelled") {
@@ -123,6 +123,17 @@ export class BaseRequestService {
                 throw new Error('Department not found');
             }
             await this.notificationService.notifyEmployee(department.managerId.toString(), message);
+        }catch (e) {
+            throw e;
+        }
+    }
+
+    async sendNotificationForEmpReq(data: CreateRequestDto, message: string){
+        try{
+            if(!data.employeeId){
+                throw new Error('EmployeeId not found');
+            }
+            await this.notificationService.notifyEmployee(data.employeeId.toString(), message);
         }catch (e) {
             throw e;
         }

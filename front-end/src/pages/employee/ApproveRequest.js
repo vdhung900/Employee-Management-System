@@ -50,6 +50,7 @@ import { formatDate } from '../../utils/format';
 import { STATUS } from '../../constants/Status';
 import Hr_ManageEmployee from "../../services/Hr_ManageEmployee";
 import { renderRequestDetailByType } from '../../utils/render';
+import {useLoading} from "../../contexts/LoadingContext";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -70,9 +71,17 @@ const ApproveRequest = () => {
     const [statsModalVisible, setStatsModalVisible] = useState(false);
     const [employeeStats, setEmployeeStats] = useState(null);
     const [selectedRequestForStats, setSelectedRequestForStats] = useState(null);
+    const {showLoading, hideLoading} = useLoading();
 
     useEffect(() => {
-        loadRequests(pagination.current, pagination.pageSize);
+        try{
+            showLoading()
+            loadRequests(pagination.current, pagination.pageSize);
+        }catch (e) {
+            message.error(e.message)
+        }finally {
+            hideLoading()
+        }
     }, []);
 
     const loadRequests = async (page = 1, size = 10) => {
@@ -247,6 +256,7 @@ const ApproveRequest = () => {
             cancelText: 'Hủy',
             async onOk() {
                 try {
+                    showLoading()
                     const response = await RequestService.approveRequest({ requestId: request._id, status });
                     if(response.success){
                         message.success(`Yêu cầu đã ${status === 'Approved' ? 'phê duyệt' : 'từ chối'} thành công!`);
@@ -260,6 +270,7 @@ const ApproveRequest = () => {
                 } catch (e) {
                     message.error(`Lỗi khi ${status === 'Approved' ? 'phê duyệt' : 'từ chối'} yêu cầu: ${e.message}`);
                 }finally {
+                    hideLoading()
                     loadRequests(pagination.current, pagination.pageSize);
                     closeDrawer();
                     handleStatsModalClose();
@@ -278,7 +289,8 @@ const ApproveRequest = () => {
                     <Avatar style={{ backgroundColor: '#722ed1' }}>{text.charAt(0)}</Avatar>
                     <div>
                         <div style={{ fontWeight: 'bold' }}>{text}</div>
-                        <Text type="secondary">{record.employeeId.email}</Text>
+                        <Text type="secondary">{record.employeeId.email}</Text><br/>
+                        <Text type="secondary">{record.departmentId?.name}</Text>
                     </div>
                 </Space>
             ),
@@ -313,8 +325,14 @@ const ApproveRequest = () => {
         },
         {
             title: 'Lí do',
-            dataIndex: ['dataReq', 'reason'],
             key: 'reason',
+            render: (value: any, record: any) => {
+                if (record.status === STATUS.REJECTED) {
+                    return record.reason || '—';
+                } else {
+                    return record.dataReq?.reason || '—';
+                }
+            }
         },
         {
             title: 'Trạng thái',
