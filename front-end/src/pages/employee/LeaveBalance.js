@@ -220,4 +220,4 @@ const LeaveBalance = () => {
   );
 };
 
-export default LeaveBalance; 
+export default LeaveBalance;

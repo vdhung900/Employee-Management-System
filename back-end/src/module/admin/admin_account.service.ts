@@ -279,7 +279,6 @@ export class AdminAccountService {
         if(!role) {
             throw new Error('Role không tồn tại');
         }
-        const code = await this.generateUserName(info.fullName);
       const newEmployee = await this.employeeModel.create({
         fullName: info.fullName,
         email: info.email,
@@ -293,7 +292,7 @@ export class AdminAccountService {
         bankAccount: null,
         bankName: null,
         contractId:  null,
-        code: code,
+        code: username,
         address: null,
         attachments: files
       });

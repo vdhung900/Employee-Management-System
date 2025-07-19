@@ -30,18 +30,18 @@ export class BaseRequestService {
     }
 
     async findAll() {
-        return await this.requestModel.find().populate('employeeId').populate('typeRequest').exec();
+        return await this.requestModel.find().populate('employeeId').populate('typeRequest').populate('departmentId').exec();
     }
 
     async findByFilterCode(departmentId: string, code: string){
-        return await this.requestModel.find({departmentId: new Types.ObjectId(departmentId)}).populate('employeeId').populate({
+        return await this.requestModel.find({departmentId: new Types.ObjectId(departmentId)}).populate('employeeId').populate('departmentId').populate({
             path: 'typeRequest',
             match: {code: {$ne: code}}
         }).exec();
     }
 
     async findById(id: any) {
-        return await this.requestModel.findById(id).populate('employeeId').populate('typeRequest').exec();
+        return await this.requestModel.findById(id).populate('employeeId').populate('typeRequest').populate('departmentId').exec();
     }
 
     async findByTypeCode(typeRequestId: Types.ObjectId) {

@@ -42,5 +42,7 @@ export enum STATUS {
     FUNERAL_LEAVE = 'FUNERAL_LEAVE',           // Nghỉ tang
     COMPENSATORY_LEAVE = 'COMPENSATORY_LEAVE', // Nghỉ bù
     REMOTE_WORK = 'REMOTE_WORK',               // Làm việc từ xa
-    OTHER = 'OTHER'                            // Nghỉ lý do khác
-}
+    OTHER = 'OTHER',                            // Nghỉ lý do khác
+    DU_THAO = '00',
+    DA_DUYET = '01'
+  }

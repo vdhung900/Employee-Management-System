@@ -66,6 +66,10 @@ import moment from 'moment';
 import UploadFileComponent from "../../components/file-list/FileList";
 import {STATUS} from "../../constants/Status";
 import Hr_ManageEmployee from "../../services/Hr_ManageEmployee";
+import SalaryService from "../../services/SalaryService";
+import '../../assets/styles/salaryTableCustom.css';
+import {useLoading} from "../../contexts/LoadingContext";
+import { renderRequestDetailByType } from '../../utils/render';
 
 const {Title, Text, Paragraph} = Typography;
 const {Option} = Select;
@@ -142,10 +146,10 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             <Form.Item
                                 name={['dataReq', 'hours']}
                                 label="Thời gian làm thêm"
-                                rules={[{ required: true, message: 'Vui lòng chọn thời gian!' }]}
+                                rules={[{required: true, message: 'Vui lòng chọn thời gian!'}]}
                             >
                                 <TimePicker.RangePicker
-                                    style={{ width: '100%' }}
+                                    style={{width: '100%'}}
                                     format="HH:mm"
                                 />
                             </Form.Item>
@@ -230,12 +234,12 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 <Select
                                     placeholder="Chọn phòng ban"
                                     onChange={(value) => {
-                                    const department = departments.find(dep => dep._id === value);
-                                    const matched = positions.find(pos =>
-                                        pos.name.toLowerCase().includes(department?.name.toLowerCase())
-                                    );
-                                    form.setFieldValue(['dataReq', 'position'], matched?._id);
-                                }}>
+                                        const department = departments.find(dep => dep._id === value);
+                                        const matched = positions.find(pos =>
+                                            pos.name.toLowerCase().includes(department?.name.toLowerCase())
+                                        );
+                                        form.setFieldValue(['dataReq', 'position'], matched?._id);
+                                    }}>
                                     {departments.map(department => (
                                         <Option key={department._id} value={department._id}>
                                             {department.name}
@@ -293,12 +297,12 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 name={['dataReq', 'month']}
                                 label="Tháng"
                                 rules={[
-                                    { required: true, message: 'Vui lòng chọn tháng' },
-                                    { type: 'number', min: 1, max: 12, message: 'Tháng phải từ 1-12' }
+                                    {required: true, message: 'Vui lòng chọn tháng'},
+                                    {type: 'number', min: 1, max: 12, message: 'Tháng phải từ 1-12'}
                                 ]}
                             >
                                 <Select placeholder="Chọn tháng">
-                                    {Array.from({ length: 12 }, (_, i) => (
+                                    {Array.from({length: 12}, (_, i) => (
                                         <Option key={i + 1} value={i + 1}>Tháng {i + 1}</Option>
                                     ))}
                                 </Select>
@@ -309,11 +313,11 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 name={['dataReq', 'year']}
                                 label="Năm"
                                 rules={[
-                                    { required: true, message: 'Vui lòng nhập năm' },
-                                    { type: 'number', min: 2000, message: 'Năm không hợp lệ' }
+                                    {required: true, message: 'Vui lòng nhập năm'},
+                                    {type: 'number', min: 2000, message: 'Năm không hợp lệ'}
                                 ]}
                             >
-                                <InputNumber style={{ width: '100%' }} placeholder="Nhập năm" />
+                                <InputNumber style={{width: '100%'}} placeholder="Nhập năm"/>
                             </Form.Item>
                         </Col>
                         <Col span={16}>
@@ -324,19 +328,19 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             </Form.Item>
                         </Col>
                     </Row>
-                    
+
                     <Form.List name={['dataReq', 'goals']}>
-                        {(fields, { add, remove }) => (
+                        {(fields, {add, remove}) => (
                             <>
-                                {fields.map(({ key, name, ...restField }) => (
-                                    <Row key={key} gutter={16} style={{ marginBottom: 8 }}>
+                                {fields.map(({key, name, ...restField}) => (
+                                    <Row key={key} gutter={16} style={{marginBottom: 8}}>
                                         <Col span={12}>
                                             <Form.Item
                                                 {...restField}
                                                 name={[name, 'title']}
-                                                rules={[{ required: true, message: 'Vui lòng nhập tiêu đề mục tiêu' }]}
+                                                rules={[{required: true, message: 'Vui lòng nhập tiêu đề mục tiêu'}]}
                                             >
-                                                <Input placeholder="Tiêu đề mục tiêu" />
+                                                <Input placeholder="Tiêu đề mục tiêu"/>
                                             </Form.Item>
                                         </Col>
                                         <Col span={10}>
@@ -344,25 +348,33 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                                 {...restField}
                                                 name={[name, 'targetValue']}
                                                 rules={[
-                                                    { required: true, message: 'Vui lòng nhập mức độ hoàn thành mục tiêu (tối đa 100)' },
-                                                    { type: 'number', max: 100, min: 0, message: 'Mức độ hoàn thành tối đa là 100' }
+                                                    {
+                                                        required: true,
+                                                        message: 'Vui lòng nhập mức độ hoàn thành mục tiêu (tối đa 100)'
+                                                    },
+                                                    {
+                                                        type: 'number',
+                                                        max: 100,
+                                                        min: 0,
+                                                        message: 'Mức độ hoàn thành tối đa là 100'
+                                                    }
                                                 ]}
                                             >
-                                                <InputNumber 
-                                                    style={{ width: '100%' }} 
+                                                <InputNumber
+                                                    style={{width: '100%'}}
                                                     placeholder="Mức độ hoàn thành mục tiêu (tối đa 100)"
                                                 />
                                             </Form.Item>
                                         </Col>
                                         <Col span={2}>
                                             <Button type="text" danger onClick={() => remove(name)}>
-                                                <DeleteOutlined />
+                                                <DeleteOutlined/>
                                             </Button>
                                         </Col>
                                     </Row>
                                 ))}
                                 <Form.Item>
-                                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
                                         Thêm mục tiêu
                                     </Button>
                                 </Form.Item>
@@ -388,7 +400,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             <Form.Item
                                 name={['dataReq', 'employeeId']}
                                 label="Nhân viên"
-                                rules={[{ required: true, message: 'Vui lòng chọn nhân viên' }]}
+                                rules={[{required: true, message: 'Vui lòng chọn nhân viên'}]}
                             >
                                 <Select
                                     placeholder="Chọn nhân viên"
@@ -398,7 +410,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                         const selectedEmployee = employees.find(emp => emp?._id === value);
                                         if (selectedEmployee) {
                                             const nextCoefficient = coefficients.find(coef => coef.rank === (selectedEmployee.salaryCoefficientId?.rank + 1));
-                                            if(!nextCoefficient) {
+                                            if (!nextCoefficient) {
                                                 message.error("Nhân viên đã đạt đến mức lương tối đa, vui lòng thử lại với nhân viên khác!")
                                             }
                                             form.setFieldsValue({
@@ -429,7 +441,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 name={['dataReq', 'department']}
                                 label="Bộ phận"
                             >
-                                <Input disabled />
+                                <Input disabled/>
                             </Form.Item>
                         </Col>
                     </Row>
@@ -439,11 +451,11 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 name={['dataReq', 'currentCoefficient']}
                                 label="Hệ số lương hiện tại"
                                 rules={[
-                                    { required: true, message: 'Vui lòng nhập hệ số lương hiện tại' },
+                                    {required: true, message: 'Vui lòng nhập hệ số lương hiện tại'},
                                 ]}
                             >
                                 <InputNumber
-                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
                                     disabled
                                     precision={2}
                                     step={0.01}
@@ -455,11 +467,11 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 name={['dataReq', 'currentSalary']}
                                 label="Số lương hiện tại"
                                 rules={[
-                                    { required: true, message: 'Vui lòng nhập số lương hiện tại' },
+                                    {required: true, message: 'Vui lòng nhập số lương hiện tại'},
                                 ]}
                             >
                                 <InputNumber
-                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
                                     precision={2}
                                     step={0.01}
                                     disabled
@@ -473,11 +485,11 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 name={['dataReq', 'proposedCoefficient']}
                                 label="Hệ số lương đề xuất"
                                 rules={[
-                                    { required: true, message: 'Vui lòng nhập hệ số lương hiện tại' },
+                                    {required: true, message: 'Vui lòng nhập hệ số lương hiện tại'},
                                 ]}
                             >
                                 <InputNumber
-                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
                                     disabled
                                     precision={2}
                                     step={0.01}
@@ -489,11 +501,11 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 name={['dataReq', 'proposedSalary']}
                                 label="Số lương đề xuất"
                                 rules={[
-                                    { required: true, message: 'Vui lòng nhập hệ số lương đề xuất' },
+                                    {required: true, message: 'Vui lòng nhập hệ số lương đề xuất'},
                                 ]}
                             >
                                 <InputNumber
-                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
                                     precision={2}
                                     step={0.01}
                                     disabled
@@ -514,7 +526,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 label="Ngày hiệu lực"
                             >
                                 <DatePicker
-                                    style={{ width: '100%' }}
+                                    style={{width: '100%'}}
                                     format="DD/MM/YYYY"
                                     placeholder="Chọn ngày hiệu lực"
                                     disabled
@@ -526,12 +538,12 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                         name={['dataReq', 'reason']}
                         label="Lý do đề xuất"
                         rules={[
-                            { required: true, message: 'Vui lòng nhập lý do đề xuất' },
-                            { min: 10, message: 'Lý do phải có ít nhất 10 ký tự' }
+                            {required: true, message: 'Vui lòng nhập lý do đề xuất'},
+                            {min: 10, message: 'Lý do phải có ít nhất 10 ký tự'}
                         ]}
                     >
-                        <Input.TextArea 
-                            rows={4} 
+                        <Input.TextArea
+                            rows={4}
                             placeholder="Nhập lý do đề xuất tăng lương (thành tích, đóng góp, kỹ năng mới,...)"
                         />
                     </Form.Item>
@@ -558,7 +570,6 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
     const selectedForm = formFields[selectedType];
     if (!selectedForm) return null;
 
-    // Nếu là MATERNITY_LEAVE, thêm logic tự động set endDate
     if (requestType === 'MATERNITY_LEAVE') {
         return (
             <>
@@ -634,22 +645,29 @@ const Requests = () => {
     const [coefficients, setCoefficients] = useState([]);
     const [isEdit, setIsEdit] = useState(false);
     const [fileResponse, setFileResponse] = useState([]);
+    const [salarySlips, setSalarySlips] = useState([]);
+    const [editingRowId, setEditingRowId] = useState(null);
+    const [editedRows, setEditedRows] = useState({});
+    const {showLoading, hideLoading} = useLoading();
 
 
     useEffect(() => {
         try {
+            showLoading()
             loadTypeReq();
             loadDataReq();
             loadEmployees();
         } catch (e) {
             console.log(e, 'test');
+        }finally {
+            hideLoading()
         }
     }, []);
 
     const loadDepartments = async () => {
         try {
             const response = await admin_account.getAllDepartments();
-            if(response.success){
+            if (response.success) {
                 setDepartments(response.data);
             }
         } catch (e) {
@@ -660,7 +678,7 @@ const Requests = () => {
     const loadPositions = async () => {
         try {
             const response = await admin_account.getAllPositions();
-            if(response.success){
+            if (response.success) {
                 setPositions(response.data);
             }
         } catch (e) {
@@ -701,10 +719,41 @@ const Requests = () => {
         }
     }
 
+    const loadSalarySlip = async () => {
+        try {
+            const date = new Date();
+            const responseSal = await SalaryService.getSalaryCaculatedByMonth(date);
+            console.log(responseSal.success);
+            if (responseSal.success) {
+                const data = responseSal.data;
+                if(data.length > 0){
+                  setSalarySlips(data || []);
+                }else{
+                  calculateSalary();
+                }
+            } else {
+                message.error("Lỗi khi lấy phiếu lương!");
+            }
+        } catch (e) {
+            message.error('Error loading salary slip');
+        }
+    };
+
+    const calculateSalary = async () => {
+        try {
+            const responseCal = await SalaryService.caculateSalary();
+            if (responseCal.success) {
+              message.success("Tính lương thành công, vui lòng tải lại trang để xem kết quả!");
+            }
+        } catch (e) {
+            message.error('Error calculating salary');
+        }
+    }
+
     const loadEmployees = async () => {
         try {
             const response = await Hr_ManageEmployee.getEmployeeSalary();
-            if(response.success){
+            if (response.success) {
                 setEmployees(response.data);
             }
         } catch (e) {
@@ -713,15 +762,15 @@ const Requests = () => {
     }
 
     const loadCoefficient = async () => {
-        try{
+        try {
             const response = await Hr_ManageEmployee.getAllCoefficients();
-            if(response.success){
+            if (response.success) {
                 let data = response.data;
                 data.sort((a, b) => a.rank - b.rank);
                 console.log(data)
                 setCoefficients(data);
             }
-        }catch (e) {
+        } catch (e) {
             message.error('Error loading coefficient');
         }
     }
@@ -820,7 +869,7 @@ const Requests = () => {
                         reason: request.dataReq.reason || ''
                     }
                 })
-            }else if(request.typeRequest.code === STATUS.OVERTIME_REQUEST){
+            } else if (request.typeRequest.code === STATUS.OVERTIME_REQUEST) {
                 let hoursValue;
                 if (request.dataReq.hours && Array.isArray(request.dataReq.hours)) {
                     try {
@@ -839,7 +888,7 @@ const Requests = () => {
                         reason: request.dataReq.reason || ''
                     }
                 })
-            }else if(request.typeRequest.code === STATUS.TARGET_REQUEST){
+            } else if (request.typeRequest.code === STATUS.TARGET_REQUEST) {
                 form.setFieldsValue({
                     dataReq: {
                         month: request.dataReq.month || '',
@@ -848,7 +897,7 @@ const Requests = () => {
                         reason: request.dataReq.reason || ''
                     }
                 })
-            }else if(request.typeRequest.code === STATUS.SALARY_INCREASE){
+            } else if (request.typeRequest.code === STATUS.SALARY_INCREASE) {
                 form.setFieldsValue({
                     dataReq: {
                         employeeId: request.dataReq.employeeId || '',
@@ -882,14 +931,18 @@ const Requests = () => {
                     time ? time.format('HH:mm') : null
                 ).filter(time => time !== null);
             }
-            if(fileResponse.length > 0){
+            if (fileResponse.length > 0) {
                 body.attachments = fileResponse;
-            }else{
+            } else {
                 body.attachments = [];
+            }
+            // Nếu là SALARY_APPROVED thì chỉ gửi mảng các _id phiếu lương
+            if (body.typeCode === STATUS.SALARY_APPROVED) {
+                body.dataReq = salarySlips.map(slip => slip._id);
             }
             if (body.requestId) {
                 const response = await requestService.updateRequest(body);
-                if(response.success) {
+                if (response.success) {
                     message.success(response.message);
                 }
             } else {
@@ -898,13 +951,13 @@ const Requests = () => {
                 body.employeeId = user.employeeId;
                 body.departmentId = employee.departmentId._id;
                 const response = await requestService.createRequest(body);
-                if(response.success) {
+                if (response.success) {
                     message.success(response.message);
                 }
             }
         } catch (e) {
             message.error("Lỗi khi lưu thông tin")
-        }finally {
+        } finally {
             loadDataReq();
             setIsModalVisible(false);
             setFileResponse([])
@@ -915,12 +968,15 @@ const Requests = () => {
 
     const handleRequestTypeChange = (value) => {
         setSelectedRequestType(value);
-        if(value === STATUS.ACCOUNT_CREATE_REQUEST){
+        if (value === STATUS.ACCOUNT_CREATE_REQUEST) {
             loadPositions();
             loadDepartments();
-        }else if (value === STATUS.SALARY_INCREASE){
+        } else if (value === STATUS.SALARY_INCREASE) {
             loadEmployees();
             loadCoefficient();
+        }
+        if (value === STATUS.SALARY_APPROVED) {
+            loadSalarySlip();
         }
         const formFields = {
             LEAVE_REQUEST: {
@@ -991,7 +1047,7 @@ const Requests = () => {
             okType: 'danger',
             cancelText: 'Đóng',
             async onOk() {
-                try{
+                try {
                     let body = request;
                     body.requestId = request._id;
                     body.status = "Cancelled";
@@ -1002,16 +1058,76 @@ const Requests = () => {
                             title: 'Yêu cầu đã được hủy',
                             content: `Yêu cầu ${request.typeRequest.name} đã được hủy thành công.`,
                         });
-                    }else{
+                    } else {
                         message.error(response.message);
                     }
-                }catch (e) {
+                } catch (e) {
                     console.log(e)
                     message.error("Lỗi khi hủy yêu cầu");
                 }
             },
         });
     };
+
+    const salarySlipColumns = [
+        {title: 'STT', dataIndex: 'index', key: 'index', render: (text, record, index) => index + 1},
+        {
+            title: 'Nhân viên',
+            dataIndex: ['employeeId', 'fullName'],
+            key: 'employee',
+            align: 'center',
+            render: (text, record) => <span>{record.employeeId?.fullName}</span>
+        },
+        {
+            title: 'Lương cơ bản',
+            dataIndex: 'baseSalary',
+            key: 'baseSalary',
+            align: 'right',
+            render: text => <span>{formatNumber(text)}</span>
+        },
+        {
+            title: 'Hệ số lương',
+            dataIndex: 'salaryCoefficient',
+            key: 'salaryCoefficient',
+            align: 'right',
+            render: text => <span>{text}</span>
+        },
+        {
+            title: 'Tổng lương cơ bản',
+            dataIndex: 'totalBaseSalary',
+            key: 'totalBaseSalary',
+            align: 'right',
+            render: text => <span style={{fontWeight: 'bold', color: '#1677ff'}}>{formatNumber(text)}</span>
+        },
+        {
+            title: 'Bảo hiểm',
+            dataIndex: 'insurance',
+            key: 'insurance',
+            align: 'right',
+            render: text => <span>{formatNumber(text)}</span>
+        },
+        {
+            title: 'Khấu trừ gia cảnh',
+            dataIndex: 'familyDeduction',
+            key: 'familyDeduction',
+            align: 'right',
+            render: text => <span>{formatNumber(text)}</span>
+        },
+        {
+            title: 'Thuế TNCN',
+            dataIndex: 'personalIncomeTax',
+            key: 'personalIncomeTax',
+            align: 'right',
+            render: text => <span>{formatNumber(text)}</span>
+        },
+        {
+            title: 'Lương thực nhận',
+            dataIndex: 'totalSalary',
+            key: 'totalSalary',
+            align: 'right',
+            render: text => <span style={{fontWeight: 'bold', color: '#1677ff'}}>{formatNumber(text)}</span>
+        },
+    ];
 
     const columns = [
         {
@@ -1373,7 +1489,7 @@ const Requests = () => {
                         {selectedRequest ? 'Lưu thay đổi' : 'Gửi yêu cầu'}
                     </Button>,
                 ]}
-                width={800}
+                width={1100}
             >
                 <Form
                     form={form}
@@ -1437,6 +1553,20 @@ const Requests = () => {
                         <>
                             {renderRequestTypeFields()}
                         </>
+                    )}
+                    {selectedRequestType === STATUS.SALARY_APPROVED && salarySlips.length > 0 && (
+                        <div style={{overflowX: 'auto', width: '100%'}}>
+                            <Table
+                                dataSource={salarySlips}
+                                columns={getDynamicSalarySlipColumns(salarySlips)}
+                                rowKey="_id"
+                                pagination={false}
+                                bordered
+                                size="middle"
+                                className="salary-slip-table"
+                                style={{borderRadius: 16, background: '#fff', minWidth: 900}}
+                            />
+                        </div>
                     )}
                 </Form>
             </Modal>
@@ -1567,159 +1697,55 @@ const Requests = () => {
     );
 };
 
-// Hàm render chi tiết dataReq theo từng loại yêu cầu
-function renderRequestDetailByType(request) {
-    if (!request || !request.dataReq) return null;
-    const { typeRequest, dataReq } = request;
-    const labelStyle = { fontWeight: 'bold', marginRight: 8 };
-    const valueStyle = { marginBottom: 8 };
-    const { Text } = Typography;
-    const iconStyle = { marginRight: 6, color: '#722ed1' };
-    // Icon lớn đầu Card
-    const cardIconStyle = { fontSize: 32, color: '#722ed1', marginBottom: 8 };
-    let cardIcon = null;
-    switch (typeRequest.code) {
-        case 'LEAVE_REQUEST':
-        case 'MARRIAGE_LEAVE':
-        case 'MATERNITY_LEAVE':
-        case 'SICK_LEAVE':
-        case 'UNPAID_LEAVE':
-        case 'PATERNITY_LEAVE':
-        case 'REMOTE_WORK':
-        case 'FUNERAL_LEAVE':
-            cardIcon = <CalendarOutlined style={cardIconStyle}/>;
-            break;
-        case 'OVERTIME_REQUEST':
-            cardIcon = <ClockCircleOutlined style={cardIconStyle}/>;
-            break;
-        case 'ACCOUNT_CREATE_REQUEST':
-            cardIcon = <UserOutlined style={cardIconStyle}/>;
-            break;
-        case 'TARGET_REQUEST':
-            cardIcon = <StarOutlined style={cardIconStyle}/>;
-            break;
-        case 'SALARY_INCREASE':
-            cardIcon = <DollarOutlined style={cardIconStyle}/>;
-            break;
-        default:
-            cardIcon = <FileTextOutlined style={cardIconStyle}/>;
-    }
-    switch (typeRequest.code) {
-        case 'LEAVE_REQUEST':
-        case 'MARRIAGE_LEAVE':
-        case 'MATERNITY_LEAVE':
-        case 'SICK_LEAVE':
-        case 'UNPAID_LEAVE':
-        case 'PATERNITY_LEAVE':
-        case 'REMOTE_WORK':
-        case 'FUNERAL_LEAVE':
-            return (
-                <Card size="small" bordered style={{ background: '#fafcff', marginBottom: 12 }}>
-                    <div style={{textAlign: 'center'}}>{cardIcon}</div>
-                    <Row gutter={[8, 8]}>
-                        <Col span={12}>
-                            <Text strong><CalendarOutlined style={iconStyle}/>Ngày bắt đầu nghỉ:</Text>
-                            <br/>{dataReq.startDate ? formatDate(dataReq.startDate) : ''}
-                        </Col>
-                        <Col span={12}>
-                            <Text strong><CalendarOutlined style={iconStyle}/>Ngày kết thúc nghỉ:</Text>
-                            <br/>{dataReq.endDate ? formatDate(dataReq.endDate) : ''}
-                        </Col>
-                        <Col span={24}>
-                            <Text strong><FileTextOutlined style={iconStyle}/>Lý do:</Text>
-                            <br/>{dataReq.reason}
-                        </Col>
-                    </Row>
-                </Card>
-            );
-        case 'OVERTIME_REQUEST':
-            return (
-                <Card size="small" bordered style={{ background: '#fafcff', marginBottom: 12 }}>
-                    <div style={{textAlign: 'center'}}>{cardIcon}</div>
-                    <Row gutter={[8, 8]}>
-                        <Col span={12}>
-                            <Text strong><CalendarOutlined style={iconStyle}/>Ngày tăng ca:</Text>
-                            <br/>{dataReq.startDate ? formatDate(dataReq.startDate) : ''}
-                        </Col>
-                        <Col span={12}>
-                            <Text strong><ClockCircleOutlined style={iconStyle}/>Thời gian làm thêm:</Text>
-                            <br/>{Array.isArray(dataReq.hours) ? dataReq.hours.join(' - ') : ''}
-                        </Col>
-                        <Col span={24}>
-                            <Text strong><FileTextOutlined style={iconStyle}/>Lý do:</Text>
-                            <br/>{dataReq.reason}
-                        </Col>
-                    </Row>
-                </Card>
-            );
-        case 'ACCOUNT_CREATE_REQUEST':
-            return (
-                <Card size="small" bordered style={{ background: '#fafcff', marginBottom: 12 }}>
-                    <div style={{textAlign: 'center'}}>{cardIcon}</div>
-                    <Row gutter={[8, 8]}>
-                        <Col span={12}><Text strong><UserOutlined style={iconStyle}/>Họ và tên:</Text><br/>{dataReq.fullName}</Col>
-                        <Col span={12}><Text strong><CalendarOutlined style={iconStyle}/>Ngày bắt đầu làm việc:</Text><br/>{dataReq.startDate ? formatDate(dataReq.startDate) : ''}</Col>
-                        <Col span={12}><Text strong><MailOutlined style={iconStyle}/>Email:</Text><br/>{dataReq.email}</Col>
-                        <Col span={12}><Text strong><PhoneOutlined style={iconStyle}/>Số điện thoại:</Text><br/>{dataReq.phone}</Col>
-                        <Col span={12}><Text strong><TagOutlined style={iconStyle}/>Phòng ban:</Text><br/>{dataReq.department}</Col>
-                        <Col span={12}><Text strong><TagOutlined style={iconStyle}/>Chức vụ:</Text><br/>{dataReq.position}</Col>
-                        {dataReq.note && <Col span={24}><Text strong><FileTextOutlined style={iconStyle}/>Ghi chú:</Text><br/>{dataReq.note}</Col>}
-                        <Col span={24}><Text strong><FileTextOutlined style={iconStyle}/>Lý do:</Text><br/>{dataReq.reason}</Col>
-                    </Row>
-                </Card>
-            );
-        case 'TARGET_REQUEST':
-            return (
-                <Card size="small" bordered style={{ background: '#fafcff', marginBottom: 12 }}>
-                    <div style={{textAlign: 'center'}}>{cardIcon}</div>
-                    <Row gutter={[8, 8]}>
-                        <Col span={12}><Text strong><CalendarOutlined style={iconStyle}/>Tháng:</Text><br/>{dataReq.month}</Col>
-                        <Col span={12}><Text strong><CalendarOutlined style={iconStyle}/>Năm:</Text><br/>{dataReq.year}</Col>
-                        <Col span={24}>
-                            <Text strong><FileTextOutlined style={iconStyle}/>Mục tiêu:</Text>
-                            <List
-                                size="small"
-                                bordered
-                                style={{ marginTop: 8, background: '#fff' }}
-                                dataSource={dataReq.goals || []}
-                                renderItem={goal => (
-                                    <List.Item>
-                                        <Text strong>Tiêu đề:</Text> {goal.title} <Text strong>- Mức độ hoàn thành:</Text> {goal.targetValue}
-                                    </List.Item>
-                                )}
-                            />
-                        </Col>
-                        <Col span={24}><Text strong><FileTextOutlined style={iconStyle}/>Lý do:</Text><br/>{dataReq.reason}</Col>
-                    </Row>
-                </Card>
-            );
-        case 'SALARY_INCREASE':
-            return (
-                <Card size="small" bordered style={{ background: '#fafcff', marginBottom: 12 }}>
-                    <div style={{textAlign: 'center'}}>{cardIcon}</div>
-                    <Row gutter={[8, 8]}>
-                        <Col span={12}><Text strong><UserOutlined style={iconStyle}/>Nhân viên:</Text><br/>{dataReq.employeeId}</Col>
-                        <Col span={12}><Text strong><TagOutlined style={iconStyle}/>Bộ phận:</Text><br/>{dataReq.department}</Col>
-                        <Col span={12}><Text strong><RiseOutlined style={iconStyle}/>Hệ số lương hiện tại:</Text><br/>{dataReq.currentCoefficient}</Col>
-                        <Col span={12}><Text strong><DollarOutlined style={iconStyle}/>Số lương hiện tại:</Text><br/>{dataReq.currentSalary}</Col>
-                        <Col span={12}><Text strong><RiseOutlined style={iconStyle}/>Hệ số lương đề xuất:</Text><br/>{dataReq.proposedCoefficient}</Col>
-                        <Col span={12}><Text strong><DollarOutlined style={iconStyle}/>Số lương đề xuất:</Text><br/>{dataReq.proposedSalary}</Col>
-                        <Col span={12}><Text strong><CalendarOutlined style={iconStyle}/>Ngày hiệu lực:</Text><br/>{dataReq.effectiveDate ? formatDate(dataReq.effectiveDate) : ''}</Col>
-                        <Col span={24}><Text strong><FileTextOutlined style={iconStyle}/>Lý do đề xuất:</Text><br/>{dataReq.reason}</Col>
-                    </Row>
-                </Card>
-            );
-        default:
-            // Hiển thị tất cả các trường còn lại nếu không khớp loại
-            return (
-                <Card size="small" bordered style={{ background: '#fafcff', marginBottom: 12 }}>
-                    <div style={{textAlign: 'center'}}>{cardIcon}</div>
-                    {Object.entries(dataReq).map(([key, value]) => (
-                        <div key={key} style={valueStyle}><Text strong>{key}:</Text> {String(value)}</div>
-                    ))}
-                </Card>
-            );
-    }
+const salarySlipFieldsToShow = [
+    'employeeId',
+    'baseSalary',
+    'salaryCoefficient',
+    'totalBaseSalary',
+    'insurance',
+    'familyDeduction',
+    'personalIncomeTax',
+    'latePenalty',
+    'unpaidLeave',
+    'otHoliday',
+    'otWeekday',
+    'otWeekend',
+    'totalSalary',
+];
+
+const salarySlipColumnNameMap = {
+    employeeId: 'Nhân viên',
+    baseSalary: 'Lương cơ bản',
+    salaryCoefficient: 'Hệ số lương',
+    totalBaseSalary: 'Tổng lương cơ bản',
+    insurance: 'Bảo hiểm',
+    familyDeduction: 'Khấu trừ gia cảnh',
+    personalIncomeTax: 'Thuế TNCN',
+    latePenalty: 'Phạt đi muộn',
+    unpaidLeave: 'Nghỉ không lương',
+    otHoliday: 'OT ngày lễ',
+    otWeekday: 'OT ngày thường',
+    otWeekend: 'OT cuối tuần',
+    totalSalary: 'Lương thực nhận',
+};
+
+function getDynamicSalarySlipColumns(salarySlips) {
+    if (!Array.isArray(salarySlips) || salarySlips.length === 0) return [];
+    return [
+        { title: 'STT', dataIndex: 'index', key: 'index', render: (text, record, index) => index + 1 },
+        ...salarySlipFieldsToShow.map(key => ({
+            title: salarySlipColumnNameMap[key] || key,
+            dataIndex: key,
+            key,
+            align: key === 'employeeId' ? 'left' : 'right',
+            render: (value, record) => {
+                if (key === 'employeeId') {
+                    return record.employeeId?.fullName || '';
+                }
+                return value;
+            }
+        }))
+    ];
 }
 
 export default Requests;

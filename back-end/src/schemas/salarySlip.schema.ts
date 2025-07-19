@@ -1,9 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import {BaseSchema} from "./base.schema";
+import {Employees} from "./employees.schema";
+
+export type SalarySlipDocument = SalarySlip & Document;
 
 @Schema({ timestamps: true })
-export class SalarySlip extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'Employee', required: true })
+export class SalarySlip extends BaseSchema {
+  @Prop({ type: Types.ObjectId, ref: Employees.name, required: true })
   employeeId: Types.ObjectId;
 
   @Prop({ required: true })
@@ -47,6 +51,9 @@ export class SalarySlip extends Document {
 
   @Prop()
   totalSalary: number;
+
+  @Prop({ default: '01' }) // 01: Chưa phê duyệt, 02: Đã phê duyệt
+  status: string;
   
 }
 

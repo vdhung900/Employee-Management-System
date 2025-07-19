@@ -17,6 +17,7 @@ import {
     Statistic,
     Progress,
     Drawer, message,
+    List,
 } from 'antd';
 import {
     SearchOutlined,
@@ -36,6 +37,11 @@ import {
     IdcardOutlined,
     FilterOutlined,
     DownloadOutlined, RiseOutlined,
+    PhoneOutlined,
+    TagOutlined,
+    StarOutlined,
+    DollarOutlined,
+    HistoryOutlined,
 } from '@ant-design/icons';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
@@ -43,6 +49,7 @@ import RequestService from '../../services/RequestService';
 import { formatDate } from '../../utils/format';
 import { STATUS } from '../../constants/Status';
 import Hr_ManageEmployee from "../../services/Hr_ManageEmployee";
+import { renderRequestDetailByType } from '../../utils/render';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -114,7 +121,7 @@ const ApproveRequest = () => {
 
     const renderPerformanceChart = (data) => {
         if (!data || !data.last6MonthsScores || data.last6MonthsScores.length === 0) return null;
-        
+
         const chartData = data.last6MonthsScores.map(item => ({
             month: item.month.split('-')[1],
             score: item.score
@@ -333,9 +340,9 @@ const ApproveRequest = () => {
                     </Tooltip>
                     {record.typeRequest?.code === STATUS.SALARY_INCREASE && record.status === STATUS.PENDING ? (
                         <Tooltip title="Thống kê nhân viên">
-                            <Button 
-                                type="primary" 
-                                icon={<RiseOutlined />} 
+                            <Button
+                                type="primary"
+                                icon={<RiseOutlined />}
                                 onClick={() => analyzeEmployee(record.dataReq.employeeId, record)}
                             />
                         </Tooltip>
@@ -343,16 +350,16 @@ const ApproveRequest = () => {
                         record.status === STATUS.PENDING && (
                             <>
                                 <Tooltip title="Phê duyệt">
-                                    <Button 
-                                        type="text" 
-                                        icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />} 
+                                    <Button
+                                        type="text"
+                                        icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
                                         onClick={() => handleApprove(record, STATUS.APPROVED)}
                                     />
                                 </Tooltip>
                                 <Tooltip title="Từ chối">
-                                    <Button 
-                                        type="text" 
-                                        icon={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />} 
+                                    <Button
+                                        type="text"
+                                        icon={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
                                         onClick={() => handleApprove(record, STATUS.REJECTED)}
                                     />
                                 </Tooltip>
@@ -372,9 +379,9 @@ const ApproveRequest = () => {
         <div style={{ padding: '24px' }}>
             <Row gutter={[24, 24]}>
                 <Col span={24}>
-                    <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: 24
                     }}>
@@ -409,7 +416,7 @@ const ApproveRequest = () => {
                                 value={pendingRequests}
                                 valueStyle={{ color: '#1890ff', fontSize: 28 }}
                             />
-                            <Progress 
+                            <Progress
                                 percent={requests.length ? Math.round((pendingRequests / requests.length) * 100) : 0}
                                 strokeColor="#1890ff"
                                 size="small"
@@ -432,7 +439,7 @@ const ApproveRequest = () => {
                                 value={approvedRequests}
                                 valueStyle={{ color: '#52c41a', fontSize: 28 }}
                             />
-                            <Progress 
+                            <Progress
                                 percent={requests.length ? Math.round((approvedRequests / requests.length) * 100) : 0}
                                 strokeColor="#52c41a"
                                 size="small"
@@ -455,7 +462,7 @@ const ApproveRequest = () => {
                                 value={rejectedRequests}
                                 valueStyle={{ color: '#ff4d4f', fontSize: 28 }}
                             />
-                            <Progress 
+                            <Progress
                                 percent={requests.length ? Math.round((rejectedRequests / requests.length) * 100) : 0}
                                 strokeColor="#ff4d4f"
                                 size="small"
@@ -468,11 +475,11 @@ const ApproveRequest = () => {
                 <Col span={24}>
                     <ThreeDContainer>
                         <Card bordered={false} style={{ borderRadius: 8 }}>
-                            <div style={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
                                 alignItems: 'center',
-                                marginBottom: 24 
+                                marginBottom: 24
                             }}>
                                 <Space size={16}>
                                     <Input.Search
@@ -561,18 +568,8 @@ const ApproveRequest = () => {
                                 </Card>
                             </Col>
                         </Row>
-                        <Divider orientation="left">Thông tin yêu cầu</Divider>
-                        <Row gutter={[16, 16]}>
-                            <Col span={12}>
-                                <Statistic title="Loại yêu cầu" value={selectedRequest.typeRequest.name} valueStyle={{ fontSize: '16px' }} />
-                            </Col>
-                            <Col span={12}>
-                                <Statistic title="Mức độ ưu tiên" value={getPriorityLabel(selectedRequest.priority)} valueStyle={{ fontSize: '16px', color: getPriorityColor(selectedRequest.priority) }} />
-                            </Col>
-                            <Col span={12}>
-                                <Statistic title="Ngày gửi" value={formatDate(selectedRequest.createdAt)} valueStyle={{ fontSize: '16px' }} />
-                            </Col>
-                        </Row>
+                        <Divider orientation="left">Chi tiết yêu cầu</Divider>
+                        {renderRequestDetailByType(selectedRequest)}
                         <Divider orientation="left">Ghi chú</Divider>
                         <Paragraph>{selectedRequest.note}</Paragraph>
                     </>
