@@ -199,4 +199,45 @@ export class SalaryCalculationService {
   async getSalarySlipById(id: string) {
     return this.salarySlipModel.findById(id).exec();
   }
+
+  // Lấy tất cả salarySlip của tất cả nhân viên
+  async getAllSalarySlips() {
+    return this.salarySlipModel.find()
+      .populate({
+        path: 'employeeId',
+        model: 'Employees',
+        select: 'fullName code email phone departmentId positionId'
+      })
+      .sort({ year: -1, month: -1, createdAt: -1 })
+      .exec();
+  }
+
+  // Lấy salarySlip theo departmentId
+  async getSalarySlipsByDepartment(departmentId: string) {
+    return this.salarySlipModel.aggregate([
+      {
+        $lookup: {
+          from: 'employees',
+          localField: 'employeeId',
+          foreignField: '_id',
+          as: 'employee'
+        }
+      },
+      {
+        $unwind: '$employee'
+      },
+      {
+        $match: {
+          'employee.departmentId': new Types.ObjectId(departmentId)
+        }
+      },
+      {
+        $sort: {
+          year: -1,
+          month: -1,
+          createdAt: -1
+        }
+      }
+    ]).exec();
+  }
 } 
