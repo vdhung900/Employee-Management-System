@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Card,
     Typography,
@@ -13,7 +13,9 @@ import {
     Space,
     DatePicker,
     Tooltip,
-    Progress
+    Progress,
+    Modal,
+    Descriptions
 } from 'antd';
 import {
     FileTextOutlined,
@@ -25,163 +27,144 @@ import {
     DollarOutlined,
     ThunderboltOutlined,
     CoffeeOutlined,
-    TeamOutlined
+    TeamOutlined,
+    SafetyCertificateOutlined,
+    PercentageOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import 'dayjs/locale/vi';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
+dayjs.extend(advancedFormat);
+dayjs.locale('vi');
+import SalarySlipService from '../../services/SalarySlipService';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
 
-// Sample payroll data
-const payrollHistoryData = [
-    {
-        id: 1,
-        period: 'November 2023',
-        startDate: '2023-11-01',
-        endDate: '2023-11-30',
-        workDays: 22,
-        actualWorkDays: 21,
-        overtime: 5,
-        basicSalary: 5000,
-        overtimePay: 250,
-        allowances: 300,
-        deductions: 150,
-        tax: 450,
-        netSalary: 4950,
-        status: 'paid',
-        paymentDate: '2023-11-30',
-    },
-    {
-        id: 2,
-        period: 'October 2023',
-        startDate: '2023-10-01',
-        endDate: '2023-10-31',
-        workDays: 22,
-        actualWorkDays: 22,
-        overtime: 8,
-        basicSalary: 5000,
-        overtimePay: 400,
-        allowances: 300,
-        deductions: 0,
-        tax: 470,
-        netSalary: 5230,
-        status: 'paid',
-        paymentDate: '2023-10-31',
-    },
-    {
-        id: 3,
-        period: 'September 2023',
-        startDate: '2023-09-01',
-        endDate: '2023-09-30',
-        workDays: 21,
-        actualWorkDays: 19,
-        overtime: 3,
-        basicSalary: 5000,
-        overtimePay: 150,
-        allowances: 300,
-        deductions: 200,
-        tax: 430,
-        netSalary: 4820,
-        status: 'paid',
-        paymentDate: '2023-09-30',
-    },
-    {
-        id: 4,
-        period: 'August 2023',
-        startDate: '2023-08-01',
-        endDate: '2023-08-31',
-        workDays: 23,
-        actualWorkDays: 23,
-        overtime: 10,
-        basicSalary: 5000,
-        overtimePay: 500,
-        allowances: 300,
-        deductions: 0,
-        tax: 480,
-        netSalary: 5320,
-        status: 'paid',
-        paymentDate: '2023-08-31',
-    },
-];
-
-// Sample current month attendance data
-const currentMonthData = {
-    workDaysTotal: 22,
-    workDaysCompleted: 15,
-    workDaysRemaining: 7,
-    leaveTaken: 1,
-    overtimeHours: 4,
-    punctuality: 95, // percentage
-};
+// Dữ liệu thực tế sẽ lấy từ backend
 
 const EmployeePayroll = () => {
-    const [selectedMonth, setSelectedMonth] = useState('November 2023');
-    const [selectedPayslip, setSelectedPayslip] = useState(payrollHistoryData[0]);
+    const [payrollHistoryData, setPayrollHistoryData] = useState([]);
+    const [selectedPayslip, setSelectedPayslip] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [detailModalVisible, setDetailModalVisible] = useState(false);
+    const [detailPayslip, setDetailPayslip] = useState(null);
+
+    useEffect(() => {
+        async function fetchData() {
+            setLoading(true);
+            try {
+                const data = await SalarySlipService.getMySalarySlips();
+                // console.log(data);
+                // Map dữ liệu backend về format frontend cần
+                const mapped = (data?.data || []).map(item => {
+                    const period = `Tháng ${item.month} ${item.year}`;
+                    return {
+                        id: item._id,
+                        period,
+                        month: item.month,
+                        year: item.year,
+                        baseSalary: item.baseSalary,
+                        salaryCoefficient: item.salaryCoefficient,
+                        totalBaseSalary: item.totalBaseSalary,
+                        unpaidLeave: item.unpaidLeave,
+                        latePenalty: item.latePenalty,
+                        otWeekday: item.otWeekday,
+                        otWeekend: item.otWeekend,
+                        totalOtHour: item.totalOtHour,
+                        totalOtSalary: item.totalOtSalary,
+                        insurance: item.insurance,
+                        personalIncomeTax: item.personalIncomeTax,
+                        familyDeduction: item.familyDeduction,
+                        netSalary: item.netSalary,
+                        status: item.status === '00' ? 'pending' : 'paid',
+                        paymentDate: item.updatedAt || '',
+                        totalTaxableIncome: item.totalTaxableIncome,
+                    };
+                });
+                setPayrollHistoryData(mapped);
+                console.log(mapped);
+                setSelectedPayslip(mapped[0] || null);
+            } catch (e) {
+                setPayrollHistoryData([]);
+                setSelectedPayslip(null);
+            }
+            setLoading(false);
+        }
+        fetchData();
+    }, []);
 
     const handleMonthChange = (value) => {
-        setSelectedMonth(value);
         setSelectedPayslip(payrollHistoryData.find(item => item.period === value));
-    };
-
-    const exportPayslip = (format) => {
-        console.log(`Exporting payslip in ${format} format...`);
-        // Implementation would connect to actual export functionality
     };
 
     const columns = [
         {
-            title: 'Period',
+            title: 'Kỳ lương',
             dataIndex: 'period',
             key: 'period',
         },
         {
-            title: 'Work Days',
-            key: 'workDays',
-            render: (_, record) => `${record.actualWorkDays}/${record.workDays}`,
+            title: 'Tổng thu nhập chịu thuế',
+            dataIndex: 'totalTaxableIncome',
+            key: 'totalTaxableIncome',
+            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
         },
         {
-            title: 'Overtime (hrs)',
-            dataIndex: 'overtime',
-            key: 'overtime',
+            title: 'Lương cơ bản',
+            dataIndex: 'totalBaseSalary',
+            key: 'totalBaseSalary',
+            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
         },
         {
-            title: 'Net Salary',
+            title: 'Tiền OT',
+            dataIndex: 'totalOtSalary',
+            key: 'totalOtSalary',
+            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+        },
+        {
+            title: 'Bảo hiểm bắt buộc',
+            dataIndex: 'insurance',
+            key: 'insurance',
+            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+        },
+        {
+            title: 'Thuế TNCN',
+            dataIndex: 'personalIncomeTax',
+            key: 'personalIncomeTax',
+            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+        },
+        {
+            title: 'Thực nhận',
+            dataIndex: 'netSalary',
             key: 'netSalary',
-            render: (_, record) => `$${record.netSalary.toLocaleString()}`,
+            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
         },
         {
-            title: 'Status',
+            title: 'Trạng thái',
             key: 'status',
             render: (_, record) => (
                 <Tag color={record.status === 'paid' ? 'green' : 'orange'}>
-                    {record.status.toUpperCase()}
+                    {record.status === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán'}
                 </Tag>
             ),
         },
         {
-            title: 'Payment Date',
+            title: 'Ngày tạo phiếu',
             key: 'paymentDate',
-            render: (_, record) => dayjs(record.paymentDate).format('DD MMM YYYY'),
+            render: (_, record) => record.paymentDate ? new Date(record.paymentDate).toLocaleDateString('vi-VN') : '',
         },
         {
-            title: 'Actions',
+            title: 'Thao tác',
             key: 'actions',
             render: (_, record) => (
                 <Space>
-                    <Tooltip title="View Details">
+                    <Tooltip title="Xem chi tiết">
                         <Button
                             type="primary"
                             size="small"
                             icon={<FileTextOutlined />}
-                            onClick={() => setSelectedPayslip(record)}
-                        />
-                    </Tooltip>
-                    <Tooltip title="Download PDF">
-                        <Button
-                            type="default"
-                            size="small"
-                            icon={<FilePdfOutlined />}
-                            onClick={() => exportPayslip('pdf')}
+                            onClick={() => { setDetailPayslip(record); setDetailModalVisible(true); }}
                         />
                     </Tooltip>
                 </Space>
@@ -195,15 +178,12 @@ const EmployeePayroll = () => {
                 <Col xs={24} md={16}>
                     <Title level={3}>
                         <FileTextOutlined style={{ marginRight: '8px' }} />
-                        My Payroll
+                        Bảng lương của tôi
                     </Title>
-                    <Text type="secondary">
-                        View and download your salary details
-                    </Text>
                 </Col>
                 <Col xs={24} md={8} style={{ textAlign: 'right' }}>
                     <Select
-                        value={selectedMonth}
+                        value={selectedPayslip?.period}
                         onChange={handleMonthChange}
                         style={{ width: 200 }}
                         options={payrollHistoryData.map(item => ({
@@ -216,40 +196,39 @@ const EmployeePayroll = () => {
 
             <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
                 <Col xs={24} lg={16}>
-                    <Card title="Current Payslip Details">
+                    <Card title="Chi tiết phiếu lương">
+                        {selectedPayslip ? (
                         <Row gutter={[16, 16]}>
                             <Col span={24}>
                                 <Paragraph>
                                     <Space>
                                         <CalendarOutlined />
-                                        <Text strong>Period:</Text> {dayjs(selectedPayslip.startDate).format('DD MMM YYYY')} - {dayjs(selectedPayslip.endDate).format('DD MMM YYYY')}
+                                        <Text strong>Kỳ lương:</Text> {selectedPayslip.period}
                                     </Space>
                                 </Paragraph>
                             </Col>
 
                             <Col xs={24} sm={8}>
                                 <Statistic
-                                    title="Basic Salary"
-                                    value={selectedPayslip.basicSalary}
-                                    prefix="$"
-                                    precision={2}
+                                    title="Lương cơ bản"
+                                    value={selectedPayslip.totalBaseSalary}
+                                    suffix="₫"
+                                    valueStyle={{ color: '#1890ff' }}
                                 />
                             </Col>
                             <Col xs={24} sm={8}>
                                 <Statistic
-                                    title="Overtime Pay"
-                                    value={selectedPayslip.overtimePay}
-                                    prefix="$"
-                                    precision={2}
+                                    title="Tiền OT"
+                                    value={selectedPayslip.totalOtSalary}
+                                    suffix="₫"
                                     valueStyle={{ color: '#52c41a' }}
                                 />
                             </Col>
                             <Col xs={24} sm={8}>
                                 <Statistic
-                                    title="Allowances"
-                                    value={selectedPayslip.allowances}
-                                    prefix="$"
-                                    precision={2}
+                                    title="Số giờ OT"
+                                    value={selectedPayslip.totalOtHour}
+                                    suffix="giờ"
                                     valueStyle={{ color: '#52c41a' }}
                                 />
                             </Col>
@@ -260,72 +239,57 @@ const EmployeePayroll = () => {
 
                             <Col xs={24} sm={8}>
                                 <Statistic
-                                    title="Deductions"
-                                    value={selectedPayslip.deductions}
-                                    prefix="$"
-                                    precision={2}
+                                    title="Bảo hiểm"
+                                    value={selectedPayslip.insurance}
+                                    suffix="₫"
                                     valueStyle={{ color: '#ff4d4f' }}
                                 />
                             </Col>
                             <Col xs={24} sm={8}>
                                 <Statistic
-                                    title="Tax"
-                                    value={selectedPayslip.tax}
-                                    prefix="$"
-                                    precision={2}
+                                    title="Thuế TNCN"
+                                    value={selectedPayslip.personalIncomeTax}
+                                    suffix="₫"
                                     valueStyle={{ color: '#ff4d4f' }}
                                 />
                             </Col>
                             <Col xs={24} sm={8}>
                                 <Statistic
-                                    title="Net Salary"
+                                    title="Thực nhận"
                                     value={selectedPayslip.netSalary}
-                                    prefix="$"
-                                    precision={2}
+                                    suffix="₫"
                                     valueStyle={{ color: '#1890ff', fontWeight: 'bold' }}
                                 />
                             </Col>
                         </Row>
+                        ) : <Text>No payslip selected.</Text>}
 
                         <Divider />
 
-                        <div style={{ textAlign: 'right' }}>
-                            <Space>
-                                <Button
-                                    type="primary"
-                                    icon={<FilePdfOutlined />}
-                                    onClick={() => exportPayslip('pdf')}
-                                >
-                                    Export as PDF
-                                </Button>
-                                <Button
-                                    icon={<FileExcelOutlined />}
-                                    onClick={() => exportPayslip('excel')}
-                                >
-                                    Export as Excel
-                                </Button>
-                            </Space>
-                        </div>
                     </Card>
                 </Col>
 
                 <Col xs={24} lg={8}>
-                    <Card title="Current Month Progress">
+                    <Card title="Tiến độ tháng hiện tại">
                         <Space direction="vertical" style={{ width: '100%' }}>
                             <div>
-                                <Text>Working Days Progress</Text>
+                                <Text>Tiến độ ngày công</Text>
                                 <Progress
-                                    percent={Math.round((currentMonthData.workDaysCompleted / currentMonthData.workDaysTotal) * 100)}
-                                    format={() => `${currentMonthData.workDaysCompleted}/${currentMonthData.workDaysTotal}`}
+                                    percent={selectedPayslip ? Math.round(((22 - (selectedPayslip.unpaidLeave || 0)) / 22) * 100) : 0}
+                                    format={() => (
+                                        <span style={{ color: '#1890ff' }}>
+                                            {selectedPayslip ? `${22 - (selectedPayslip.unpaidLeave || 0)}/${22}` : `-/-`}
+                                        </span>
+                                    )}
+                                    strokeColor="#1890ff"
                                 />
                             </div>
-
                             <Row gutter={[16, 16]}>
                                 <Col span={12}>
                                     <Card size="small">
                                         <Statistic
-                                            title="Leave Taken"
-                                            value={currentMonthData.leaveTaken}
+                                            title="Số ngày nghỉ"
+                                            value={selectedPayslip ? selectedPayslip.unpaidLeave || 0 : 0}
                                             prefix={<CoffeeOutlined />}
                                             valueStyle={{ fontSize: '24px' }}
                                         />
@@ -334,29 +298,27 @@ const EmployeePayroll = () => {
                                 <Col span={12}>
                                     <Card size="small">
                                         <Statistic
-                                            title="Overtime"
-                                            value={currentMonthData.overtimeHours}
-                                            suffix="hrs"
-                                            prefix={<ClockCircleOutlined />}
+                                            title="Số ngày làm việc"
+                                            value={selectedPayslip ? 22 - (selectedPayslip.unpaidLeave || 0) : 0}
+                                            prefix={<TeamOutlined />}
                                             valueStyle={{ fontSize: '24px', color: '#52c41a' }}
                                         />
                                     </Card>
                                 </Col>
                             </Row>
-
                             <Card size="small">
                                 <Statistic
-                                    title="Punctuality"
-                                    value={currentMonthData.punctuality}
+                                    title="Chỉ số đúng giờ"
+                                    value={selectedPayslip ? (selectedPayslip.latePenalty === 0 ? 100 : Math.max(100 - (selectedPayslip.latePenalty || 0) * 2, 80)) : 100}
                                     suffix="%"
                                     prefix={<ThunderboltOutlined />}
-                                    valueStyle={{ color: currentMonthData.punctuality > 90 ? '#52c41a' : '#faad14' }}
+                                    valueStyle={{ color: selectedPayslip && selectedPayslip.latePenalty === 0 ? '#52c41a' : '#faad14' }}
                                 />
                                 <Progress
-                                    percent={currentMonthData.punctuality}
-                                    status={currentMonthData.punctuality > 90 ? 'success' : 'normal'}
+                                    percent={selectedPayslip ? (selectedPayslip.latePenalty === 0 ? 100 : Math.max(100 - (selectedPayslip.latePenalty || 0) * 2, 80)) : 100}
+                                    status={selectedPayslip && selectedPayslip.latePenalty === 0 ? 'success' : 'normal'}
                                     showInfo={false}
-                                    strokeColor={currentMonthData.punctuality > 90 ? '#52c41a' : '#faad14'}
+                                    strokeColor={selectedPayslip && selectedPayslip.latePenalty === 0 ? '#52c41a' : '#faad14'}
                                 />
                             </Card>
                         </Space>
@@ -364,14 +326,81 @@ const EmployeePayroll = () => {
                 </Col>
             </Row>
 
-            <Card title="Payroll History" style={{ marginTop: '16px' }}>
+            <Card title="Lịch sử bảng lương" style={{ marginTop: '16px' }}>
                 <Table
                     columns={columns}
                     dataSource={payrollHistoryData}
                     rowKey="id"
                     pagination={false}
+                    loading={loading}
                 />
             </Card>
+
+            <Modal
+                title={<span><FileTextOutlined style={{marginRight: 8}}/>Chi tiết phiếu lương</span>}
+                open={detailModalVisible}
+                onCancel={() => setDetailModalVisible(false)}
+                footer={null}
+                width={800}
+            >
+                {detailPayslip && (
+                    <Descriptions bordered column={2} size="middle">
+                        {/* Nhóm 1: Thông tin chung */}
+                        <Descriptions.Item label={<span><CalendarOutlined /> Kỳ lương</span>} span={2} labelStyle={{fontWeight:'bold', background:'#f0f5ff'}} contentStyle={{background:'#f0f5ff'}}>
+                            {detailPayslip.period}
+                        </Descriptions.Item>
+                        {/* Nhóm 2: Thu nhập */}
+                        <Descriptions.Item label={<span><DollarOutlined /> Thu nhập chịu thuế </span>} labelStyle={{ color:'#096dd9'}}> 
+                            {detailPayslip.totalTaxableIncome?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><DollarOutlined /> Lương cơ bản</span>} labelStyle={{color:'#096dd9'}}>
+                            {detailPayslip.totalBaseSalary?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><ClockCircleOutlined /> Số giờ OT</span>} labelStyle={{color:'#096dd9'}}>
+                            {detailPayslip.totalOtHour}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><DollarOutlined /> Tiền OT</span>} labelStyle={{color:'#096dd9'}}>
+                            {detailPayslip.totalOtSalary?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        {/* Nhóm 3: Khấu trừ */}
+                        <Descriptions.Item label={<span><TeamOutlined /> Giảm trừ gia cảnh</span>} labelStyle={{color:'#d4380d'}}> 
+                            {detailPayslip.familyDeduction?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><SafetyCertificateOutlined /> Bảo hiểm bắt buộc</span>} labelStyle={{color:'#d4380d'}}> 
+                            {detailPayslip.insurance?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><PercentageOutlined /> Thuế TNCN</span>} labelStyle={{color:'#d4380d'}}> 
+                            {detailPayslip.personalIncomeTax?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        {/* Nhóm 4: Ngày công */}
+                        <Descriptions.Item label={<span><CoffeeOutlined /> Số ngày nghỉ</span>} labelStyle={{color:'#531dab'}}> 
+                            {detailPayslip.unpaidLeave}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><TeamOutlined /> Số ngày làm việc</span>} labelStyle={{color:'#531dab'}}> 
+                            {22 - (detailPayslip.unpaidLeave || 0)}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><ThunderboltOutlined /> Chỉ số đúng giờ</span>} labelStyle={{color:'#531dab'}}> 
+                            <Tooltip title="Chỉ số đúng giờ càng cao càng tốt, bị trừ khi có đi muộn/về sớm">
+                                {detailPayslip.latePenalty === 0 ? '100%' : `${Math.max(100 - (detailPayslip.latePenalty || 0) * 2, 80)}%`}
+                            </Tooltip>
+                        </Descriptions.Item>
+                        {/* Divider nhóm */}
+                        <Descriptions.Item span={2} contentStyle={{padding:0, background:'transparent'}} labelStyle={{padding:0, background:'transparent'}}>
+                            <div style={{borderTop:'1px solid #e6f7ff', margin:'3px 0'}}></div>
+                        </Descriptions.Item>
+                        {/* Nhóm 5: Kết quả nhận */}
+                        <Descriptions.Item label={<span>Trạng thái</span>}>
+                            {detailPayslip.status === 'paid' ? <Tag color="green">Đã thanh toán</Tag> : <Tag color="orange">Chờ thanh toán</Tag>}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span>Ngày tạo </span>}>
+                            {detailPayslip.paymentDate ? new Date(detailPayslip.paymentDate).toLocaleDateString('vi-VN') : ''}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span style={{fontWeight:'bold', color:'#1890ff'}}><DollarOutlined /> Thực nhận</span>} span={2} labelStyle={{fontWeight:'bold', color:'#1890ff', fontSize:18}} contentStyle={{textAlign:'center', fontSize:24, color:'#1890ff', fontWeight:700, background:'#e6f7ff'}}>
+                            {detailPayslip.netSalary?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                    </Descriptions>
+                )}
+            </Modal>
         </div>
     );
 };

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { SalarySlip } from '../../schemas/salarySlip.schema';
 import { Employees } from '../../schemas/employees.schema';
 import { AttendanceRecords } from '../../schemas/attendanceRecords.schema';
@@ -25,7 +25,7 @@ export class SalaryCalculationService {
   async handleSalaryCalculation() {
     this.logger.log('Bắt đầu tính lương tự động cuối tháng...');
     const now = new Date();
-    const month = now.getMonth() + 1;
+    const month = 4;
     const year = now.getFullYear();
 
     // Lấy toàn bộ nhân viên còn làm việc
@@ -82,7 +82,7 @@ export class SalaryCalculationService {
       if (!rank) return;
       const baseSalary = rank.salary_base;
       const salaryCoefficient = coef.salary_coefficient;
-      const totalBaseSalary = baseSalary * salaryCoefficient;
+      let totalBaseSalary = baseSalary * salaryCoefficient;
       // Lấy attendance records trong tháng
       const attendances = attMap.get(emp._id.toString()) || [];
       // Tính nghỉ không phép
@@ -110,9 +110,11 @@ export class SalaryCalculationService {
 
       // Tính OT ngày thường và cuối tuần
       let otWeekday = 0, otWeekend = 0;
+      let totalOtHours = 0;
       for (const a of attendances) {
         if (a.status === 'overtime' || a.isOvertime) {
           const otHours = getTotalOtHours(a.overtimeRange);
+          totalOtHours += otHours;
           const date = new Date(a.date);
           const day = date.getDay();
           if (day === 0 || day === 6) {
@@ -122,9 +124,10 @@ export class SalaryCalculationService {
           }
         }
       }
+      const totalOtAmount = otWeekday + otWeekend;
 
       // Tổng các khoản trước bảo hiểm
-      const gross = totalBaseSalary - unpaidLeave - latePenalty + otWeekday + otWeekend;
+      const totalTaxableIncome = totalBaseSalary - unpaidLeave - latePenalty + totalOtAmount;
 
       // Tiền bảo hiểm
       const insurance = totalBaseSalary * 0.105;
@@ -150,7 +153,9 @@ export class SalaryCalculationService {
       }
 
       // Tổng lương thực nhận
-      const totalSalary = gross - insurance - personalIncomeTax;
+      const netSalary = totalTaxableIncome - insurance - personalIncomeTax;
+
+      totalBaseSalary = totalBaseSalary - unpaidLeave;
 
       // Lưu vào salarySlip: update nếu đã có, insert nếu chưa có
       await this.salarySlipModel.updateOne(
@@ -163,16 +168,19 @@ export class SalaryCalculationService {
             baseSalary,
             salaryCoefficient,
             totalBaseSalary,
-            unpaidLeave,
-            latePenalty,
+            unpaidLeave: unpaidLeaveCount,
             otWeekday,
             otWeekend,
             otHoliday: 0, // Không tính ngày lễ
+            totalOtHour: totalOtHours, // Tổng số giờ OT
+            totalOtSalary: totalOtAmount, // Tổng tiền OT
             insurance,
             personalIncomeTax,
             familyDeduction: totalFamilyDeduction,
-            totalSalary,
+            netSalary,
             status: '00',
+            latePenalty, //Đúng giờ
+            totalTaxableIncome, //Tổng thu nhập chịu thuế
           },
         },
         { upsert: true }
@@ -180,5 +188,15 @@ export class SalaryCalculationService {
     } catch (err) {
       this.logger.error(`Lỗi tính lương cho nhân viên ${emp.fullName}:`, err);
     }
+  }
+
+  // Lấy tất cả salarySlip theo employeeId
+  async getSalarySlipsByEmployee(employeeId: string) {
+    return this.salarySlipModel.find({ employeeId: new Types.ObjectId(employeeId) }).sort({ year: -1, month: -1 }).exec();
+  }
+
+  // Lấy salarySlip theo id
+  async getSalarySlipById(id: string) {
+    return this.salarySlipModel.findById(id).exec();
   }
 } 

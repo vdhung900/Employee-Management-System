@@ -46,10 +46,19 @@ export class SalarySlip extends Document {
   familyDeduction: number;
 
   @Prop()
-  totalSalary: number;
+  netSalary: number;
+
+  @Prop({ default: '00' })
+  status: string;
 
   @Prop()
-  status: string;
+  totalOtSalary: number;
+
+  @Prop()
+  totalOtHour: number;
+
+  @Prop()
+  totalTaxableIncome: number;
   
 }
 
