@@ -54,7 +54,7 @@ export class SalaryCalculationController {
   }
 
   @Get('slips/department/:departmentId')
-  // @Roles(USER_ROLE.MANAGER)
+  @Roles(USER_ROLE.MANAGER)
   async getSalarySlipsByDepartment(@Param('departmentId') departmentId: string) {
     try {
       const slips = await this.salaryCalculationService.getSalarySlipsByDepartment(departmentId);

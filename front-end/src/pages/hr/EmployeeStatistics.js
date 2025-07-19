@@ -49,7 +49,7 @@ const EmployeeStatistics = () => {
   // Tạo danh sách năm từ 2020 đến năm hiện tại + 1
   const currentYear = new Date().getFullYear();
   const yearOptions = [];
-  for (let year = 2022; year <= currentYear; year++) {
+  for (let year = currentYear - 3; year <= currentYear; year++) {
     yearOptions.push(year);
   }
 
