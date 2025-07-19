@@ -7,6 +7,7 @@ import { Employees, EmployeesSchema } from '../../schemas/employees.schema';
 import { AttendanceRecords, AttendanceRecordSchema } from '../../schemas/attendanceRecords.schema';
 import { SalaryCoefficient, SalaryCoefficientSchema } from '../../schemas/salaryCoefficents.schema';
 import { SalaryRank, SalaryRankSchema } from '../../schemas/salaryRank.schema';
+import { Benefits, BenefitSchema } from '../../schemas/benefits.schema';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SalaryRank, SalaryRankSchema } from '../../schemas/salaryRank.schema';
       { name: AttendanceRecords.name, schema: AttendanceRecordSchema },
       { name: SalaryCoefficient.name, schema: SalaryCoefficientSchema },
       { name: SalaryRank.name, schema: SalaryRankSchema },
+      { name: Benefits.name, schema: BenefitSchema },
     ]),
   ],
   controllers: [SalaryCalculationController],

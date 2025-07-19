@@ -7,6 +7,7 @@ import { Employees } from '../../schemas/employees.schema';
 import { AttendanceRecords } from '../../schemas/attendanceRecords.schema';
 import { SalaryCoefficient } from '../../schemas/salaryCoefficents.schema';
 import { SalaryRank } from '../../schemas/salaryRank.schema';
+import { Benefits } from '../../schemas/benefits.schema';
 
 @Injectable()
 export class SalaryCalculationService {
@@ -19,13 +20,14 @@ export class SalaryCalculationService {
     @InjectModel(AttendanceRecords.name) private attendanceModel: Model<AttendanceRecords>,
     @InjectModel(SalaryCoefficient.name) private coefModel: Model<SalaryCoefficient>,
     @InjectModel(SalaryRank.name) private rankModel: Model<SalaryRank>,
+    @InjectModel(Benefits.name) private benefitModel: Model<Benefits>,
   ) {}
 
   @Cron('0 59 23 L * *') // 23:59 ngày cuối cùng mỗi tháng
   async handleSalaryCalculation() {
     this.logger.log('Bắt đầu tính lương tự động cuối tháng...');
     const now = new Date();
-    const month = 4;
+    const month = now.getMonth() + 1;
     const year = now.getFullYear();
 
     // Lấy toàn bộ nhân viên còn làm việc
@@ -126,8 +128,19 @@ export class SalaryCalculationService {
       }
       const totalOtAmount = otWeekday + otWeekend;
 
+      // === LẤY BENEFIT THEO EMPLOYEE HOẶC DEPARTMENT ===
+      // Lưu ý: cần khai báo benefitModel ở constructor và import model Benefit
+      const benefits = await (this as any).benefitModel.find({
+        $or: [
+          { employees: emp._id },
+          { departments: emp.departmentId }
+        ]
+      });
+      // Tổng tiền thưởng benefit (không loại bỏ trùng)
+      const totalBenefit = benefits.reduce((sum, b) => sum + (b.amount || 0), 0);
+
       // Tổng các khoản trước bảo hiểm
-      const totalTaxableIncome = totalBaseSalary - unpaidLeave - latePenalty + totalOtAmount;
+      const totalTaxableIncome = totalBaseSalary - unpaidLeave - latePenalty + totalOtAmount + totalBenefit;
 
       // Tiền bảo hiểm
       const insurance = totalBaseSalary * 0.105;
@@ -181,6 +194,7 @@ export class SalaryCalculationService {
             status: '00',
             latePenalty, //Đúng giờ
             totalTaxableIncome, //Tổng thu nhập chịu thuế
+            benefit: totalBenefit, // Tổng benefit cộng vào
           },
         },
         { upsert: true }

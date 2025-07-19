@@ -80,6 +80,7 @@ const EmployeePayroll = () => {
                         status: item.status === '00' ? 'pending' : 'paid',
                         paymentDate: item.updatedAt || '',
                         totalTaxableIncome: item.totalTaxableIncome,
+                        benefit: item.benefit,
                     };
                 });
                 setPayrollHistoryData(mapped);
@@ -114,6 +115,12 @@ const EmployeePayroll = () => {
             title: 'Lương cơ bản',
             dataIndex: 'totalBaseSalary',
             key: 'totalBaseSalary',
+            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+        },
+        {
+            title: 'Phúc lợi',
+            dataIndex: 'benefit',
+            key: 'benefit',
             render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
         },
         {
@@ -226,9 +233,9 @@ const EmployeePayroll = () => {
                             </Col>
                             <Col xs={24} sm={8}>
                                 <Statistic
-                                    title="Số giờ OT"
-                                    value={selectedPayslip.totalOtHour}
-                                    suffix="giờ"
+                                    title="Phúc lợi"
+                                    value={selectedPayslip.benefit}
+                                    suffix="₫"
                                     valueStyle={{ color: '#52c41a' }}
                                 />
                             </Col>
@@ -285,23 +292,54 @@ const EmployeePayroll = () => {
                                 />
                             </div>
                             <Row gutter={[16, 16]}>
-                                <Col span={12}>
-                                    <Card size="small">
+                                <Col span={8}>
+                                    <Card
+                                        size="small"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #fff1f0 0%, #ffa39e 100%)',
+                                            border: '1px solid #ffa39e',
+                                            boxShadow: '0 2px 8px rgba(255, 77, 79, 0.08)'
+                                        }}
+                                    >
                                         <Statistic
-                                            title="Số ngày nghỉ"
+                                            title={<span style={{ color: '#cf1322', fontWeight: 600 }}>Số ngày nghỉ</span>}
                                             value={selectedPayslip ? selectedPayslip.unpaidLeave || 0 : 0}
-                                            prefix={<CoffeeOutlined />}
-                                            valueStyle={{ fontSize: '24px' }}
+                                            prefix={<CoffeeOutlined style={{ color: '#cf1322' }} />}
+                                            valueStyle={{ fontSize: '24px', color: '#cf1322', fontWeight: 700 }}
                                         />
                                     </Card>
                                 </Col>
-                                <Col span={12}>
-                                    <Card size="small">
+                                <Col span={8}>
+                                    <Card
+                                        size="small"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #f6ffed 0%, #b7eb8f 100%)',
+                                            border: '1px solid #b7eb8f',
+                                            boxShadow: '0 2px 8px rgba(82, 196, 26, 0.08)'
+                                        }}
+                                    >
                                         <Statistic
-                                            title="Số ngày làm việc"
+                                            title={<span style={{ color: '#389e0d', fontWeight: 600 }}>Số ngày làm việc</span>}
                                             value={selectedPayslip ? 22 - (selectedPayslip.unpaidLeave || 0) : 0}
-                                            prefix={<TeamOutlined />}
-                                            valueStyle={{ fontSize: '24px', color: '#52c41a' }}
+                                            prefix={<TeamOutlined style={{ color: '#389e0d' }} />}
+                                            valueStyle={{ fontSize: '24px', color: '#389e0d', fontWeight: 700 }}
+                                        />
+                                    </Card>
+                                </Col>
+                                <Col span={8}>
+                                    <Card
+                                        size="small"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #fffbe6 0%, #ffe58f 100%)',
+                                            border: '1px solid #ffe58f',
+                                            boxShadow: '0 2px 8px rgba(255, 215, 0, 0.08)'
+                                        }}
+                                    >
+                                        <Statistic
+                                            title={<span style={{ color: '#faad14', fontWeight: 600 }}>Số giờ OT</span>}
+                                            value={selectedPayslip ? selectedPayslip.totalOtHour || 0 : 0}
+                                            prefix={<ThunderboltOutlined style={{ color: '#faad14' }} />}
+                                            valueStyle={{ fontSize: '28px', color: '#faad14', fontWeight: 700 }}
                                         />
                                     </Card>
                                 </Col>
@@ -356,8 +394,8 @@ const EmployeePayroll = () => {
                         <Descriptions.Item label={<span><DollarOutlined /> Lương cơ bản</span>} labelStyle={{color:'#096dd9'}}>
                             {detailPayslip.totalBaseSalary?.toLocaleString('vi-VN')} ₫
                         </Descriptions.Item>
-                        <Descriptions.Item label={<span><ClockCircleOutlined /> Số giờ OT</span>} labelStyle={{color:'#096dd9'}}>
-                            {detailPayslip.totalOtHour}
+                        <Descriptions.Item label={<span><DollarOutlined /> Phúc lợi</span>} labelStyle={{color:'#096dd9'}}>
+                            {detailPayslip.benefit?.toLocaleString('vi-VN')} ₫
                         </Descriptions.Item>
                         <Descriptions.Item label={<span><DollarOutlined /> Tiền OT</span>} labelStyle={{color:'#096dd9'}}>
                             {detailPayslip.totalOtSalary?.toLocaleString('vi-VN')} ₫

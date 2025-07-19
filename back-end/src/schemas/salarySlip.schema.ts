@@ -59,6 +59,9 @@ export class SalarySlip extends Document {
 
   @Prop()
   totalTaxableIncome: number;
+
+  @Prop({ default: 0 })
+  benefit: number;
   
 }
 
