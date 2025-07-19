@@ -13,7 +13,9 @@ import {
     Space,
     DatePicker,
     Tooltip,
-    Progress
+    Progress,
+    Modal,
+    Descriptions
 } from 'antd';
 import {
     FileTextOutlined,
@@ -25,7 +27,9 @@ import {
     DollarOutlined,
     ThunderboltOutlined,
     CoffeeOutlined,
-    TeamOutlined
+    TeamOutlined,
+    SafetyCertificateOutlined,
+    PercentageOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import 'dayjs/locale/vi';
@@ -43,6 +47,8 @@ const EmployeePayroll = () => {
     const [payrollHistoryData, setPayrollHistoryData] = useState([]);
     const [selectedPayslip, setSelectedPayslip] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [detailModalVisible, setDetailModalVisible] = useState(false);
+    const [detailPayslip, setDetailPayslip] = useState(null);
 
     useEffect(() => {
         async function fetchData() {
@@ -144,7 +150,7 @@ const EmployeePayroll = () => {
             ),
         },
         {
-            title: 'Ngày thanh toán',
+            title: 'Ngày tạo phiếu',
             key: 'paymentDate',
             render: (_, record) => record.paymentDate ? new Date(record.paymentDate).toLocaleDateString('vi-VN') : '',
         },
@@ -158,7 +164,7 @@ const EmployeePayroll = () => {
                             type="primary"
                             size="small"
                             icon={<FileTextOutlined />}
-                            onClick={() => setSelectedPayslip(record)}
+                            onClick={() => { setDetailPayslip(record); setDetailModalVisible(true); }}
                         />
                     </Tooltip>
                 </Space>
@@ -174,9 +180,6 @@ const EmployeePayroll = () => {
                         <FileTextOutlined style={{ marginRight: '8px' }} />
                         Bảng lương của tôi
                     </Title>
-                    <Text type="secondary">
-                        Xem và tải chi tiết lương của bạn
-                    </Text>
                 </Col>
                 <Col xs={24} md={8} style={{ textAlign: 'right' }}>
                     <Select
@@ -332,6 +335,72 @@ const EmployeePayroll = () => {
                     loading={loading}
                 />
             </Card>
+
+            <Modal
+                title={<span><FileTextOutlined style={{marginRight: 8}}/>Chi tiết phiếu lương</span>}
+                open={detailModalVisible}
+                onCancel={() => setDetailModalVisible(false)}
+                footer={null}
+                width={800}
+            >
+                {detailPayslip && (
+                    <Descriptions bordered column={2} size="middle">
+                        {/* Nhóm 1: Thông tin chung */}
+                        <Descriptions.Item label={<span><CalendarOutlined /> Kỳ lương</span>} span={2} labelStyle={{fontWeight:'bold', background:'#f0f5ff'}} contentStyle={{background:'#f0f5ff'}}>
+                            {detailPayslip.period}
+                        </Descriptions.Item>
+                        {/* Nhóm 2: Thu nhập */}
+                        <Descriptions.Item label={<span><DollarOutlined /> Thu nhập chịu thuế </span>} labelStyle={{ color:'#096dd9'}}> 
+                            {detailPayslip.totalTaxableIncome?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><DollarOutlined /> Lương cơ bản</span>} labelStyle={{color:'#096dd9'}}>
+                            {detailPayslip.totalBaseSalary?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><ClockCircleOutlined /> Số giờ OT</span>} labelStyle={{color:'#096dd9'}}>
+                            {detailPayslip.totalOtHour}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><DollarOutlined /> Tiền OT</span>} labelStyle={{color:'#096dd9'}}>
+                            {detailPayslip.totalOtSalary?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        {/* Nhóm 3: Khấu trừ */}
+                        <Descriptions.Item label={<span><TeamOutlined /> Giảm trừ gia cảnh</span>} labelStyle={{color:'#d4380d'}}> 
+                            {detailPayslip.familyDeduction?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><SafetyCertificateOutlined /> Bảo hiểm bắt buộc</span>} labelStyle={{color:'#d4380d'}}> 
+                            {detailPayslip.insurance?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><PercentageOutlined /> Thuế TNCN</span>} labelStyle={{color:'#d4380d'}}> 
+                            {detailPayslip.personalIncomeTax?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                        {/* Nhóm 4: Ngày công */}
+                        <Descriptions.Item label={<span><CoffeeOutlined /> Số ngày nghỉ</span>} labelStyle={{color:'#531dab'}}> 
+                            {detailPayslip.unpaidLeave}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><TeamOutlined /> Số ngày làm việc</span>} labelStyle={{color:'#531dab'}}> 
+                            {22 - (detailPayslip.unpaidLeave || 0)}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span><ThunderboltOutlined /> Chỉ số đúng giờ</span>} labelStyle={{color:'#531dab'}}> 
+                            <Tooltip title="Chỉ số đúng giờ càng cao càng tốt, bị trừ khi có đi muộn/về sớm">
+                                {detailPayslip.latePenalty === 0 ? '100%' : `${Math.max(100 - (detailPayslip.latePenalty || 0) * 2, 80)}%`}
+                            </Tooltip>
+                        </Descriptions.Item>
+                        {/* Divider nhóm */}
+                        <Descriptions.Item span={2} contentStyle={{padding:0, background:'transparent'}} labelStyle={{padding:0, background:'transparent'}}>
+                            <div style={{borderTop:'1px solid #e6f7ff', margin:'3px 0'}}></div>
+                        </Descriptions.Item>
+                        {/* Nhóm 5: Kết quả nhận */}
+                        <Descriptions.Item label={<span>Trạng thái</span>}>
+                            {detailPayslip.status === 'paid' ? <Tag color="green">Đã thanh toán</Tag> : <Tag color="orange">Chờ thanh toán</Tag>}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span>Ngày tạo </span>}>
+                            {detailPayslip.paymentDate ? new Date(detailPayslip.paymentDate).toLocaleDateString('vi-VN') : ''}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={<span style={{fontWeight:'bold', color:'#1890ff'}}><DollarOutlined /> Thực nhận</span>} span={2} labelStyle={{fontWeight:'bold', color:'#1890ff', fontSize:18}} contentStyle={{textAlign:'center', fontSize:24, color:'#1890ff', fontWeight:700, background:'#e6f7ff'}}>
+                            {detailPayslip.netSalary?.toLocaleString('vi-VN')} ₫
+                        </Descriptions.Item>
+                    </Descriptions>
+                )}
+            </Modal>
         </div>
     );
 };
