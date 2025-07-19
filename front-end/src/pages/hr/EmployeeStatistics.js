@@ -25,7 +25,7 @@ const getAgeRange = (dob) => {
 };
 
 const getSalaryRange = (salary) => {
-  if (salary < 10000000) return '<10M';
+  if (salary < 10000000) return 'Dưới 10M';
   if (salary < 15000000) return '10M - 15M';
   if (salary < 20000000) return '15M - 20M';
   if (salary < 25000000) return '20M - 25M';
