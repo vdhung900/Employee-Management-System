@@ -1,7 +1,7 @@
 import { fetchWithAuth, handleApiError } from "../utils/FetchWithAuth";
 import APIConfig from "./APIConfig";
 
-let API_GET_IP = process.env.REACT_APP_PUBLIC_IP_API;
+let API_GET_IP = 'https://api.ipify.org?format=json';
 
 let cachedClientIP = null;
 
