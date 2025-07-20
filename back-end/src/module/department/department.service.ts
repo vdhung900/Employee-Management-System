@@ -77,9 +77,7 @@ export class DepartmentService {
     }
 
     async findAllEmployeesWithFullName() {
-        return this.accountModel.find({ status: 'active' })
-            .select('username employeeId')
-            .populate('employeeId', 'fullName')
-            .exec();
+        const EmployeesModel = this.accountModel.db.model('Employees');
+        return EmployeesModel.find({}).select('_id fullName').exec();
     }
 } 
