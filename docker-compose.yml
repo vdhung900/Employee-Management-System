@@ -17,7 +17,7 @@ services:
       EMAIL_HOST:
       EMAIL_PORT:
       EMAIL_FROM:
-      MINIO_ENDPOINT: http://52:62:162:252:9000
+      MINIO_ENDPOINT: http://52.62.162.252:9000
       MINIO_USERNAME: minioadmin
       MINIO_PASSWORD: minioadmin
       NODE_ENV: dev
