@@ -18,7 +18,7 @@ export class Benefits extends BaseSchema {
     @Prop()
     amount: number; // VND
 
-    @Prop({ type: [{ type: Types.ObjectId, ref: Account.name }] })
+    @Prop({ type: [{ type: Types.ObjectId, ref: Employees.name }] })
     employees: Types.ObjectId[];
 
     @Prop({ type: [{ type: Types.ObjectId, ref: Departments.name }] })

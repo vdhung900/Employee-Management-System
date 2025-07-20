@@ -52,15 +52,15 @@ const getStatusLabel = (status) => {
 };
 
 const TeamManagement = () => {
-  const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState([]);
   const [departmentName, setDepartmentName] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchTeamMembers = async () => {
-      setLoading(true);
+        setLoading(true);
       try {
         const user = JSON.parse(localStorage.getItem("user"));
         const response = await EmployeeProfile.getEmployeeProfile(user.employeeId);
@@ -68,7 +68,7 @@ const TeamManagement = () => {
         setDepartmentName(response.data?.departmentId?.name || "");
         if (!departmentId) {
           message.error("Không tìm thấy phòng ban của bạn!");
-          setLoading(false);
+            setLoading(false);
           return;
         }
         const res = await StatisticsService.getEmployeesByDepartment(departmentId);
@@ -81,22 +81,22 @@ const TeamManagement = () => {
     fetchTeamMembers();
   }, []);
 
-  const columns = [
-    {
+    const columns = [
+        {
       title: 'Nhân viên',
       dataIndex: 'fullName',
       key: 'fullName',
-      render: (text, record) => (
-        <Space>
+            render: (text, record) => (
+                <Space>
           <Avatar style={{ backgroundColor: '#722ed1' }}>{record.fullName.charAt(0)}</Avatar>
           <div>
             <div style={{ fontWeight: 'bold' }}>{record.fullName}</div>
             <Text type="secondary">{record.code}</Text>
           </div>
-        </Space>
-      ),
-    },
-    {
+                </Space>
+            ),
+        },
+        {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
@@ -113,50 +113,50 @@ const TeamManagement = () => {
       dataIndex: 'positionId',
       key: 'positionId',
       render: (pos, record) => record.positionId?.name || record.position || 'Chưa rõ',
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
+        },
+        {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            key: 'status',
+            render: (status) => (
         <Tag color={getStatusColor(status)}>{getStatusLabel(status)}</Tag>
-      ),
-    },
-    {
-      title: 'Thao tác',
-      key: 'action',
-      render: (_, record) => (
-        <Button
-          type="text"
+            ),
+        },
+        {
+            title: 'Thao tác',
+            key: 'action',
+            render: (_, record) => (
+                        <Button
+                            type="text"
           icon={<EyeOutlined />}
           onClick={() => { setSelectedMember(record); setDetailVisible(true); }}
         >
           Xem chi tiết
         </Button>
-      ),
-    },
-  ];
+            ),
+        },
+    ];
 
-  return (
+    return (
     <div style={{ padding: 24, minHeight: "100vh", background: "linear-gradient(135deg, #e0e7ff 0%, #f0f7fa 100%)" }}>
       <Title level={2} style={{ textAlign: "center", color: "#1976d2", marginBottom: 32, letterSpacing: 1 }}>
         Quản lý đội nhóm phòng ban {departmentName}
-      </Title>
+            </Title>
       <Spin spinning={loading}>
         <Card title="Danh sách thành viên trong phòng ban">
-          <Table
+                <Table
             dataSource={members}
-            columns={columns}
+                    columns={columns}
             rowKey="_id"
-            pagination={{
+                    pagination={{
               defaultPageSize: 10,
-              showSizeChanger: true,
+                        showSizeChanger: true,
               pageSizeOptions: ['10', '20', '50', '100'],
               showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} thành viên`,
-            }}
-          />
-        </Card>
-        <Modal
+                    }}
+                />
+            </Card>
+            <Modal
           title={selectedMember?.fullName}
           open={detailVisible}
           onCancel={() => setDetailVisible(false)}
@@ -237,10 +237,10 @@ const TeamManagement = () => {
               
             </div>
           )}
-        </Modal>
+            </Modal>
       </Spin>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default TeamManagement;

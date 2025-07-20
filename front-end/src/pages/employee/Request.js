@@ -1566,9 +1566,10 @@ const Requests = () => {
                                 rowKey="_id"
                                 pagination={false}
                                 bordered
-                                size="middle"
+                                size="small"
                                 className="salary-slip-table"
-                                style={{borderRadius: 16, background: '#fff', minWidth: 900}}
+                                style={{borderRadius: 12, background: '#fff', minWidth: 600, maxWidth: 1000, margin: '0 auto'}}
+                                scroll={{ x: 'max-content' }}
                             />
                         </div>
                     )}
@@ -1706,6 +1707,7 @@ const salarySlipFieldsToShow = [
     'baseSalary',
     'salaryCoefficient',
     'totalBaseSalary',
+    'benefit', // Thêm benefit
     'insurance',
     'familyDeduction',
     'personalIncomeTax',
@@ -1714,6 +1716,10 @@ const salarySlipFieldsToShow = [
     'otHoliday',
     'otWeekday',
     'otWeekend',
+    'totalOtHour', // Thêm tổng giờ OT
+    'totalOtSalary', // Thêm tổng lương OT
+    'totalTaxableIncome', // Thêm tổng thu nhập chịu thuế
+    'netSalary', // Thêm lương ròng
     'totalSalary',
 ];
 
@@ -1722,6 +1728,7 @@ const salarySlipColumnNameMap = {
     baseSalary: 'Lương cơ bản',
     salaryCoefficient: 'Hệ số lương',
     totalBaseSalary: 'Tổng lương cơ bản',
+    benefit: 'Phụ cấp', // Thêm benefit
     insurance: 'Bảo hiểm',
     familyDeduction: 'Khấu trừ gia cảnh',
     personalIncomeTax: 'Thuế TNCN',
@@ -1730,6 +1737,10 @@ const salarySlipColumnNameMap = {
     otHoliday: 'OT ngày lễ',
     otWeekday: 'OT ngày thường',
     otWeekend: 'OT cuối tuần',
+    totalOtHour: 'Tổng giờ OT', // Thêm tổng giờ OT
+    totalOtSalary: 'Tổng lương OT', // Thêm tổng lương OT
+    totalTaxableIncome: 'Tổng TN chịu thuế', // Thêm tổng thu nhập chịu thuế
+    netSalary: 'Lương ròng', // Thêm lương ròng
     totalSalary: 'Lương thực nhận',
 };
 

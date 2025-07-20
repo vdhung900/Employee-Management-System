@@ -14,6 +14,26 @@ const StatisticsService = {
     } catch (e) {
       throw handleApiError(e);
     }
+  },
+
+  // Method chính để lấy tất cả salary slip
+  async getAllSalarySlips() {
+    try {
+      const response = await fetchWithAuth('/salary-calc/slips', 'GET');
+      return response;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  // Lấy salary slip theo departmentId
+  async getSalarySlipsByDepartment(departmentId) {
+    try {
+      const response = await fetchWithAuth(`/salary-calc/slips/department/${departmentId}`, 'GET');
+      return response;
+    } catch (error) {
+      throw handleApiError(error);
+    }
   }
 };
 

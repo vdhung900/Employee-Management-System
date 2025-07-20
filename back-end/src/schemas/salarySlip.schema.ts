@@ -50,10 +50,22 @@ export class SalarySlip extends BaseSchema {
   familyDeduction: number;
 
   @Prop()
-  totalSalary: number;
+  netSalary: number;
 
-  @Prop({ default: '01' }) // 01: Chưa phê duyệt, 02: Đã phê duyệt
+  @Prop({ default: '00' })
   status: string;
+
+  @Prop()
+  totalOtSalary: number;
+
+  @Prop()
+  totalOtHour: number;
+
+  @Prop()
+  totalTaxableIncome: number;
+
+  @Prop({ default: 0 })
+  benefit: number;
   
 }
 

@@ -4,7 +4,7 @@ import mongoose, {Model, Types} from 'mongoose';
 import {Account, AccountDocument} from '../../schemas/account.schema';
 import {Employees, EmployeesDocument} from '../../schemas/employees.schema';
 import {CreateAccount, ResetPassword, UpdateAccount, UpdateStatus} from './dto/admin_account.dto';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import {Departments, DepartmentsDocument} from '../../schemas/departments.schema';
 import {Position, PositionDocument} from '../../schemas/position.schema';
 import {AccountInfoDto} from "./dto/accountInfo.dto";
