@@ -214,9 +214,9 @@ export class AdminAccountService {
     }
 
     async resetPassword(id: string, updateAdminDto: ResetPassword) {
-        // if (updateAdminDto.password) {
-        //   updateAdminDto.password = await bcrypt.hash(updateAdminDto.password, 10);
-        // }
+        if (updateAdminDto.password) {
+          updateAdminDto.password = await bcrypt.hash(updateAdminDto.password, 10);
+        }
 
 
         const admin = await this.accountModel.findOneAndUpdate(
@@ -307,6 +307,7 @@ export class AdminAccountService {
         employeeId: newEmployee._id,
         status: STATUS.ACTIVE,
       })
+        newAccount.password = password;
       return {newAccount, newEmployee};
     }catch (e) {
       throw e;
