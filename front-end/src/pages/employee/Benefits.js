@@ -136,7 +136,8 @@ const Benefits = () => {
             });
             message.success(editing ? 'Cập nhật thành công' : 'Thêm thành công');
             setModalVisible(false);
-            fetchBenefits();
+            await fetchBenefits();
+            await fetchEmployees(); // Đảm bảo employeeMap luôn mới nhất
         } catch (err) {
             // Nếu validate lỗi sẽ không vào đây
             // Log giá trị hiện tại của form để debug
@@ -153,6 +154,17 @@ const Benefits = () => {
         return matchSearch && matchDept && matchStatus && matchMonth;
     });
 
+    // Log dữ liệu employees và employees trong từng benefit để debug
+    console.log('Danh sách employees:', employees);
+    console.log('Danh sách benefits:', benefits);
+
+    // Tạo map từ _id sang tên (fullName hoặc username)
+    const employeeMap = {};
+    employees.forEach(e => {
+        if (e.fullName) employeeMap[e._id] = e.fullName;
+        else if (e.username) employeeMap[e._id] = e.username;
+    });
+
     const columns = [
         { title: 'Tên', dataIndex: 'name', key: 'name', render: (v) => <span>{v}</span> },
         { title: 'Mô tả', dataIndex: 'description', key: 'description', render: v => <span style={{ color: '#888' }}>{v}</span> },
@@ -160,7 +172,23 @@ const Benefits = () => {
         { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v, record) => v === 'auto' ? <Tag> Tự động (Tất cả các tháng) </Tag> : <Tag> Thủ công </Tag> },
         { title: 'Tháng hiệu lực', dataIndex: 'effective', key: 'effective', render: (arr, record) => record.status === 'auto' ? <Tag> Tất cả các tháng </Tag> : <Space wrap>{arr?.map(m => <Tag key={m}>Tháng {m}</Tag>)}</Space> },
         { title: 'Phòng ban', dataIndex: 'departments', key: 'departments', render: (arr, record) => record.applyAll ? <Tag> Tất cả phòng ban </Tag> : <Space wrap>{arr?.map(d => <Tag key={typeof d === 'object' ? d._id : d}>{typeof d === 'object' ? d.name : d}</Tag>)}</Space> },
-        { title: 'Nhân viên', dataIndex: 'employees', key: 'employees', render: (arr) => <Space wrap>{arr?.map(e => <Tag key={typeof e === 'object' ? e._id : e}>{typeof e === 'object' ? e.username : e}</Tag>)}</Space> },
+        {
+            title: 'Nhân viên', dataIndex: 'employees', key: 'employees', render: (arr) => (
+                <Space wrap>
+                    {arr?.map(e => {
+                        let id = e;
+                        let name = '';
+                        if (typeof e === 'object' && e !== null) {
+                            id = e._id;
+                            name = e.fullName || e.username || employeeMap[id] || id || 'Không rõ';
+                        } else {
+                            name = employeeMap[id] || id || 'Không rõ';
+                        }
+                        return <Tag key={id}>{name}</Tag>;
+                    })}
+                </Space>
+            )
+        },
     ];
     const role = localStorage.getItem('role');
     if (role === 'hr') {
@@ -292,7 +320,7 @@ const Benefits = () => {
                                 <Select mode="multiple" placeholder="Chọn nhân viên">
                                     {employees.map(e => (
                                         <Option key={e._id} value={e._id}>
-                                            {e.username}
+                                            {e.fullName || e.username || e._id}
                                         </Option>
                                     ))}
                                 </Select>
