@@ -3,7 +3,7 @@ import APIConfig from "../services/APIConfig";
 import {Navigate} from "react-router-dom";
 import React from "react";
 
-let API_GET_IP = process.env.REACT_APP_PUBLIC_IP_API;
+let API_GET_IP = 'https://api.ipify.org?format=json';
 
 let cachedClientIP = null;
 
