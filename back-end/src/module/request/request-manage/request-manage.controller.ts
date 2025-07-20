@@ -57,7 +57,7 @@ export class RequestManageController {
     }
 
     @Post('/approve')
-    @Roles(USER_ROLE.MANAGER, USER_ROLE.ADMIN, USER_ROLE.HR)
+    @Roles(USER_ROLE.MANAGER, USER_ROLE.ADMIN, USER_ROLE.HR, USER_ROLE.EMPLOYEE)
     async approveRequest(@Body() req: CreateRequestDto): Promise<BaseResponse>{
         try{
             const resData = await this.hrRequestService.approveRequest(req);
