@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { SalarySlip } from '../../schemas/salarySlip.schema';
+import {SalarySlip, SalarySlipDocument} from '../../schemas/salarySlip.schema';
 import { Employees } from '../../schemas/employees.schema';
 import { AttendanceRecords } from '../../schemas/attendanceRecords.schema';
 import { SalaryCoefficient } from '../../schemas/salaryCoefficents.schema';
@@ -15,7 +15,7 @@ export class SalaryCalculationService {
   private readonly BATCH_SIZE = 100;
 
   constructor(
-    @InjectModel(SalarySlip.name) private salarySlipModel: Model<SalarySlip>,
+    @InjectModel(SalarySlip.name) private salarySlipModel: Model<SalarySlipDocument>,
     @InjectModel(Employees.name) private employeeModel: Model<Employees>,
     @InjectModel(AttendanceRecords.name) private attendanceModel: Model<AttendanceRecords>,
     @InjectModel(SalaryCoefficient.name) private coefModel: Model<SalaryCoefficient>,
@@ -31,7 +31,7 @@ export class SalaryCalculationService {
     const year = now.getFullYear();
 
     // Lấy toàn bộ nhân viên còn làm việc
-    const employees = await this.employeeModel.find({});
+    const employees = await this.employeeModel.find({}).exec();
     for (let i = 0; i < employees.length; i += this.BATCH_SIZE) {
       const batch = employees.slice(i, i + this.BATCH_SIZE);
       try {
@@ -204,6 +204,21 @@ export class SalaryCalculationService {
     }
   }
 
+  async getSalarySlipByMonth (month: string) {
+    try{
+      const monthDate = new Date(month);
+      const year = monthDate.getFullYear();
+      const monthNumber = monthDate.getMonth() + 1; // thang trong js la 0 - 11
+      const salarySlips = await this.salarySlipModel.find({month: monthNumber, year: year}).populate("employeeId", "fullName").exec();
+      if(salarySlips.length === 0 || !salarySlips) {
+        throw new Error('Chưa có dữ liệu lương cho tháng này');
+      }
+      return salarySlips;
+    }catch (e) {
+      throw e;
+    }
+  }
+
   // Lấy tất cả salarySlip theo employeeId
   async getSalarySlipsByEmployee(employeeId: string) {
     return this.salarySlipModel.find({ employeeId: new Types.ObjectId(employeeId) }).sort({ year: -1, month: -1 }).exec();
@@ -254,4 +269,4 @@ export class SalaryCalculationService {
       }
     ]).exec();
   }
-} 
+}

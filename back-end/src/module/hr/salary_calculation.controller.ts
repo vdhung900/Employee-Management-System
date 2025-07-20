@@ -5,18 +5,34 @@ import { Types } from 'mongoose';
 import { USER_ROLE } from 'src/enum/role.enum';
 import {Roles} from "../../common/decorators/roles.decorator";
 import {RolesGuard} from "../../common/guards/roles.guard";
+import {BaseResponse} from "../../interfaces/response/base.response";
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('salary-calc')
 export class SalaryCalculationController {
+    constructor(private readonly salaryCalculationService: SalaryCalculationService) {
+    }
   private readonly logger = new Logger(SalaryCalculationController.name);
-  constructor(private readonly salaryCalculationService: SalaryCalculationService) {}
 
-  @Post('run')
-  async runSalaryCalculation() {
-    await this.salaryCalculationService.handleSalaryCalculation();
-    return { message: 'Đã tính lương xong!' };
-  }
+    @Post('run')
+    async runSalaryCalculation(): Promise<BaseResponse> {
+        try {
+            await this.salaryCalculationService.handleSalaryCalculation();
+            return BaseResponse.success(null, 'Đã tính lương xong!', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({error: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Get('get-by-month/:month')
+    async getSalaryByMonth(@Param('month') month: string): Promise<BaseResponse> {
+        try {
+            const resData = await this.salaryCalculationService.getSalarySlipByMonth(month);
+            return BaseResponse.success(resData, 'Lấy lương theo tháng thành công!', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({error: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
   @Get('slip')
   async getMySalarySlips(@Req() req: any) {
@@ -63,4 +79,4 @@ export class SalaryCalculationController {
       throw new HttpException({ message: e.message }, e.status || HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-} 
+}

@@ -1,7 +1,7 @@
 import {Injectable} from '@nestjs/common';
 import {InjectModel} from "@nestjs/mongoose";
 import {Requests, RequestsDocument} from "../../../schemas/requests.schema";
-import {Model, Types} from "mongoose";
+import {Model, ObjectId, Types} from "mongoose";
 import {typeRequest, typeRequestDocument} from "../../../schemas/typeRequestCategory.schema";
 import {BaseRequestService} from "../base-request.service";
 import {CreateRequestDto} from "../dto/createRequest.dto";
@@ -19,6 +19,7 @@ import {Employees, EmployeesDocument} from "../../../schemas/employees.schema";
 import {SalaryCoefficient, SalaryCoefficientDocument} from "../../../schemas/salaryCoefficents.schema";
 import {SalaryRank, SalaryRankDocument} from "../../../schemas/salaryRank.schema";
 import {LeaveBalance, LeaveBalanceDocument} from "../../../schemas/leaveBalance.schema";
+import {SalarySlip, SalarySlipDocument} from "../../../schemas/salarySlip.schema";
 
 @Injectable()
 export class RequestManageService {
@@ -33,6 +34,7 @@ export class RequestManageService {
         @InjectModel(SalaryCoefficient.name) private salaryCoefficientModel: Model<SalaryCoefficientDocument>,
         @InjectModel(SalaryRank.name) private salaryRankModel: Model<SalaryRankDocument>,
         @InjectModel(LeaveBalance.name) private leaveBalanceModel: Model<LeaveBalanceDocument>,
+        @InjectModel(SalarySlip.name) private salarySlipModel: Model<SalarySlipDocument>,
         private readonly requestService: BaseRequestService,
         private readonly adminAccountService: AdminAccountService,
         private readonly mailService: MailService,
@@ -175,10 +177,15 @@ export class RequestManageService {
                     case STATUS.SALARY_INCREASE:
                         await this.updateCoefficient(req, data, typeRequest);
                         break;
+                    case STATUS.SALARY_APPROVED:
+                        await this.updateAndSendSalaryToEmployee(req);
+                        break;
                     default:
                         throw new Error("Trạng thái đơn không hợp lệ!");
                 }
             }
+            req.employeeId = data?.employeeId._id as Types.ObjectId;
+            await this.requestService.sendNotificationForEmpReq(req, `Yêu cầu ${typeRequest?.name} của bạn đã được phê duyệt!`);
             return data;
         } catch (error) {
             try {
@@ -187,6 +194,59 @@ export class RequestManageService {
                 console.log(e)
             }
             throw error;
+        }
+    }
+
+    async updateAndSendSalaryToEmployee(data: CreateRequestDto) {
+        try {
+            const dataRequest = await this.requestService.findById(data.requestId);
+            const typeRequest = await this.typeRequestModel.findById(dataRequest?.typeRequest).exec();
+            if (!dataRequest) {
+                throw new Error("Không tìm thấy dữ liệu cần sửa")
+            }
+            if (dataRequest.dataReq === null || dataRequest.dataReq === undefined) {
+                throw new Error("Lỗi do không có thông tin chi tiết lịch nghỉ");
+            }
+            if (typeRequest?.code === STATUS.SALARY_APPROVED) {
+                const salarySlipIds = dataRequest.dataReq as string[];
+                const slips = await this.salarySlipModel.find({
+                    _id: { $in: salarySlipIds }
+                }).exec();
+                const allApproved = slips.every(slip => slip.status === STATUS.DA_DUYET);
+                if (allApproved) {
+                    throw new Error('Lương của tháng này đã được phê duyệt rồi.');
+                }
+                const tasks = slips.map(async slip => {
+                    if (slip.status === STATUS.DA_DUYET) return;
+
+                    const updated = await this.updateSlipStatus(slip._id as string);
+                    if (!updated) throw new Error(`Không tìm thấy phiếu lương với ID: ${slip._id}`);
+
+                    await this.sendSlipMail(updated);
+                });
+                await Promise.all(tasks);
+            }
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    private async updateSlipStatus(slipId: string) {
+        return this.salarySlipModel.findByIdAndUpdate(
+            new Types.ObjectId(slipId),
+            { status: STATUS.DA_DUYET },
+            { new: true }
+        ).exec();
+    }
+
+    private async sendSlipMail(slip: SalarySlip) {
+        const employee = await this.employeeModel.findById(slip.employeeId).exec();
+        if (employee) {
+            await this.mailService.sendSalarySlipMail(
+                employee.email,
+                employee.fullName,
+                slip
+            );
         }
     }
 
@@ -219,8 +279,9 @@ export class RequestManageService {
                             employeeId: new Types.ObjectId(dataRequest.employeeId),
                             leaveTypeCode: typeRequest.code
                         }).exec();
-                        if(leaveBalanceData){
-                            const leavePackage = this.checkLeavePackage(dates, leaveBalanceData?.totalAllocated);;
+                        if (leaveBalanceData) {
+                            const leavePackage = this.checkLeavePackage(dates, leaveBalanceData?.totalAllocated);
+                            ;
                             const recordsToInsert = [
                                 ...leavePackage.paidDates.map(date => ({
                                     employeeId: dataRequest.employeeId,
@@ -253,7 +314,7 @@ export class RequestManageService {
                             leaveBalanceData.remaining = newTotalBalance;
                             await leaveBalanceData.save();
                             await this.attendanceRecordModel.insertMany(recordsToInsert);
-                        }else{
+                        } else {
                             throw new Error("Không tìm thấy dữ liệu số ngày nghỉ phép cho loại yêu cầu này");
                         }
                     } else {
@@ -306,43 +367,43 @@ export class RequestManageService {
             }
 
             if (typeRequest.code === STATUS.TARGET_REQUEST) {
-              const checkData = await this.monthlyGoalModel
-                .findOne({
-                  employee_id: dataRequest.employeeId._id,
-                  month: dataRequest.dataReq.month,
-                  year: dataRequest.dataReq.year,
-                })
-                .exec();
-              if (checkData) {
-                const existingTitles = checkData.goals.map((goal) =>
-                  goal.title.trim().toLowerCase()
-                );
-                const newUniqueGoals = dataRequest.dataReq.goals.filter((goal) => {
-                  const title = goal.title.trim().toLowerCase();
-                  return !existingTitles.includes(title);
-                });
-                const goalsWithCode = newUniqueGoals.map((goal, index) => ({
-                  ...goal,
-                  code: checkData.goals.length + index,
-                }));
+                const checkData = await this.monthlyGoalModel
+                    .findOne({
+                        employee_id: dataRequest.employeeId._id,
+                        month: dataRequest.dataReq.month,
+                        year: dataRequest.dataReq.year,
+                    })
+                    .exec();
+                if (checkData) {
+                    const existingTitles = checkData.goals.map((goal) =>
+                        goal.title.trim().toLowerCase()
+                    );
+                    const newUniqueGoals = dataRequest.dataReq.goals.filter((goal) => {
+                        const title = goal.title.trim().toLowerCase();
+                        return !existingTitles.includes(title);
+                    });
+                    const goalsWithCode = newUniqueGoals.map((goal, index) => ({
+                        ...goal,
+                        code: checkData.goals.length + index,
+                    }));
 
-                if (newUniqueGoals.length > 0) {
-                  checkData.goals.push(...goalsWithCode);
-                  await checkData.save();
+                    if (newUniqueGoals.length > 0) {
+                        checkData.goals.push(...goalsWithCode);
+                        await checkData.save();
+                    }
+                } else {
+                    const goalsWithCode = dataRequest.dataReq.goals.map((goal: any, index: number) => ({
+                        ...goal,
+                        code: index,
+                    }));
+
+                    await this.monthlyGoalModel.insertOne({
+                        employee_id: dataRequest.employeeId._id,
+                        month: dataRequest.dataReq.month,
+                        year: dataRequest.dataReq.year,
+                        goals: goalsWithCode,
+                    });
                 }
-              } else {
-                const goalsWithCode = dataRequest.dataReq.goals.map((goal: any, index: number) => ({
-                  ...goal,
-                  code: index,
-                }));
-
-                await this.monthlyGoalModel.insertOne({
-                  employee_id: dataRequest.employeeId._id,
-                  month: dataRequest.dataReq.month,
-                  year: dataRequest.dataReq.year,
-                  goals: goalsWithCode,
-                });
-              }
             }
         } catch (e) {
             throw new Error(e);
@@ -392,17 +453,17 @@ export class RequestManageService {
 
     async getLeaveRequestsByDepartment(departmentId: string) {
         // Lấy typeRequestId của LEAVE_REQUEST
-        const leaveType = await this.typeRequestModel.findOne({ code: 'LEAVE_REQUEST' });
+        const leaveType = await this.typeRequestModel.findOne({code: 'LEAVE_REQUEST'});
         if (!leaveType) throw new Error('Không tìm thấy loại đơn nghỉ phép');
 
         // Lấy tất cả nhân viên thuộc phòng ban này
-        const employees = await this.employeeModel.find({ departmentId: new Types.ObjectId(departmentId) }).select('_id');
+        const employees = await this.employeeModel.find({departmentId: new Types.ObjectId(departmentId)}).select('_id');
         const employeeIds = employees.map(e => e._id);
 
         // Lấy tất cả đơn nghỉ phép của các nhân viên này
         const leaveRequests = await this.requestModel.find({
             typeRequest: leaveType._id,
-            employeeId: { $in: employeeIds }
+            employeeId: {$in: employeeIds}
         });
 
         return leaveRequests;
@@ -412,13 +473,13 @@ export class RequestManageService {
         try {
             const paidDates = requestDates.slice(0, leaveBalance);
             const unpaidDates = requestDates.slice(leaveBalance);
-            return { paidDates, unpaidDates };
+            return {paidDates, unpaidDates};
         } catch (e) {
             throw new Error(e.message || e);
         }
     }
 
-    getStatusAttendance(typeRequest: string){
+    getStatusAttendance(typeRequest: string) {
         let status = '';
         switch (typeRequest) {
             case STATUS.LEAVE_REQUEST:

@@ -18,6 +18,7 @@ import {SalaryRank, SalaryRankSchema} from "../../schemas/salaryRank.schema";
 import {Employees, EmployeesSchema} from "../../schemas/employees.schema";
 import {LeaveBalance, LeaveBalanceSchema} from "../../schemas/leaveBalance.schema";
 import {NotificationModule} from "../notification/notification.module";
+import {SalarySlip, SalarySlipSchema} from "../../schemas/salarySlip.schema";
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import {NotificationModule} from "../notification/notification.module";
           {name: SalaryRank.name, schema: SalaryRankSchema },
           {name: Employees.name, schema: EmployeesSchema },
           {name: LeaveBalance.name, schema: LeaveBalanceSchema },
+          {name: SalarySlip.name, schema: SalarySlipSchema },
       ]),
       AdminAccountModule,
       MailModule,

@@ -6,7 +6,7 @@ import { Employees, EmployeesDocument } from "src/schemas/employees.schema";
 import { Account, AccountDocument } from "src/schemas/account.schema";
 import { JwtService } from "@nestjs/jwt";
 import { RolePermissionService } from "./role_permission/role_permission.service";
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import {NotificationService} from "../notification/notification.service";
 import {STATUS} from "../../enum/status.enum";
 import {USER_ROLE} from "../../enum/role.enum";
@@ -44,12 +44,12 @@ export class AuthService {
   async login(req: LoginReq) {
     try {
       const account = await this.findUserByUsername(req.username);
-
-      const isPasswordValid = account && account.password === req.password;
-      // const isPasswordValid = account && await bcrypt.compare(req.password, account.password);
-
-      if (!account || !isPasswordValid) {
-        throw new Error("Invalid username or password");
+      if (!account) {
+        throw new Error("Tài khoản không tồn tại");
+      }
+      const isPasswordValid = await bcrypt.compare(req.password, account.password);
+      if (!isPasswordValid) {
+        throw new Error("Mật khẩu không đúng");
       }
 
       const rolePermission = await this.rolePermissionService.getRolePermissionByRole(account.role);
@@ -75,4 +75,29 @@ export class AuthService {
       throw new Error(error.message);
     }
   }
+
+  async resetPass() {
+    try {
+      const defaultPassword = 'a';
+      const hashedPass = await bcrypt.hash(defaultPassword, 10);
+
+      const users = await this.accountModel.find().exec();
+
+      const resetPromises = users.map(user =>
+          this.accountModel.findByIdAndUpdate(
+              user._id,
+              { password: hashedPass },
+              { new: true }
+          ).exec()
+      );
+
+      await Promise.all(resetPromises);
+
+      console.log(`✅ Reset mật khẩu cho ${users.length} tài khoản thành công.`);
+    } catch (e) {
+      console.error('❌ Lỗi khi reset mật khẩu:', e);
+      throw new Error('Reset mật khẩu thất bại');
+    }
+  }
+
 }

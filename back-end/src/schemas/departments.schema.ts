@@ -12,6 +12,9 @@ export class Departments extends BaseSchema {
     @Prop()
     description: string;
 
+    @Prop()
+    code: string;
+
     @Prop({ type: Types.ObjectId, ref: () => 'Employees' })
     managerId: Types.ObjectId;
 }

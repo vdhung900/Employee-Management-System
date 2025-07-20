@@ -30,6 +30,17 @@ export class MailService {
         console.log('Email sent: %s', info.messageId);
     }
 
+    async sendSalarySlipMail(to: string, fullName: string, slip: any) {
+        const htmlTemplate = this.getSalarySlipHtmlTemplate(fullName, slip);
+        const info = await this.transporter.sendMail({
+            from: 'Hệ thống quản lý nhân sự',
+            to,
+            subject: `Bảng lương tháng ${slip.month}/${slip.year}`,
+            html: htmlTemplate,
+        });
+        console.log('Salary slip email sent: %s', info.messageId);
+    }
+
     private getHtmlTemplate(fullName: string, username: string, password: string): string {
         const createdDate = new Date().toLocaleDateString('vi-VN');
 
@@ -442,5 +453,36 @@ export class MailService {
     </div>
 </body>
 </html>`
+    }
+
+    private getSalarySlipHtmlTemplate(fullName: string, slip: any): string {
+        return `<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Bảng lương tháng ${slip.month}/${slip.year}</title>
+</head>
+<body>
+    <h2>Xin chào ${fullName},</h2>
+    <p>Bạn nhận được bảng lương tháng <b>${slip.month}/${slip.year}</b>:</p>
+    <table border="1" cellpadding="8" style="border-collapse:collapse;">
+        <tr><th>Mục</th><th>Giá trị</th></tr>
+        <tr><td>Lương cơ bản</td><td>${slip.baseSalary?.toLocaleString() || 0} VND</td></tr>
+        <tr><td>Hệ số lương</td><td>${slip.salaryCoefficient || 0}</td></tr>
+        <tr><td>Tổng lương cơ bản</td><td>${slip.totalBaseSalary?.toLocaleString() || 0} VND</td></tr>
+        <tr><td>Phép không lương</td><td>${slip.unpaidLeave?.toLocaleString() || 0} VND</td></tr>
+        <tr><td>Phạt đi muộn/về sớm</td><td>${slip.latePenalty?.toLocaleString() || 0} VND</td></tr>
+        <tr><td>OT ngày thường</td><td>${slip.otWeekday?.toLocaleString() || 0} VND</td></tr>
+        <tr><td>OT cuối tuần</td><td>${slip.otWeekend?.toLocaleString() || 0} VND</td></tr>
+        <tr><td>OT ngày lễ</td><td>${slip.otHoliday?.toLocaleString() || 0} VND</td></tr>
+        <tr><td>Bảo hiểm</td><td>${slip.insurance?.toLocaleString() || 0} VND</td></tr>
+        <tr><td>Thuế TNCN</td><td>${slip.personalIncomeTax?.toLocaleString() || 0} VND</td></tr>
+        <tr><td>Giảm trừ gia cảnh</td><td>${slip.familyDeduction?.toLocaleString() || 0} VND</td></tr>
+        <tr><td><b>Tổng lương thực nhận</b></td><td><b>${slip.totalSalary?.toLocaleString() || 0} VND</b></td></tr>
+    </table>
+    <p>Nếu có thắc mắc về bảng lương, vui lòng liên hệ phòng nhân sự.</p>
+    <p>Trân trọng,<br/>Phòng Nhân sự</p>
+</body>
+</html>`;
     }
 }

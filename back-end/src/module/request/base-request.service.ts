@@ -30,18 +30,18 @@ export class BaseRequestService {
     }
 
     async findAll() {
-        return await this.requestModel.find().populate('employeeId').populate('typeRequest').exec();
+        return await this.requestModel.find().populate('employeeId').populate('typeRequest').populate('departmentId').exec();
     }
 
     async findByFilterCode(departmentId: string, code: string){
-        return await this.requestModel.find({departmentId: new Types.ObjectId(departmentId)}).populate('employeeId').populate({
+        return await this.requestModel.find({departmentId: new Types.ObjectId(departmentId)}).populate('employeeId').populate('departmentId').populate({
             path: 'typeRequest',
             match: {code: {$ne: code}}
         }).exec();
     }
 
     async findById(id: any) {
-        return await this.requestModel.findById(id).populate('employeeId').populate('typeRequest').exec();
+        return await this.requestModel.findById(id).populate('employeeId').populate('typeRequest').populate('departmentId').exec();
     }
 
     async findByTypeCode(typeRequestId: Types.ObjectId) {
@@ -100,7 +100,7 @@ export class BaseRequestService {
                 throw new Error('Request is not pending or approved');
             }
             data.status = 'Rejected';
-            data.dataReq.reason = reason || 'No reason provided';
+            data.reason = reason || 'No reason provided';
             data.timeResolve = 1;
             await data.save();
         }else if (status === "Cancelled") {
@@ -123,6 +123,17 @@ export class BaseRequestService {
                 throw new Error('Department not found');
             }
             await this.notificationService.notifyEmployee(department.managerId.toString(), message);
+        }catch (e) {
+            throw e;
+        }
+    }
+
+    async sendNotificationForEmpReq(data: CreateRequestDto, message: string){
+        try{
+            if(!data.employeeId){
+                throw new Error('EmployeeId not found');
+            }
+            await this.notificationService.notifyEmployee(data.employeeId.toString(), message);
         }catch (e) {
             throw e;
         }

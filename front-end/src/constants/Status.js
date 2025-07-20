@@ -45,4 +45,7 @@ export const STATUS = {
     CHINH_THUC: 'Chính thức', // Full-time
     THOI_VU: 'Thời vụ',       // Part-time
     THU_VIEC: 'Thử việc',     // Probation
-};
+    DU_THAO: '00',
+    CHO_DUYET: '01',
+    DA_DUYET: '02'
+  };
