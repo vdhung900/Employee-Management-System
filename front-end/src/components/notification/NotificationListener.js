@@ -7,8 +7,8 @@ function NotificationListener({ employeeId, onNewNotification }) {
     if (!employeeId) return;
 
 
-    const SOCKET_LOCAL = 'ws://localhost:9123/notification';
-    const SOCKET_PROD = 'wss://ems-api.api-score.com/notification'; 
+    const SOCKET_LOCAL = 'http://localhost:9123/notification';
+    const SOCKET_PROD = 'https://ems-api.api-score.com/notification'; 
     
 
     const socket = io(SOCKET_PROD, {
