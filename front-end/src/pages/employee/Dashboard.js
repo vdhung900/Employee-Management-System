@@ -424,7 +424,7 @@ const EmployeeDashboard = () => {
                     Hoàn thành
                   </ThreeDButton>
                 )}
-                <ThreeDButton icon={<CoffeeOutlined />}>Đăng ký nghỉ phép</ThreeDButton>
+                {/*<ThreeDButton icon={<CoffeeOutlined />}>Đăng ký nghỉ phép</ThreeDButton>*/}
               </Space>
             </div>
           </ThreeDCard>
