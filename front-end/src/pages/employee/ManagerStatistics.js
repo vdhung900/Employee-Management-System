@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Typography, Spin, message, Statistic, Divider, Table, Select } from "antd";
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
+import { UserOutlined, TeamOutlined, DollarOutlined, BarChartOutlined } from '@ant-design/icons';
 import StatisticsService from "../../services/StatisticsService";
 import EmployeeProfile from "../../services/EmployeeProfile";
 
@@ -352,12 +353,12 @@ const ManagerStatistics = () => {
   const totalLeave = leaveTable.reduce((sum, emp) => sum + emp.totalLeaveDays, 0);
 
   return (
-    <div style={{ padding: 24, minHeight: '100vh', background: '#f4f6fb' }}>
-      <Title level={2} style={{ textAlign: 'center', color: '#1976d2', marginBottom: 32 }}>Thống kê nhân sự phòng ban</Title>
+    <div style={{ padding: 24, minHeight: '100vh', background: '#fff' }}>
+      <Title level={2} style={{ textAlign: 'left', color: '#1976d2', marginBottom: 32 }}><BarChartOutlined style={{ marginRight: 8 }} />Thống kê nhân sự phòng ban</Title>
       <Spin spinning={loading}>
         <Row gutter={[32, 32]} justify="center">
           <Col xs={24} md={12}>
-            <Card title="Tỷ lệ giới tính nhân viên">
+            <Card title={<span><UserOutlined style={{ color: '#0088FE', marginRight: 8 }} />Tỷ lệ giới tính nhân viên</span>} bodyStyle={{ padding: 24, background: '#fff' }} style={{ background: '#fff' }}>
               <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
                   <Pie
@@ -380,7 +381,7 @@ const ManagerStatistics = () => {
             </Card>
           </Col>
           <Col xs={24} md={12}>
-            <Card title="Phân bố độ tuổi nhân viên">
+            <Card title={<span><TeamOutlined style={{ color: '#82ca9d', marginRight: 8 }} />Phân bố độ tuổi nhân viên</span>} bodyStyle={{ padding: 24, background: '#fff' }} style={{ background: '#fff' }}>
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={ageData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -405,7 +406,7 @@ const ManagerStatistics = () => {
             {yearOptions.map(y => <Option key={y} value={y}>{y}</Option>)}
           </Select>
         </div>
-        <Card title="Biểu đồ tổng số ngày nghỉ phép của phòng ban theo tháng trong năm" style={{ marginBottom: 24 }}>
+        <Card title={<span><BarChartOutlined style={{ color: '#8884d8', marginRight: 8 }} />Biểu đồ tổng số ngày nghỉ phép của phòng ban theo tháng trong năm</span>} style={{ marginBottom: 24, background: '#fff' }} bodyStyle={{ padding: 24, background: '#fff' }}>
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={leaveByMonth} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -417,7 +418,7 @@ const ManagerStatistics = () => {
             </BarChart>
           </ResponsiveContainer>
         </Card>
-        <Card title="Bảng thống kê số ngày nghỉ phép của nhân viên trong phòng ban">
+        <Card title={<span><UserOutlined style={{ color: '#faad14', marginRight: 8 }} />Bảng thống kê số ngày nghỉ phép của nhân viên trong phòng ban</span>} bodyStyle={{ padding: 24, background: '#fff' }} style={{ background: '#fff' }}>
           <Table 
             columns={columns} 
             dataSource={leaveTable} 
@@ -435,7 +436,7 @@ const ManagerStatistics = () => {
             <Card
               title={
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#52c41a', fontWeight: 600 }}>Phân bố lương phòng ban</span>
+                  <span style={{ color: '#52c41a', fontWeight: 600, textAlign: 'left' }}><DollarOutlined style={{ color: '#52c41a', marginRight: 8 }} />Phân bố lương phòng ban</span>
                   <Select
                     value={selectedMonth}
                     onChange={handleMonthChange}
@@ -449,7 +450,8 @@ const ManagerStatistics = () => {
                   </Select>
                 </div>
               }
-              style={{ borderRadius: 16, boxShadow: '0 4px 24px rgba(82, 196, 26, 0.08)' }}
+              style={{ background: '#fff' }}
+              bodyStyle={{ padding: 24, background: '#fff' }}
             >
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={salaryRangeData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -472,8 +474,9 @@ const ManagerStatistics = () => {
         <Row gutter={[32, 32]} justify="center">
           <Col xs={24}>
             <Card
-              title={<span style={{ color: '#722ed1', fontWeight: 600 }}>Thống kê lương phòng ban theo tháng</span>}
-              style={{ borderRadius: 16, boxShadow: '0 4px 24px rgba(114, 46, 209, 0.08)' }}
+              title={<span style={{ color: '#722ed1', fontWeight: 600, textAlign: 'left' }}><DollarOutlined style={{ color: '#722ed1', marginRight: 8 }} />Thống kê lương phòng ban theo tháng</span>}
+              style={{ background: '#fff' }}
+              bodyStyle={{ padding: 24, background: '#fff' }}
             >
               <Table
                 columns={monthlySalaryColumns}

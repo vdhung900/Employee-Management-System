@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Typography, Row, Col, Button, Table, Modal, Form, Input, InputNumber, Select, Checkbox, message, Tag, Space, Divider, Tooltip, Input as AntInput } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, GiftOutlined, EyeOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, GiftOutlined, EyeOutlined, SearchOutlined, FilterOutlined, DollarOutlined, UserOutlined, TeamOutlined, CalendarOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import APIConfig from '../../services/APIConfig';
 
 const { Title } = Typography;
@@ -208,7 +208,10 @@ const Benefits = () => {
     return (
         <div style={{ padding: 24, minHeight: '100vh', background: '#fff' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <Title level={3} style={{ margin: 0 }}>Quản lý benefits</Title>
+                <Title level={3} style={{ margin: 0 }}>
+                  <GiftOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                  Quản lý benefits
+                </Title>
                 {userRole === 'hr' && (
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
                         Thêm phúc lợi
@@ -282,12 +285,12 @@ const Benefits = () => {
                 <Form form={form} layout="vertical">
                     <Row gutter={24}>
                         <Col span={12}>
-                            <Form.Item name="name" label="Tên" rules={[{ required: true, message: 'Nhập tên phúc lợi' }]}>
+                            <Form.Item name="name" label={<><GiftOutlined style={{ marginRight: 6 }} />Tên</>} rules={[{ required: true, message: 'Nhập tên phúc lợi' }]}>
                                 <Input placeholder="Nhập tên phúc lợi" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
-                            <Form.Item name="amount" label="Số tiền (VND)" rules={[{ required: true, message: 'Nhập số tiền' }]}>
+                            <Form.Item name="amount" label={<><DollarOutlined style={{ marginRight: 6 }} />Số tiền (VND)</>} rules={[{ required: true, message: 'Nhập số tiền' }]}>
                                 <InputNumber min={0} style={{ width: '100%' }} placeholder="Nhập số tiền" />
                             </Form.Item>
                         </Col>
@@ -309,14 +312,14 @@ const Benefits = () => {
                     </Row>
                     <Row gutter={24}>
                         <Col span={12}>
-                            <Form.Item name="departments" label="Phòng ban" dependencies={["applyAll"]}>
+                            <Form.Item name="departments" label={<><TeamOutlined style={{ marginRight: 6 }} />Phòng ban</>} dependencies={["applyAll"]}>
                                 <Select mode="multiple" placeholder="Chọn phòng ban" disabled={form.getFieldValue('applyAll')}>
                                     {departments.map(d => <Option key={d._id} value={d._id}>{d.name}</Option>)}
                                 </Select>
                             </Form.Item>
                         </Col>
                         <Col span={12}>
-                            <Form.Item name="employees" label="Nhân viên">
+                            <Form.Item name="employees" label={<><UserOutlined style={{ marginRight: 6 }} />Nhân viên</>}>
                                 <Select mode="multiple" placeholder="Chọn nhân viên">
                                     {employees.map(e => (
                                         <Option key={e._id} value={e._id}>
@@ -329,14 +332,14 @@ const Benefits = () => {
                     </Row>
                     <Row gutter={24}>
                         <Col span={12}>
-                            <Form.Item name="effective" label="Tháng hiệu lực" rules={[{ required: form.getFieldValue('status') === 'manual', message: 'Chọn tháng hiệu lực' }]}>
+                            <Form.Item name="effective" label={<><CalendarOutlined style={{ marginRight: 6 }} />Tháng hiệu lực</>} rules={[{ required: form.getFieldValue('status') === 'manual', message: 'Chọn tháng hiệu lực' }]}>
                                 <Select mode="multiple" placeholder="Chọn tháng">
                                     {months.map(m => <Option key={m.value} value={m.value}>{m.label}</Option>)}
                                 </Select>
                             </Form.Item>
                         </Col>
                         <Col span={12}>
-                            <Form.Item name="description" label="Mô tả">
+                            <Form.Item name="description" label={<><InfoCircleOutlined style={{ marginRight: 6 }} />Mô tả</>}>
                                 <Input.TextArea rows={2} />
                             </Form.Item>
                         </Col>

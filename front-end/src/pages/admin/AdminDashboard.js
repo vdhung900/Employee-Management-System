@@ -292,10 +292,10 @@ const AdminDashboard = () => {
                 {/* Attendance Table */}
                 <Col xs={24} lg={10} style={{ marginBottom: 32 }}>
                     <ThreeDCard
-                        title="Điểm danh hôm nay"
-                        extra={<FileExclamationOutlined style={{ color: '#52c41a' }} />}
+                        title={<><FileExclamationOutlined style={{ marginRight: 8, color: '#52c41a' }} />Điểm danh hôm nay</>}
+                        extra={null}
                         className="card-green-theme"
-                        style={{ marginBottom: 24 }}
+                        style={{ marginBottom: 24, padding: 24 }}
                     >
                         <Table
                             dataSource={attendanceData}
@@ -311,10 +311,10 @@ const AdminDashboard = () => {
                 {/* Department Attendance + Biểu đồ nhân viên theo phòng ban */}
                 <Col xs={24} lg={7} style={{ marginBottom: 32 }}>
                     <ThreeDCard
-                        title="Nhân viên theo phòng ban"
-                        extra={<BarChart width={20} height={20}><Bar dataKey="count" fill="#1890ff" /></BarChart>}
+                        title={<><BarChart width={20} height={20}><Bar dataKey="count" fill="#1890ff" /></BarChart><span style={{ marginLeft: 8 }}>Nhân viên theo phòng ban</span></>}
+                        extra={null}
                         className="card-green-theme"
-                        style={{ marginBottom: 24 }}
+                        style={{ marginBottom: 24, padding: 24 }}
                     >
                         <ResponsiveContainer width="100%" height={180}>
                             <BarChart data={employeeByDepartment}>
@@ -326,10 +326,10 @@ const AdminDashboard = () => {
                         </ResponsiveContainer>
                     </ThreeDCard>
                     <ThreeDCard
-                        title="Hiệu suất mục tiêu tháng"
-                        extra={<RiseOutlined style={{ color: '#faad14' }} />}
+                        title={<><RiseOutlined style={{ color: '#faad14', marginRight: 8 }} />Hiệu suất mục tiêu tháng</>}
+                        extra={null}
                         className="card-green-theme"
-                        style={{ marginTop: 16 }}
+                        style={{ marginTop: 16, padding: 24 }}
                     >
                         <Text strong>Đã hoàn thành {goalProgress}% mục tiêu tháng</Text>
                         <Progress percent={goalProgress} status="active" strokeColor="#faad14" style={{ marginTop: 8 }} />
@@ -339,10 +339,10 @@ const AdminDashboard = () => {
                 {/* Biểu đồ yêu cầu theo trạng thái + Thông báo */}
                 <Col xs={24} lg={7} style={{ marginBottom: 32 }}>
                     <ThreeDCard
-                        title="Yêu cầu theo trạng thái"
-                        extra={<PieChart width={20} height={20}><Pie dataKey="value" data={requestStatusData} cx={10} cy={10} outerRadius={10} fill="#1890ff" /></PieChart>}
+                        title={<><PieChart width={20} height={20}><Pie dataKey="value" data={requestStatusData} cx={10} cy={10} outerRadius={10} fill="#1890ff" /></PieChart><span style={{ marginLeft: 8 }}>Yêu cầu theo trạng thái</span></>}
+                        extra={null}
                         className="card-green-theme"
-                        style={{ marginBottom: 24 }}
+                        style={{ marginBottom: 24, padding: 24 }}
                     >
                         <ResponsiveContainer width="100%" height={180}>
                             <PieChart>
@@ -365,10 +365,10 @@ const AdminDashboard = () => {
                         </ResponsiveContainer>
                     </ThreeDCard>
                     <ThreeDCard
-                        title="Thông báo mới nhất"
-                        extra={<AlertOutlined style={{ color: '#faad14' }} />}
+                        title={<><AlertOutlined style={{ color: '#faad14', marginRight: 8 }} />Thông báo mới nhất</>}
+                        extra={null}
                         className="card-green-theme"
-                        style={{ marginTop: 16 }}
+                        style={{ marginTop: 16, padding: 24 }}
                     >
                         <ul style={{ paddingLeft: 16, margin: 0 }}>
                             {notifications.map(n => (

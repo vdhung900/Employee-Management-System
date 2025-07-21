@@ -237,7 +237,7 @@ const DocumentManagement = () => {
   );
 
   return (
-    <div style={{ background: 'white', minHeight: '80vh', padding: 10 }}>
+    <div style={{ background: 'white', minHeight: '80vh', padding: 24 }}>
       <div style={{
         textAlign: 'left',
       }}>

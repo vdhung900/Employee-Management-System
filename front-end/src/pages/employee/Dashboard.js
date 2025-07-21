@@ -290,20 +290,21 @@ const EmployeeDashboard = () => {
               border: "1px solid rgba(24, 144, 255, 0.2)",
             }}
           >
-            <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "24px 0" }}>
+              <UserOutlined style={{ fontSize: 32, color: "#1890ff", marginRight: 12 }} />
               <Title level={3} style={{ margin: 0, fontWeight: "700" }}>
                 <span className="blue-gradient-text">Chào, {user?.name || "Nhân viên"}!</span>
               </Title>
-              <Text style={{ fontSize: "16px", color: "rgba(0, 0, 0, 0.65)" }}>
-                Hôm nay:{" "}
-                {currentDate.toLocaleDateString("vi-VN", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </Text>
             </div>
+            <Text style={{ fontSize: "16px", color: "rgba(0, 0, 0, 0.65)" }}>
+              Hôm nay:{" "}
+              {currentDate.toLocaleDateString("vi-VN", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </Text>
             <ThreeDButton
               type="primary"
               icon={<FieldTimeOutlined />}

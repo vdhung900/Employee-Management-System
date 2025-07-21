@@ -443,9 +443,9 @@ const MonthlyPerformanceReview = () => {
   ];
 
   return (
-    <div>
+    <div style={{ padding: 24 }}>
       <Title level={2}>
-        <BarChartOutlined /> Đánh giá hiệu suất nhân viên
+        <BarChartOutlined style={{ marginRight: 8 }} /> Đánh giá hiệu suất nhân viên
       </Title>
       <Divider />
 

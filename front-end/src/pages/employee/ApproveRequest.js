@@ -326,7 +326,7 @@ const ApproveRequest = () => {
         {
             title: 'Lí do',
             key: 'reason',
-            render: (value: any, record: any) => {
+            render: (value, record) => {
                 if (record.status === STATUS.REJECTED) {
                     return record.reason || '—';
                 } else {
@@ -394,7 +394,7 @@ const ApproveRequest = () => {
     const rejectedRequests = requests.filter((r) => r.status === 'Rejected').length;
 
     return (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: 24 }}>
             <Row gutter={[24, 24]}>
                 <Col span={24}>
                     <div style={{

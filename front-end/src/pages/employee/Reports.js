@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Card,
     Typography,
@@ -32,6 +32,8 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
+import ReportService from '../../services/ReportService';
+import * as XLSX from 'xlsx';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -86,6 +88,30 @@ const Reports = () => {
         dayjs().startOf('month'),
         dayjs().endOf('month')
     ]);
+    const [staffReportData, setStaffReportData] = useState([]);
+    const [payrollReportData, setPayrollReportData] = useState([]);
+    const [attendanceReportData, setAttendanceReportData] = useState([]);
+    const [performanceReportData, setPerformanceReportData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        setLoading(true);
+        setError(null);
+        Promise.all([
+            ReportService.getStaffReport(),
+            ReportService.getPayrollReport(),
+            ReportService.getAttendanceReport(),
+            ReportService.getPerformanceReport()
+        ]).then(([staff, payroll, attendance, performance]) => {
+            setStaffReportData(staff?.data ?? []);
+            setPayrollReportData(payroll?.data ?? []);
+            setAttendanceReportData(attendance?.data ?? []);
+            setPerformanceReportData(performance?.data ?? []);
+        }).catch(e => {
+            setError(e.message || 'Lỗi tải báo cáo');
+        }).finally(() => setLoading(false));
+    }, []);
 
     // Columns cho bảng báo cáo nhân sự
     const staffColumns = [
@@ -292,91 +318,172 @@ const Reports = () => {
         }
     ];
 
+    // Hàm xuất Excel cho từng tab
+    const exportExcel = () => {
+        let exportData = [];
+        let sheetName = '';
+        if (activeTab === '1') {
+            exportData = staffReportData.map((item, idx) => ({
+                'STT': idx + 1,
+                'Phòng ban': item.department,
+                'Tổng nhân viên': item.total,
+                'Nhân viên mới': item.new,
+                'Nghỉ việc': item.leave,
+                'Nam': item.male,
+                'Nữ': item.female,
+            }));
+            sheetName = 'NhanSu';
+        } else if (activeTab === '3') {
+            exportData = payrollReportData.map((item, idx) => ({
+                'STT': idx + 1,
+                'Tháng': item.month,
+                'Tổng lương': item.totalSalary,
+                'Thưởng': item.bonus,
+                'Khấu trừ': item.deductions,
+                'Thực chi': item.netPayment,
+            }));
+            sheetName = 'Luong';
+        } else if (activeTab === '4') {
+            exportData = attendanceReportData.map((item, idx) => ({
+                'STT': idx + 1,
+                'Tháng': item.month,
+                'Tổng ngày công': item.total,
+                'Đúng giờ': item.onTime,
+                'Đi muộn': item.late,
+                'Vắng mặt': item.absent,
+                'Nghỉ phép': item.leave,
+                'Giờ tăng ca': item.overtime,
+            }));
+            sheetName = 'ChamCong';
+        } else if (activeTab === '5') {
+            exportData = performanceReportData.map((item, idx) => ({
+                'STT': idx + 1,
+                'Tháng': item.month,
+                'Điểm TB': item.averageScore,
+                'Số lượt đánh giá': item.totalReviews,
+            }));
+            sheetName = 'DanhGia';
+        }
+        if (exportData.length === 0) return;
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        XLSX.writeFile(wb, `report_${sheetName}.xlsx`);
+    };
+
+    // Hàm xuất toàn bộ báo cáo ra Excel (nhiều sheet)
+    const exportAllExcel = () => {
+        const wb = XLSX.utils.book_new();
+        // Nhân sự
+        const staffSheet = XLSX.utils.json_to_sheet(staffReportData.map((item, idx) => ({
+            'STT': idx + 1,
+            'Phòng ban': item.department,
+            'Tổng nhân viên': item.total,
+            'Nhân viên mới': item.new,
+            'Nghỉ việc': item.leave,
+            'Nam': item.male,
+            'Nữ': item.female,
+        })));
+        XLSX.utils.book_append_sheet(wb, staffSheet, 'NhanSu');
+        // Lương
+        const payrollSheet = XLSX.utils.json_to_sheet(payrollReportData.map((item, idx) => ({
+            'STT': idx + 1,
+            'Tháng': item.month,
+            'Tổng lương': item.totalSalary,
+            'Thưởng': item.bonus,
+            'Khấu trừ': item.deductions,
+            'Thực chi': item.netPayment,
+        })));
+        XLSX.utils.book_append_sheet(wb, payrollSheet, 'Luong');
+        // Chấm công
+        const attendanceSheet = XLSX.utils.json_to_sheet(attendanceReportData.map((item, idx) => ({
+            'STT': idx + 1,
+            'Tháng': item.month,
+            'Tổng ngày công': item.total,
+            'Đúng giờ': item.onTime,
+            'Đi muộn': item.late,
+            'Vắng mặt': item.absent,
+            'Nghỉ phép': item.leave,
+            'Giờ tăng ca': item.overtime,
+        })));
+        XLSX.utils.book_append_sheet(wb, attendanceSheet, 'ChamCong');
+        // Đánh giá
+        const performanceSheet = XLSX.utils.json_to_sheet(performanceReportData.map((item, idx) => ({
+            'STT': idx + 1,
+            'Tháng': item.month,
+            'Điểm TB': item.averageScore,
+            'Số lượt đánh giá': item.totalReviews,
+        })));
+        XLSX.utils.book_append_sheet(wb, performanceSheet, 'DanhGia');
+        XLSX.writeFile(wb, 'BaoCaoTongHop.xlsx');
+    };
+
     return (
-        <div>
-            <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
-                <Col span={24}>
-                    <Title level={2}>Báo cáo HR</Title>
-                    <Text type="secondary">Thống kê và báo cáo về nhân sự, tuyển dụng, lương thưởng và chấm công</Text>
+        <div style={{ padding: '24px' }}>
+            <Row gutter={[16, 16]} style={{ marginBottom: '16px', alignItems: 'center' }}>
+                <Col span={24} style={{ textAlign: 'left' }}>
+                    <BarChartOutlined style={{ fontSize: 36, color: '#1890ff', marginRight: 12, verticalAlign: 'middle' }} />
+                    <Title level={2} style={{ display: 'inline', verticalAlign: 'middle', margin: 0 }}>Báo cáo</Title>
                 </Col>
             </Row>
 
-            <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
-                <Col xs={24} md={6}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px', justifyContent: 'center' }}>
+                <div style={{ minWidth: 300, flex: '1 1 300px', maxWidth: 400 }}>
                     <ThreeDContainer>
                         <Card>
                             <Statistic
                                 title="Tổng nhân viên"
-                                value={89}
+                                value={staffReportData.reduce((sum, d) => sum + d.total, 0)}
                                 prefix={<TeamOutlined />}
                                 valueStyle={{ color: '#1890ff' }}
                             />
                         </Card>
                     </ThreeDContainer>
-                </Col>
-                <Col xs={24} md={6}>
+                </div>
+                <div style={{ minWidth: 300, flex: '1 1 300px', maxWidth: 400 }}>
                     <ThreeDContainer>
                         <Card>
                             <Statistic
-                                title="Tỷ lệ nghỉ việc"
-                                value={2.5}
-                                suffix="%"
-                                precision={1}
-                                valueStyle={{ color: '#ff4d4f' }}
-                                prefix={<UserDeleteOutlined />}
-                            />
-                        </Card>
-                    </ThreeDContainer>
-                </Col>
-                <Col xs={24} md={6}>
-                    <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Tỷ lệ đi làm đúng giờ"
-                                value={87.5}
-                                suffix="%"
-                                precision={1}
-                                valueStyle={{ color: '#52c41a' }}
-                                prefix={<ClockCircleOutlined />}
-                            />
-                        </Card>
-                    </ThreeDContainer>
-                </Col>
-                <Col xs={24} md={6}>
-                    <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Chi phí nhân sự/tháng"
-                                value={375}
-                                suffix="triệu"
-                                precision={0}
+                                title="Tổng phòng ban"
+                                value={staffReportData.length}
+                                prefix={<PieChartOutlined />}
                                 valueStyle={{ color: '#722ed1' }}
-                                prefix={<DollarOutlined />}
                             />
                         </Card>
                     </ThreeDContainer>
-                </Col>
-            </Row>
+                </div>
+                <div style={{ minWidth: 300, flex: '1 1 300px', maxWidth: 400 }}>
+                    <ThreeDContainer>
+                        <Card>
+                            <Statistic
+                                title="Điểm đánh giá TB 6 tháng"
+                                value={performanceReportData.length > 0 ? (performanceReportData.reduce((sum, d) => sum + d.averageScore, 0) / performanceReportData.length).toFixed(2) : 0}
+                                prefix={<AuditOutlined />}
+                                valueStyle={{ color: '#faad14' }}
+                            />
+                        </Card>
+                    </ThreeDContainer>
+                </div>
+                <div style={{ minWidth: 300, flex: '1 1 300px', maxWidth: 400 }}>
+                    <ThreeDContainer>
+                        <Card>
+                            <Statistic
+                                title="Tỷ lệ đúng giờ 6 tháng"
+                                value={attendanceReportData.length > 0 ? ((attendanceReportData.reduce((sum, d) => sum + d.onTime, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1)) * 100).toFixed(1) : 0}
+                                suffix="%"
+                                prefix={<ClockCircleOutlined />}
+                                valueStyle={{ color: '#52c41a' }}
+                            />
+                        </Card>
+                    </ThreeDContainer>
+                </div>
+            </div>
 
             <ThreeDContainer>
                 <div style={{ marginBottom: '16px', padding: '16px', background: '#fff', borderRadius: '8px' }}>
-                    <Space direction="horizontal" size="middle" style={{ marginBottom: '16px' }}>
-                        <Text strong>Thời gian:</Text>
-                        <RangePicker value={dateRange} onChange={setDateRange} allowClear={false} />
-                        <Select defaultValue="all" style={{ width: 160 }}>
-                            <Option value="all">Tất cả phòng ban</Option>
-                            <Option value="engineering">Engineering</Option>
-                            <Option value="design">Design</Option>
-                            <Option value="management">Management</Option>
-                            <Option value="sales">Sales</Option>
-                            <Option value="marketing">Marketing</Option>
-                        </Select>
-                        <Button type="primary" icon={<FilterOutlined />}>Lọc</Button>
-                    </Space>
                     <Space>
-                        <Button icon={<FilePdfOutlined />}>Xuất PDF</Button>
-                        <Button icon={<FileExcelOutlined />}>Xuất Excel</Button>
-                        <Button icon={<DownloadOutlined />}>Tải báo cáo đầy đủ</Button>
+                        <Button icon={<FileExcelOutlined />} onClick={exportExcel}>Xuất Excel</Button>
+                        <Button icon={<DownloadOutlined />} onClick={exportAllExcel} style={{marginRight: 8}}>Tải báo cáo đầy đủ (Excel)</Button>
                     </Space>
                 </div>
 
@@ -389,59 +496,59 @@ const Reports = () => {
                             <Paragraph>
                                 Báo cáo thống kê về số lượng nhân viên, biến động nhân sự theo phòng ban cho giai đoạn đã chọn.
                             </Paragraph>
-
+                            {error && <Text type="danger">{error}</Text>}
                             <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
                                 <Col span={8}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><UserOutlined style={{color:'#1890ff'}}/>Tổng số nhân viên</span>}>
                                         <Statistic
                                             title="Tổng số nhân viên"
-                                            value={89}
+                                            value={staffReportData.reduce((sum, d) => sum + d.total, 0)}
                                             prefix={<UserOutlined />}
                                         />
                                         <Divider />
                                         <div>
                                             <div><Text type="secondary">Phòng ban nhiều nhất:</Text></div>
-                                            <Text strong>Engineering (25)</Text>
+                                            <Text strong>{staffReportData.length > 0 ? `${staffReportData.reduce((max, d) => d.total > max.total ? d : max, staffReportData[0]).department} (${staffReportData.reduce((max, d) => d.total > max.total ? d : max, staffReportData[0]).total})` : '-'}</Text>
                                         </div>
                                     </Card>
                                 </Col>
                                 <Col span={8}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><UserAddOutlined style={{color:'#52c41a'}}/>Tuyển mới trong kỳ</span>}>
                                         <Statistic
                                             title="Tuyển mới trong kỳ"
-                                            value={10}
+                                            value={staffReportData.reduce((sum, d) => sum + d.new, 0)}
                                             valueStyle={{ color: '#52c41a' }}
                                             prefix={<UserAddOutlined />}
                                         />
                                         <Divider />
                                         <Progress
-                                            percent={11.2}
+                                            percent={staffReportData.length > 0 ? (staffReportData.reduce((sum, d) => sum + d.new, 0) / staffReportData.reduce((sum, d) => sum + d.total, 0)) * 100 : 0}
                                             size="small"
                                             status="success"
-                                            format={() => '11.2% tổng nhân sự'}
+                                            format={() => `${staffReportData.length > 0 ? ((staffReportData.reduce((sum, d) => sum + d.new, 0) / staffReportData.reduce((sum, d) => sum + d.total, 0)) * 100).toFixed(1) : 0}% tổng nhân sự`}
                                         />
                                     </Card>
                                 </Col>
                                 <Col span={8}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><UserDeleteOutlined style={{color:'#ff4d4f'}}/>Nghỉ việc trong kỳ</span>}>
                                         <Statistic
                                             title="Nghỉ việc trong kỳ"
-                                            value={3}
+                                            value={staffReportData.reduce((sum, d) => sum + d.leave, 0)}
                                             valueStyle={{ color: '#ff4d4f' }}
                                             prefix={<UserDeleteOutlined />}
                                         />
                                         <Divider />
                                         <Progress
-                                            percent={3.4}
+                                            percent={staffReportData.length > 0 ? (staffReportData.reduce((sum, d) => sum + d.leave, 0) / staffReportData.reduce((sum, d) => sum + d.total, 0)) * 100 : 0}
                                             size="small"
                                             status="exception"
-                                            format={() => '3.4% tổng nhân sự'}
+                                            format={() => `${staffReportData.length > 0 ? ((staffReportData.reduce((sum, d) => sum + d.leave, 0) / staffReportData.reduce((sum, d) => sum + d.total, 0)) * 100).toFixed(1) : 0}% tổng nhân sự`}
                                         />
                                     </Card>
                                 </Col>
                             </Row>
-
                             <Table
+                                loading={loading}
                                 dataSource={staffReportData}
                                 columns={staffColumns}
                                 rowKey="department"
@@ -475,7 +582,7 @@ const Reports = () => {
                                             <Table.Summary.Cell>{totalFemale}</Table.Summary.Cell>
                                             <Table.Summary.Cell>
                                                 <Progress
-                                                    percent={Math.round((totalMale / totalStaff) * 100)}
+                                                    percent={totalStaff > 0 ? Math.round((totalMale / totalStaff) * 100) : 0}
                                                     size="small"
                                                     format={() => `${totalMale}:${totalFemale}`}
                                                     strokeColor={{ from: '#108ee9', to: '#87d068' }}
@@ -488,89 +595,7 @@ const Reports = () => {
                         </Card>
                     </TabPane>
 
-                    <TabPane
-                        tab={<span><UserAddOutlined /> Báo cáo tuyển dụng</span>}
-                        key="2"
-                    >
-                        <Card>
-                            <Paragraph>
-                                Báo cáo thống kê về hoạt động tuyển dụng, số lượng ứng viên, tỷ lệ tuyển dụng thành công và chi phí.
-                            </Paragraph>
-
-                            <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
-                                <Col span={8}>
-                                    <Card>
-                                        <Statistic
-                                            title="Tổng hồ sơ ứng tuyển"
-                                            value={265}
-                                            prefix={<FileExcelOutlined />}
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={8}>
-                                    <Card>
-                                        <Statistic
-                                            title="Tỷ lệ phỏng vấn/hồ sơ"
-                                            value={38.9}
-                                            suffix="%"
-                                            precision={1}
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={8}>
-                                    <Card>
-                                        <Statistic
-                                            title="Tỷ lệ tuyển dụng thành công"
-                                            value={25.2}
-                                            suffix="%"
-                                            precision={1}
-                                            valueStyle={{ color: '#52c41a' }}
-                                        />
-                                    </Card>
-                                </Col>
-                            </Row>
-
-                            <Table
-                                dataSource={recruitmentReportData}
-                                columns={recruitmentColumns}
-                                rowKey="month"
-                                pagination={false}
-                                summary={pageData => {
-                                    let totalApplicants = 0;
-                                    let totalInterviews = 0;
-                                    let totalHired = 0;
-                                    let totalCost = 0;
-
-                                    pageData.forEach(({ applicants, interviews, hired, cost }) => {
-                                        totalApplicants += applicants;
-                                        totalInterviews += interviews;
-                                        totalHired += hired;
-                                        totalCost += cost;
-                                    });
-
-                                    return (
-                                        <Table.Summary.Row style={{ fontWeight: 'bold' }}>
-                                            <Table.Summary.Cell>Tổng cộng</Table.Summary.Cell>
-                                            <Table.Summary.Cell>{totalApplicants}</Table.Summary.Cell>
-                                            <Table.Summary.Cell>{totalInterviews}</Table.Summary.Cell>
-                                            <Table.Summary.Cell>
-                                                <span style={{ color: '#52c41a' }}>{totalHired}</span>
-                                            </Table.Summary.Cell>
-                                            <Table.Summary.Cell>-</Table.Summary.Cell>
-                                            <Table.Summary.Cell>{`${(totalCost/1000000).toFixed(1)} triệu`}</Table.Summary.Cell>
-                                            <Table.Summary.Cell>
-                                                <Progress
-                                                    percent={Math.round((totalHired / totalInterviews) * 100)}
-                                                    size="small"
-                                                    status="success"
-                                                />
-                                            </Table.Summary.Cell>
-                                        </Table.Summary.Row>
-                                    );
-                                }}
-                            />
-                        </Card>
-                    </TabPane>
+                    {/* BỎ TAB TUYỂN DỤNG */}
 
                     <TabPane
                         tab={<span><DollarOutlined /> Báo cáo lương thưởng</span>}
@@ -580,13 +605,13 @@ const Reports = () => {
                             <Paragraph>
                                 Báo cáo thống kê về chi phí lương, thưởng, phụ cấp và tổng chi phí nhân sự theo tháng.
                             </Paragraph>
-
+                            {error && <Text type="danger">{error}</Text>}
                             <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
                                 <Col span={6}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><DollarOutlined style={{color:'#1890ff'}}/>Tổng chi phí 6 tháng</span>}>
                                         <Statistic
                                             title="Tổng chi phí 6 tháng"
-                                            value={(2091 / 1000).toFixed(1)}
+                                            value={(payrollReportData.reduce((sum, d) => sum + d.netPayment, 0) / 1000000000).toFixed(1)}
                                             suffix="tỷ VND"
                                             precision={1}
                                             prefix={<DollarOutlined />}
@@ -594,10 +619,10 @@ const Reports = () => {
                                     </Card>
                                 </Col>
                                 <Col span={6}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><DollarOutlined style={{color:'#1890ff'}}/>Chi phí lương cơ bản</span>}>
                                         <Statistic
                                             title="Chi phí lương cơ bản"
-                                            value={85.7}
+                                            value={payrollReportData.length > 0 ? (payrollReportData.reduce((sum, d) => sum + d.totalSalary, 0) / payrollReportData.reduce((sum, d) => sum + d.netPayment, 0)) * 100 : 0}
                                             suffix="%"
                                             precision={1}
                                             valueStyle={{ color: '#1890ff' }}
@@ -605,10 +630,10 @@ const Reports = () => {
                                     </Card>
                                 </Col>
                                 <Col span={6}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><DollarOutlined style={{color:'#52c41a'}}/>Chi phí thưởng</span>}>
                                         <Statistic
                                             title="Chi phí thưởng"
-                                            value={9.3}
+                                            value={payrollReportData.length > 0 ? (payrollReportData.reduce((sum, d) => sum + d.bonus, 0) / payrollReportData.reduce((sum, d) => sum + d.netPayment, 0)) * 100 : 0}
                                             suffix="%"
                                             precision={1}
                                             valueStyle={{ color: '#52c41a' }}
@@ -616,10 +641,10 @@ const Reports = () => {
                                     </Card>
                                 </Col>
                                 <Col span={6}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><DollarOutlined style={{color:'#722ed1'}}/>Trung bình/nhân viên</span>}>
                                         <Statistic
                                             title="Trung bình/nhân viên"
-                                            value={18.7}
+                                            value={payrollReportData.length > 0 ? (payrollReportData.reduce((sum, d) => sum + d.netPayment, 0) / 6 / (staffReportData.reduce((sum, d) => sum + d.total, 0) || 1) / 1000000).toFixed(1) : 0}
                                             suffix="triệu"
                                             precision={1}
                                             valueStyle={{ color: '#722ed1' }}
@@ -627,8 +652,8 @@ const Reports = () => {
                                     </Card>
                                 </Col>
                             </Row>
-
                             <Table
+                                loading={loading}
                                 dataSource={payrollReportData}
                                 columns={payrollColumns}
                                 rowKey="month"
@@ -669,49 +694,49 @@ const Reports = () => {
                             <Paragraph>
                                 Báo cáo thống kê về tình hình chấm công, đi muộn, vắng mặt và tăng ca của nhân viên.
                             </Paragraph>
-
+                            {error && <Text type="danger">{error}</Text>}
                             <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
                                 <Col span={6}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#52c41a'}}/>Tỷ lệ đi làm đúng giờ</span>}>
                                         <Statistic
                                             title="Tỷ lệ đi làm đúng giờ"
-                                            value={87.5}
+                                            value={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.onTime, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100).toFixed(1) : 0}
                                             suffix="%"
                                             precision={1}
                                             valueStyle={{ color: '#52c41a' }}
                                         />
-                                        <Progress percent={87.5} size="small" status="success" />
+                                        <Progress percent={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.onTime, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100) : 0} size="small" status="success" />
                                     </Card>
                                 </Col>
                                 <Col span={6}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#faad14'}}/>Tỷ lệ đi muộn</span>}>
                                         <Statistic
                                             title="Tỷ lệ đi muộn"
-                                            value={8.2}
+                                            value={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100).toFixed(1) : 0}
                                             suffix="%"
                                             precision={1}
                                             valueStyle={{ color: '#faad14' }}
                                         />
-                                        <Progress percent={8.2} size="small" status="warning" />
+                                        <Progress percent={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100) : 0} size="small" status="warning" />
                                     </Card>
                                 </Col>
                                 <Col span={6}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#ff4d4f'}}/>Tỷ lệ vắng mặt</span>}>
                                         <Statistic
                                             title="Tỷ lệ vắng mặt"
-                                            value={3.1}
+                                            value={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.absent, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100).toFixed(1) : 0}
                                             suffix="%"
                                             precision={1}
                                             valueStyle={{ color: '#ff4d4f' }}
                                         />
-                                        <Progress percent={3.1} size="small" status="exception" />
+                                        <Progress percent={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.absent, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100) : 0} size="small" status="exception" />
                                     </Card>
                                 </Col>
                                 <Col span={6}>
-                                    <Card>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#1890ff'}}/>Tổng giờ tăng ca</span>}>
                                         <Statistic
                                             title="Tổng giờ tăng ca"
-                                            value={740}
+                                            value={attendanceReportData.reduce((sum, d) => sum + d.overtime, 0)}
                                             suffix="giờ"
                                             precision={0}
                                             valueStyle={{ color: '#1890ff' }}
@@ -719,8 +744,8 @@ const Reports = () => {
                                     </Card>
                                 </Col>
                             </Row>
-
                             <Table
+                                loading={loading}
                                 dataSource={attendanceReportData}
                                 columns={attendanceColumns}
                                 rowKey="month"
@@ -747,7 +772,7 @@ const Reports = () => {
                                             <Table.Summary.Cell>Tổng cộng</Table.Summary.Cell>
                                             <Table.Summary.Cell>{totalDays}</Table.Summary.Cell>
                                             <Table.Summary.Cell>
-                                                {totalOnTime} ({Math.round((totalOnTime/totalDays) * 100)}%)
+                                                {totalOnTime} ({totalDays > 0 ? Math.round((totalOnTime/totalDays) * 100) : 0}%)
                                             </Table.Summary.Cell>
                                             <Table.Summary.Cell>
                                                 <span style={{ color: '#faad14' }}>{totalLate}</span>
@@ -768,8 +793,35 @@ const Reports = () => {
                         tab={<span><AuditOutlined /> Báo cáo đánh giá</span>}
                         key="5"
                     >
-                        <Card>
+                        <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><AuditOutlined style={{color:'#faad14'}}/>Báo cáo đánh giá hiệu suất nhân viên</span>}>
                             <Text>Báo cáo đánh giá hiệu suất nhân viên</Text>
+                            {error && <Text type="danger">{error}</Text>}
+                            <Table
+                                loading={loading}
+                                dataSource={performanceReportData}
+                                columns={[
+                                    { title: 'Tháng', dataIndex: 'month', key: 'month' },
+                                    { title: 'Điểm TB', dataIndex: 'averageScore', key: 'averageScore', render: v => v.toFixed(2) },
+                                    { title: 'Số lượt đánh giá', dataIndex: 'totalReviews', key: 'totalReviews' }
+                                ]}
+                                rowKey="month"
+                                pagination={false}
+                                summary={pageData => {
+                                    let totalScore = 0;
+                                    let totalReviews = 0;
+                                    pageData.forEach(({ averageScore, totalReviews: tr }) => {
+                                        totalScore += averageScore * tr;
+                                        totalReviews += tr;
+                                    });
+                                    return (
+                                        <Table.Summary.Row style={{ fontWeight: 'bold' }}>
+                                            <Table.Summary.Cell>Tổng cộng</Table.Summary.Cell>
+                                            <Table.Summary.Cell>{totalReviews > 0 ? (totalScore / totalReviews).toFixed(2) : 0}</Table.Summary.Cell>
+                                            <Table.Summary.Cell>{totalReviews}</Table.Summary.Cell>
+                                        </Table.Summary.Row>
+                                    );
+                                }}
+                            />
                         </Card>
                     </TabPane>
                 </Tabs>

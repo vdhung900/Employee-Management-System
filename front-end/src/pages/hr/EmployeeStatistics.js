@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Typography, Spin, message, Statistic, Divider, Select, Table } from 'antd';
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { UserOutlined, TeamOutlined, DollarOutlined, BarChartOutlined, PieChartOutlined, CalendarOutlined, LineChartOutlined } from '@ant-design/icons';
 import Hr_Employee from '../../services/Hr_Employee';
 import RequestService from '../../services/RequestService';
 import StatisticsService from '../../services/StatisticsService';
@@ -280,23 +281,26 @@ const EmployeeStatistics = () => {
   };
 
   return (
-    <div style={{ padding: '24px', minHeight: '100vh', background: 'linear-gradient(135deg, #e0e7ff 0%, #f0f7fa 100%)' }}>
-      <Title level={2} style={{ textAlign: 'center', color: '#1976d2', marginBottom: 32, letterSpacing: 1 }}>Thống kê nhân sự</Title>
+    <div style={{ padding: '24px', minHeight: '100vh', background: '#fff' }}>
+      <Title level={2} style={{ textAlign: 'left', color: '#222', marginBottom: 32, letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <BarChartOutlined style={{ fontSize: 32, color: '#1976d2', marginRight: 8 }} />
+        Thống kê nhân sự
+      </Title>
       <Spin spinning={loading}>
         <Row gutter={[32, 32]} justify="center">
           <Col xs={24} md={12}>
-            <Card style={{ borderRadius: 16, boxShadow: '0 4px 24px rgba(25, 118, 210, 0.08)' }}>
+            <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               <Statistic
-                title={<span style={{ color: '#1976d2', fontWeight: 600 }}>Tổng số nhân viên</span>}
+                title={<span style={{ color: '#222', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}><UserOutlined style={{ color: '#1976d2' }} />Tổng số nhân viên</span>}
                 value={total}
                 valueStyle={{ color: '#1976d2', fontSize: 36, fontWeight: 700 }}
               />
             </Card>
           </Col>
           <Col xs={24} md={12}>
-            <Card style={{ borderRadius: 16, boxShadow: '0 4px 24px rgba(255, 107, 107, 0.08)' }}>
+            <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               <Statistic
-                title={<span style={{ color: '#ff6b6b', fontWeight: 600 }}>Tổng đơn nghỉ phép</span>}
+                title={<span style={{ color: '#222', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}><CalendarOutlined style={{ color: '#ff6b6b' }} />Tổng đơn nghỉ phép</span>}
                 value={totalLeaveRequests}
                 valueStyle={{ color: '#ff6b6b', fontSize: 36, fontWeight: 700 }}
               />
@@ -307,8 +311,8 @@ const EmployeeStatistics = () => {
         <Row gutter={[32, 32]} justify="center">
           <Col xs={24} md={12}>
             <Card
-              title={<span style={{ color: '#0088FE', fontWeight: 600 }}>Tỷ lệ giới tính nhân viên</span>}
-              style={{ borderRadius: 16, boxShadow: '0 4px 24px rgba(0, 136, 254, 0.08)' }}
+              title={<span style={{ color: '#222', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}><PieChartOutlined style={{ color: '#0088FE' }} />Tỷ lệ giới tính nhân viên</span>}
+              style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
             >
               <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
@@ -333,8 +337,8 @@ const EmployeeStatistics = () => {
           </Col>
           <Col xs={24} md={12}>
             <Card
-              title={<span style={{ color: '#8884d8', fontWeight: 600 }}>Phân bố độ tuổi nhân viên</span>}
-              style={{ borderRadius: 16, boxShadow: '0 4px 24px rgba(136, 132, 216, 0.08)' }}
+              title={<span style={{ color: '#222', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}><TeamOutlined style={{ color: '#8884d8' }} />Phân bố độ tuổi nhân viên</span>}
+              style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
             >
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={ageData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -358,21 +362,24 @@ const EmployeeStatistics = () => {
           <Col xs={24}>
             <Card
               title={
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#ff6b6b', fontWeight: 600 }}>Thống kê đơn nghỉ phép theo tháng</span>
-                  <Select
-                    value={selectedYear}
-                    onChange={handleYearChange}
-                    style={{ width: 120 }}
-                    placeholder="Chọn năm"
-                  >
-                    {yearOptions.map(year => (
-                      <Option key={year} value={year}>{year}</Option>
-                    ))}
-                  </Select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <LineChartOutlined style={{ color: '#ff6b6b' }} />
+                  <span style={{ color: '#222', fontWeight: 600 }}>Thống kê đơn nghỉ phép theo tháng</span>
+                  <div style={{ marginLeft: 'auto' }}>
+                    <Select
+                      value={selectedYear}
+                      onChange={handleYearChange}
+                      style={{ width: 120 }}
+                      placeholder="Chọn năm"
+                    >
+                      {yearOptions.map(year => (
+                        <Option key={year} value={year}>{year}</Option>
+                      ))}
+                    </Select>
+                  </div>
                 </div>
               }
-              style={{ borderRadius: 16, boxShadow: '0 4px 24px rgba(255, 107, 107, 0.08)' }}
+              style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
             >
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={leaveData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -400,22 +407,25 @@ const EmployeeStatistics = () => {
           <Col xs={24}>
             <Card
               title={
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#52c41a', fontWeight: 600 }}>Phân bố lương</span>
-                  <Select
-                    value={selectedMonth}
-                    onChange={handleMonthChange}
-                    style={{ width: 200 }}
-                    placeholder="Chọn tháng"
-                    allowClear={false}
-                  >
-                    {availableMonths.map(month => (
-                      <Option key={month.value} value={month.value}>{month.label}</Option>
-                    ))}
-                  </Select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <DollarOutlined style={{ color: '#52c41a' }} />
+                  <span style={{ color: '#222', fontWeight: 600 }}>Phân bố lương</span>
+                  <div style={{ marginLeft: 'auto' }}>
+                    <Select
+                      value={selectedMonth}
+                      onChange={handleMonthChange}
+                      style={{ width: 200 }}
+                      placeholder="Chọn tháng"
+                      allowClear={false}
+                    >
+                      {availableMonths.map(month => (
+                        <Option key={month.value} value={month.value}>{month.label}</Option>
+                      ))}
+                    </Select>
+                  </div>
                 </div>
               }
-              style={{ borderRadius: 16, boxShadow: '0 4px 24px rgba(82, 196, 26, 0.08)' }}
+              style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
             >
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={salaryRangeData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -438,8 +448,8 @@ const EmployeeStatistics = () => {
         <Row gutter={[32, 32]} justify="center">
           <Col xs={24}>
             <Card
-              title={<span style={{ color: '#722ed1', fontWeight: 600 }}>Thống kê lương theo tháng</span>}
-              style={{ borderRadius: 16, boxShadow: '0 4px 24px rgba(114, 46, 209, 0.08)' }}
+              title={<span style={{ color: '#222', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}><BarChartOutlined style={{ color: '#722ed1' }} />Thống kê lương theo tháng</span>}
+              style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
             >
               <Table
                 columns={monthlySalaryColumns}

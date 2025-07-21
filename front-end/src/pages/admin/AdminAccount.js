@@ -455,13 +455,15 @@ const AdminAccount = () => {
 
       <Card
         title={
-          <Title level={4} className="green-gradient-text" style={{ margin: 0 }}>
+          <span>
             <UserOutlined style={{ marginRight: 8 }} />
-            Danh sách người dùng
-          </Title>
+            <Title level={4} className="green-gradient-text" style={{ margin: 0, display: 'inline' }}>
+              Danh sách người dùng
+            </Title>
+          </span>
         }
         className="card-green-theme"
-        style={{ borderRadius: '12px', overflow: 'hidden' }}
+        style={{ borderRadius: '12px', overflow: 'hidden', padding: 24 }}
       >
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
           <Col xs={24} md={8}>
