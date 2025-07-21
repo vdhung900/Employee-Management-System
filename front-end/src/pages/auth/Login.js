@@ -213,7 +213,7 @@ const Login = () => {
                         Đăng nhập
                     </Title>
                     <Text style={{color: "#666", display: "block", fontSize: "16px"}}>
-                        Hệ thống Quản lý Chấm công
+                        Hệ thống Quản lý nhân viên
                     </Text>
                 </div>
 
@@ -288,16 +288,16 @@ const Login = () => {
                                 <Form.Item name="remember" valuePropName="checked" noStyle>
                                     <Checkbox>Ghi nhớ đăng nhập</Checkbox>
                                 </Form.Item>
-                                <a
-                                    href="#"
-                                    style={{
-                                        color: "#1976d2",
-                                        textDecoration: "none",
-                                        fontWeight: "500",
-                                    }}
-                                >
-                                    Quên mật khẩu?
-                                </a>
+                                {/*<a*/}
+                                {/*    href="#"*/}
+                                {/*    style={{*/}
+                                {/*        color: "#1976d2",*/}
+                                {/*        textDecoration: "none",*/}
+                                {/*        fontWeight: "500",*/}
+                                {/*    }}*/}
+                                {/*>*/}
+                                {/*    Quên mật khẩu?*/}
+                                {/*</a>*/}
                             </Space>
                         </Form.Item>
 
@@ -332,50 +332,50 @@ const Login = () => {
                             </button>
                         </Form.Item>
 
-                        <Divider plain style={{fontSize: "14px", color: "#666"}}>
-                            Hoặc đăng nhập bằng
-                        </Divider>
+                        {/*<Divider plain style={{fontSize: "14px", color: "#666"}}>*/}
+                        {/*    Hoặc đăng nhập bằng*/}
+                        {/*</Divider>*/}
 
-                        <div style={{display: "flex", justifyContent: "center", gap: "16px"}}>
-                            <button
-                                onClick={handleGoogleLogin}
-                                style={{
-                                    padding: "8px 16px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    background: "rgba(255, 255, 255, 0.9)",
-                                    border: "1px solid #e8e8e8",
-                                    borderRadius: "8px",
-                                    cursor: "pointer",
-                                    boxShadow: "0 2px 0 rgba(0,0,0,0.02)",
-                                    transition: "all 0.3s",
-                                    color: "#666",
-                                }}
-                            >
-                                <GoogleOutlined style={{color: "#ea4335"}}/>
-                                <span>Google</span>
-                            </button>
-                            <button
-                                onClick={handleOtpLogin}
-                                style={{
-                                    padding: "8px 16px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    background: "rgba(255, 255, 255, 0.9)",
-                                    border: "1px solid #e8e8e8",
-                                    borderRadius: "8px",
-                                    cursor: "pointer",
-                                    boxShadow: "0 2px 0 rgba(0,0,0,0.02)",
-                                    transition: "all 0.3s",
-                                    color: "#666",
-                                }}
-                            >
-                                <MailOutlined style={{color: "#1976d2"}}/>
-                                <span>Email OTP</span>
-                            </button>
-                        </div>
+                        {/*<div style={{display: "flex", justifyContent: "center", gap: "16px"}}>*/}
+                        {/*    <button*/}
+                        {/*        onClick={handleGoogleLogin}*/}
+                        {/*        style={{*/}
+                        {/*            padding: "8px 16px",*/}
+                        {/*            display: "flex",*/}
+                        {/*            alignItems: "center",*/}
+                        {/*            gap: "8px",*/}
+                        {/*            background: "rgba(255, 255, 255, 0.9)",*/}
+                        {/*            border: "1px solid #e8e8e8",*/}
+                        {/*            borderRadius: "8px",*/}
+                        {/*            cursor: "pointer",*/}
+                        {/*            boxShadow: "0 2px 0 rgba(0,0,0,0.02)",*/}
+                        {/*            transition: "all 0.3s",*/}
+                        {/*            color: "#666",*/}
+                        {/*        }}*/}
+                        {/*    >*/}
+                        {/*        <GoogleOutlined style={{color: "#ea4335"}}/>*/}
+                        {/*        <span>Google</span>*/}
+                        {/*    </button>*/}
+                        {/*    <button*/}
+                        {/*        onClick={handleOtpLogin}*/}
+                        {/*        style={{*/}
+                        {/*            padding: "8px 16px",*/}
+                        {/*            display: "flex",*/}
+                        {/*            alignItems: "center",*/}
+                        {/*            gap: "8px",*/}
+                        {/*            background: "rgba(255, 255, 255, 0.9)",*/}
+                        {/*            border: "1px solid #e8e8e8",*/}
+                        {/*            borderRadius: "8px",*/}
+                        {/*            cursor: "pointer",*/}
+                        {/*            boxShadow: "0 2px 0 rgba(0,0,0,0.02)",*/}
+                        {/*            transition: "all 0.3s",*/}
+                        {/*            color: "#666",*/}
+                        {/*        }}*/}
+                        {/*    >*/}
+                        {/*        <MailOutlined style={{color: "#1976d2"}}/>*/}
+                        {/*        <span>Email OTP</span>*/}
+                        {/*    </button>*/}
+                        {/*</div>*/}
                     </Form>
                 </div>
             </ThreeDContainer>
