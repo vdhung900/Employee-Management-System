@@ -180,7 +180,7 @@ const EmployeePayroll = () => {
     ];
 
     return (
-        <div>
+        <div style={{ padding: 24 }}>
             <Row gutter={[16, 16]}>
                 <Col xs={24} md={16}>
                     <Title level={3}>

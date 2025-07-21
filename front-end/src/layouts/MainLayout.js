@@ -269,24 +269,24 @@ const MainLayout = () => {
             label: "Dashboard",
             permission: "EMPLOYEE_DASHBOARD",
         },
-        {
-            key: "/employee/attendance-review",
-            icon: <ClockCircleOutlined/>,
-            label: "Chấm công",
-            permission: "EMPLOYEE_ATTENDANCE_REVIEW",
-        },
-        {
-            key: "/employee/calender",
-            icon: <CalendarOutlined/>,
-            label: "Lịch",
-            permission: "EMPLOYEE_CALENDAR",
-        },
-        {
-            key: "/employee/overtime",
-            icon: <ClockCircleOutlined/>,
-            label: "Làm thêm giờ",
-            permission: "EMPLOYEE_OVERTIME",
-        },
+        // {
+        //     key: "/employee/attendance-review",
+        //     icon: <ClockCircleOutlined/>,
+        //     label: "Chấm công",
+        //     permission: "EMPLOYEE_ATTENDANCE_REVIEW",
+        // },
+        // {
+        //     key: "/employee/calender",
+        //     icon: <CalendarOutlined/>,
+        //     label: "Lịch",
+        //     permission: "EMPLOYEE_CALENDAR",
+        // },
+        // {
+        //     key: "/employee/overtime",
+        //     icon: <ClockCircleOutlined/>,
+        //     label: "Làm thêm giờ",
+        //     permission: "EMPLOYEE_OVERTIME",
+        // },
         {
             key: "/employee/approve-request",
             icon: <CheckCircleOutlined/>,
@@ -305,12 +305,12 @@ const MainLayout = () => {
             label: "Bảng lương",
             permission: "EMPLOYEE_PAYROLL",
         },
-        {
-            key: "/employee/payroll-management",
-            icon: <FileTextOutlined/>,
-            label: "Quản lý lương",
-            permission: "EMPLOYEE_PAYROLL_MANAGEMENT",
-        },
+        // {
+        //     key: "/employee/payroll-management",
+        //     icon: <FileTextOutlined/>,
+        //     label: "Quản lý lương",
+        //     permission: "EMPLOYEE_PAYROLL_MANAGEMENT",
+        // },
         {
             key: "/employee/reports",
             icon: <FileTextOutlined/>,
@@ -323,12 +323,12 @@ const MainLayout = () => {
             label: "Quản lý nhân viên",
             permission: "EMPLOYEE_STAFF_MANAGEMENT",
         },
-        {
-            key: "/employee/team-management",
-            icon: <UserOutlined/>,
-            label: "Quản lý nhóm",
-            permission: "EMPLOYEE_TEAM_MANAGEMENT",
-        },
+        // {
+        //     key: "/employee/team-management",
+        //     icon: <UserOutlined/>,
+        //     label: "Quản lý nhóm",
+        //     permission: "EMPLOYEE_TEAM_MANAGEMENT",
+        // },
         {
             key: "/employee/team-performance",
             icon: <DashboardOutlined/>,
@@ -533,23 +533,23 @@ const MainLayout = () => {
                         </div>
                     </div>
                     <Space size="large" align="center">
-                        <Tag
-                            color={colorTheme.tagBg}
-                            style={{
-                                padding: "6px 16px",
-                                borderRadius: "50px",
-                                boxShadow: "0 2px 5px rgba(25, 118, 210, 0.08)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                fontSize: "15px",
-                                color: colorTheme.tagText,
-                                background: colorTheme.tagBg,
-                                fontWeight: 500,
-                            }}
-                        >
-                            <ClockCircleOutlined style={{color: "#1976d2"}}/> Trạng thái chấm công
-                        </Tag>
+                        {/*<Tag*/}
+                        {/*    color={colorTheme.tagBg}*/}
+                        {/*    style={{*/}
+                        {/*        padding: "6px 16px",*/}
+                        {/*        borderRadius: "50px",*/}
+                        {/*        boxShadow: "0 2px 5px rgba(25, 118, 210, 0.08)",*/}
+                        {/*        display: "flex",*/}
+                        {/*        alignItems: "center",*/}
+                        {/*        gap: "6px",*/}
+                        {/*        fontSize: "15px",*/}
+                        {/*        color: colorTheme.tagText,*/}
+                        {/*        background: colorTheme.tagBg,*/}
+                        {/*        fontWeight: 500,*/}
+                        {/*    }}*/}
+                        {/*>*/}
+                        {/*    <ClockCircleOutlined style={{color: "#1976d2"}}/> Trạng thái chấm công*/}
+                        {/*</Tag>*/}
                         <div style={{ position: 'relative' }}>
                             <Badge count={notificationItem.filter(n => !n.read).length} overflowCount={99}>
                                 <BellOutlined

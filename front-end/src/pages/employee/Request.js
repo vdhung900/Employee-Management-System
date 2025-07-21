@@ -70,6 +70,10 @@ import SalaryService from "../../services/SalaryService";
 import '../../assets/styles/salaryTableCustom.css';
 import {useLoading} from "../../contexts/LoadingContext";
 import { renderRequestDetailByType } from '../../utils/render';
+// Thêm import cho xuất file
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const {Title, Text, Paragraph} = Typography;
 const {Option} = Select;
@@ -1150,7 +1154,7 @@ const Requests = () => {
             render: (_, record) => (
                 <Space direction="vertical" size="small">
                     {/*<div style={{ fontWeight: 'bold' }}>{record.requestNumber}</div>*/}
-                    <div>Loại: {record.typeRequest.name}</div>
+                    <div>Loại: {record?.typeRequest?.name}</div>
                     <Tag color={getPriorityColor(record.priority)}>
                         {getPriorityLabel(record.priority)}
                     </Tag>
@@ -1250,13 +1254,38 @@ const Requests = () => {
     const rejectedRequests = requests.filter(r => r.status === 'Rejected').length;
     const cancelledRequests = requests.filter(r => r.status === 'Cancelled').length;
 
+    // Thêm hàm xuất Excel
+    const exportExcel = (data) => {
+        const exportData = data.map((item, idx) => ({
+            'STT': idx + 1,
+            'Người gửi': item.employeeId?.fullName || '',
+            'Email': item.employeeId?.email || '',
+            'Loại yêu cầu': item.typeRequest?.name || '',
+            'Mức độ ưu tiên': getPriorityLabel(item.priority),
+            'Ngày gửi': formatDate(item.createdAt),
+            'Trạng thái': getStatusLabel(item.status),
+            'Ghi chú': item.note || '',
+            'Lí do': item.status === STATUS.REJECTED ? (item.reason || '—') : (item.dataReq?.reason || '—'),
+        }));
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Requests');
+        XLSX.writeFile(wb, 'requests.xlsx');
+    };
+
+    // XÓA HÀM exportPDF
+    // Chỉ giữ lại exportExcel
+
     return (
-        <div style={{padding: '10px'}}>
+        <div style={{padding: '24px'}}>
             <Row gutter={[16, 16]} style={{marginBottom: '20px'}}>
                 <Col span={24}>
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                         <div>
-                            <Title level={2}>Quản lý yêu cầu</Title>
+                            <Title level={2}>
+                                <FileTextOutlined style={{ marginRight: 8 }} />
+                                Quản lý yêu cầu
+                            </Title>
                             <Text type="secondary">Gửi và theo dõi các yêu cầu của nhân viên</Text>
                         </div>
                         <div>
@@ -1268,21 +1297,14 @@ const Requests = () => {
                             >
                                 Tạo yêu cầu mới
                             </Button>
-                            <Dropdown
-                                menu={{
-                                    items: [
-                                        {key: '1', label: 'Export danh sách', icon: <ExportOutlined/>},
-                                        {key: '2', label: 'Xem hướng dẫn', icon: <QuestionCircleOutlined/>},
-                                    ]
-                                }}
+                            {/* Thêm 2 nút xuất file */}
+                            <Button
+                                icon={<ExportOutlined/>}
+                                style={{marginRight: 8}}
+                                onClick={() => exportExcel(requests)}
                             >
-                                <Button>
-                                    <Space>
-                                        Thao tác
-                                        <DownOutlined/>
-                                    </Space>
-                                </Button>
-                            </Dropdown>
+                                Xuất Excel
+                            </Button>
                         </div>
                     </div>
                 </Col>
@@ -1374,15 +1396,6 @@ const Requests = () => {
                                     onChange={e => setSearchText(e.target.value)}
                                     allowClear
                                 />
-                                <Space>
-                                    <RangePicker placeholder={['Từ ngày', 'Đến ngày']} style={{marginRight: 8}}/>
-                                    <Button icon={<FilterOutlined/>} style={{marginRight: 8}}>
-                                        Lọc
-                                    </Button>
-                                    <Button icon={<ExportOutlined/>}>
-                                        Export
-                                    </Button>
-                                </Space>
                             </div>
 
                             <Table

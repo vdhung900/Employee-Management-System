@@ -257,7 +257,11 @@ const PayrollManagement = () => {
     ];
 
     return (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '32px' }}>
+            <Space style={{ marginBottom: 24 }}>
+                <DollarOutlined style={{ fontSize: 32, color: '#722ed1' }} />
+                <Title level={2} style={{ margin: 0 }}>Quản lý lương</Title>
+            </Space>
             <Card
                 variant="outlined"
                 styles={{
@@ -269,12 +273,6 @@ const PayrollManagement = () => {
                         padding: '24px'
                     }
                 }}
-                title={
-                    <Space>
-                        <DollarOutlined />
-                        <Title level={4} style={{ margin: 0 }}>Quản lý lương</Title>
-                    </Space>
-                }
             >
                 <Spin spinning={loading}>
                     <Text type="secondary">

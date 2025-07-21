@@ -63,10 +63,12 @@ const AdminUserAdd = () => {
     <div className="admin-user-add-page">
       
 
-      <Card bordered={false}>
+      <Card bordered={false} style={{ padding: 24 }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
           <Col>
-            <Title level={4} style={{ margin: 0 }}>Thêm người dùng mới</Title>
+            <Title level={4} style={{ margin: 0 }}>
+              <UserOutlined style={{ marginRight: 8 }} />Thêm người dùng mới
+            </Title>
           </Col>
           <Col>
             <Button

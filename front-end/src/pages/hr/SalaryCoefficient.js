@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, InputNumber, Select, message, Typography, Space, Tag } from 'antd';
 import SalaryCoefficientService from '../../services/SalaryCoefficientService';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { EditOutlined, EyeOutlined, PlusOutlined, CalculatorOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -126,14 +126,13 @@ const SalaryCoefficient = () => {
     <div className="welcome-section glass-effect" style={{
       padding: '24px',
       marginBottom: '24px',
-      borderRadius: '16px',
       justifyContent: 'space-between',
       alignItems: 'center',
-      gap: '16px',
-      backdropFilter: 'blur(8px)',
-      border: '1px solid rgba(57, 120, 26, 0.2)'
     }}>
-      <Title level={3}>Quản lý hệ số lương</Title>
+      <Title level={3}>
+        <CalculatorOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+        Quản lý hệ số lương
+      </Title>
       <Space style={{ marginBottom: 16 }}>
         <input
           placeholder="Tìm kiếm theo bậc lương hoặc hệ số"
@@ -141,18 +140,20 @@ const SalaryCoefficient = () => {
           onChange={e => setSearch(e.target.value)}
           style={{ padding: 4, borderRadius: 4, border: '1px solid #ddd', width: 'auto', minWidth: 250, height: 36, flex: 1, marginRight: 16 }}
         />
-        <Button type="primary" onClick={handleAdd}>
+        <Button type="primary" onClick={handleAdd} icon={<PlusOutlined />}>
           Thêm hệ số lương
         </Button>
       </Space>
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        rowKey="_id"
-        loading={loading}
-        pagination={pagination}
-        onChange={pag => setPagination(pag)}
-      />
+      <div style={{ padding: '12px 0' }}>
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          rowKey="_id"
+          loading={loading}
+          pagination={pagination}
+          onChange={pag => setPagination(pag)}
+        />
+      </div>
       <Modal
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

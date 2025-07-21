@@ -742,9 +742,12 @@ const AdminSettings = () => {
             </Card>
 
             <Modal
-                title={`Chỉnh sửa ${currentEditingType === 'attendance' ? 'chấm công' : 
+                title={<span style={{ display: 'flex', alignItems: 'center', padding: '24px 0' }}>
+                    <SettingOutlined style={{ marginRight: 8 }} />
+                    {`Chỉnh sửa ${currentEditingType === 'attendance' ? 'chấm công' : 
                                   currentEditingType === 'leave' ? 'ngày nghỉ' : 
                                   'tính lương'}`}
+                </span>}
                 visible={isModalVisible}
                 onOk={handleModalOk}
                 onCancel={handleModalCancel}

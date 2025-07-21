@@ -205,11 +205,11 @@ const Category = () => {
   const [activeTab, setActiveTab] = useState("department");
   return (
     <div>
-      <Title level={3}>
+      <Title level={3} style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
         <TeamOutlined style={{ marginRight: 8 }} />
         Danh mục
       </Title>
-      <Card style={{ marginTop: 16 }}>
+      <Card style={{ marginTop: 16, padding: 24 }}>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <TabPane
             tab={

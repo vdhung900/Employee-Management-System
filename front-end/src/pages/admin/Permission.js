@@ -210,7 +210,8 @@ const Permission = () => {
                             border: '1px solid rgba(82, 196, 26, 0.2)'
                         }}>
                             <div>
-                                <Title level={3} style={{ margin: 0, fontWeight: '700' }}>
+                                <Title level={3} style={{ margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <SafetyOutlined style={{ color: '#52c41a', fontSize: 28, marginRight: 8 }} />
                                     <span className="green-gradient-text">Quản lý quyền hệ thống</span>
                                 </Title>
                                 <Text style={{ fontSize: '16px', color: 'rgba(0, 0, 0, 0.65)' }}>

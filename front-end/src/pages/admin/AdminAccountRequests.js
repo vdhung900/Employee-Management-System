@@ -244,7 +244,7 @@ const AdminAccountRequests = () => {
     ];
 
     return (
-        <div style={{ padding: '15px', maxWidth: '1800px', margin: '0 auto' }}>
+        <div style={{ padding: '24px', maxWidth: '1800px', margin: '0 auto' }}>
             <div style={{ 
                 marginBottom: '24px', 
                 display: 'flex', 

@@ -302,8 +302,11 @@ const AccessControl = () => {
     ];
 
     return (
-        <div>
-            <Title level={2}>Quản lý truy cập hệ thống</Title>
+        <div style={{ padding: 24 }}>
+            <Title level={2}>
+                <LockOutlined style={{ marginRight: 8 }} />
+                Quản lý truy cập hệ thống
+            </Title>
 
             <Tabs activeKey={activeTab} onChange={setActiveTab}>
                 <TabPane
