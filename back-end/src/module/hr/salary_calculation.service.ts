@@ -131,11 +131,9 @@ export class SalaryCalculationService {
       // === LẤY BENEFIT THEO EMPLOYEE HOẶC DEPARTMENT ===
       // Lưu ý: cần khai báo benefitModel ở constructor và import model Benefit
       const benefits = await (this as any).benefitModel.find({
-        $or: [
-          { employees: emp._id },
-          { departments: emp.departmentId }
-        ]
+        departments: emp.departmentId
       });
+      
       // Tổng tiền thưởng benefit (không loại bỏ trùng)
       const totalBenefit = benefits.reduce((sum, b) => sum + (b.amount || 0), 0);
 

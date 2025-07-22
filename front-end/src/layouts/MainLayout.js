@@ -323,12 +323,12 @@ const MainLayout = () => {
             label: "Quản lý nhân viên",
             permission: "EMPLOYEE_STAFF_MANAGEMENT",
         },
-        // {
-        //     key: "/employee/team-management",
-        //     icon: <UserOutlined/>,
-        //     label: "Quản lý nhóm",
-        //     permission: "EMPLOYEE_TEAM_MANAGEMENT",
-        // },
+        {
+            key: "/employee/team-management",
+            icon: <UserOutlined/>,
+            label: "Quản lý nhóm",
+            permission: "EMPLOYEE_TEAM_MANAGEMENT",
+        },
         {
             key: "/employee/team-performance",
             icon: <DashboardOutlined/>,

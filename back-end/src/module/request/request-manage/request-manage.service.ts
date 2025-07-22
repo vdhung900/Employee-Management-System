@@ -469,6 +469,15 @@ export class RequestManageService {
         return leaveRequests;
     }
 
+    async getAllLeaveRequestsForEmployees() {
+        // Lấy tất cả typeRequest có code chứa chữ "LEAVE"
+        const leaveTypes = await this.typeRequestModel.find({ code: /LEAVE/ });
+        const leaveTypeIds = leaveTypes.map(t => t._id);
+        // Lấy tất cả đơn nghỉ phép thuộc các loại này
+        const leaveRequests = await this.requestModel.find({ typeRequest: { $in: leaveTypeIds } }).populate('employeeId').populate('typeRequest').populate('attachments').exec();
+        return leaveRequests;
+    }
+
     checkLeavePackage(requestDates: Date[], leaveBalance: number) {
         try {
             const paidDates = requestDates.slice(0, leaveBalance);
