@@ -146,7 +146,7 @@ const StaffManagement = () => {
             setFileAvatar(getfileAvatar(employee.avatar));
         } else {
             form.resetFields();
-          
+
         }
     };
 
@@ -179,8 +179,8 @@ const StaffManagement = () => {
                     setAvatar('');
                     setFileResponse([]);
                     setIsModalVisible(false);
-                    
-                    
+
+
                     message.success('Cập nhật thành công');
                 } else {
                     console.error('Update failed:', response);
@@ -467,90 +467,573 @@ const StaffManagement = () => {
 
 
     return (
-        <ThreeDContainer>
-      <div style={{ padding: 24, minHeight: '100vh', background: '#fff' }}>
-        <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-          <Col span={24}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <TeamOutlined style={{ fontSize: 32, color: '#1976d2' }} />
-              <div>
-                <Title level={2} style={{ margin: 0, color: '#222', fontWeight: 700, letterSpacing: 1 }}>Quản lý nhân viên</Title>
-                <Text type="secondary" style={{ fontSize: 16, color: '#666' }}>
-                  Theo dõi, thêm, sửa, xuất danh sách nhân viên trong hệ thống
-                </Text>
-              </div>
-            </div>
-          </Col>
-        </Row>
-        <Row gutter={[24, 24]}>
-          <Col span={24}>
+        <div style={{ padding: '24px' }}>
             <Card
-              bordered={false}
-              style={{ borderRadius: 16, boxShadow: '0 4px 24px #0001', padding: 24 }}
-            >
-              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                <Input
-                  placeholder="Tìm kiếm nhân viên, mã nhân viên..."
-                  prefix={<SearchOutlined />}
-                  style={{ width: 300, maxWidth: '100%' }}
-                  value={searchText}
-                  onChange={e => setSearchText(e.target.value)}
-                  allowClear
-                />
-                <Space>
-                  <Select
-                    style={{ width: 180 }}
-                    placeholder="Phòng ban"
-                    value={filterDepartment}
-                    onChange={handleDepartmentChange}
-                  >
-                    <Option value="all">Tất cả phòng ban</Option>
-                    {departments.map(dept => (
-                      <Option key={dept._id} value={dept._id}>{dept.name}</Option>
-                    ))}
-                  </Select>
-                  <Select
-                    style={{ width: 180 }}
-                    placeholder="Trạng thái"
-                    value={filterStatus}
-                    onChange={handleStatusChange}
-                  >
-                    <Option value="all">Tất cả trạng thái</Option>
-                    <Option value="active">Đang làm việc</Option>
-                    <Option value="inactive">Nghỉ việc</Option>
-                    <Option value="leave">Nghỉ phép</Option>
-                  </Select>
-                  <Button icon={<FilterOutlined />}>Lọc</Button>
-                  <Button icon={<ExportOutlined />} onClick={exportToExcel}>Export</Button>
-                  <Button
-                    type="primary"
-                    icon={<UserAddOutlined />}
-                    onClick={() => showModal('add')}
-                  >
-                    Thêm nhân viên
-                  </Button>
-                </Space>
-              </div>
-              <Table
-                dataSource={filteredEmployees}
-                columns={columns}
-                rowKey="_id"
-                size="middle"
-                pagination={{
-                  defaultPageSize: 10,
-                  showSizeChanger: true,
-                  pageSizeOptions: ['10', '20', '50', '100'],
-                  showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhân viên`,
+                variant="outlined"
+                styles={{
+                    header: {
+                        background: '#fafafa',
+                        borderBottom: '1px solid #f0f0f0'
+                    },
+                    body: {
+                        padding: '24px'
+                    }
                 }}
-                style={{ borderRadius: 8, background: '#fff' }}
-              />
+                title={
+                    <Space>
+                        <TeamOutlined />
+                        <Title level={4} style={{ margin: 0 }}>Quản lý nhân viên</Title>
+                    </Space>
+                }
+            >
+                <Spin spinning={loading}>
+                    <ThreeDContainer>
+                        <Tabs
+                            activeKey={activeTab}
+                            onChange={setActiveTab}
+                            items={[
+                                {
+                                    key: '1',
+                                    label: <span><TeamOutlined /> Tất cả nhân viên</span>,
+                                    children: (
+                                        <Card>
+                                            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+                                                <Space>
+                                                    <Input
+                                                        placeholder="Tìm kiếm nhân viên, mã nhân viên..."
+                                                        prefix={<SearchOutlined />}
+                                                        style={{ width: 300 }}
+                                                        value={searchText}
+                                                        onChange={e => setSearchText(e.target.value)}
+                                                        allowClear
+                                                    />
+                                                    <Select
+                                                        style={{ width: 200 }}
+                                                        placeholder="Phòng ban"
+                                                        value={filterDepartment}
+                                                        onChange={handleDepartmentChange}
+                                                    >
+                                                        <Option value="all">Tất cả phòng ban</Option>
+                                                        {departments.map(dept => (
+                                                            <Option key={dept._id} value={dept._id}>{dept.name}</Option>
+                                                        ))}
+                                                    </Select>
+                                                    <Select
+                                                        style={{ width: 200 }}
+                                                        placeholder="Trạng thái"
+                                                        value={filterStatus}
+                                                        onChange={handleStatusChange}
+                                                    >
+                                                        <Option value="all">Tất cả trạng thái</Option>
+                                                        <Option value="active">Đang làm việc</Option>
+                                                        <Option value="inactive">Nghỉ việc</Option>
+                                                        <Option value="leave">Nghỉ phép</Option>
+                                                    </Select>
+                                                </Space>
+                                                <Space>
+                                                    {isHR && (
+                                                        <>
+                                                            <Button icon={<FilterOutlined />}>Lọc</Button>
+                                                            <Button icon={<ExportOutlined />} onClick={exportToExcel}>Export</Button>
+                                                        </>
+                                                    )}
+                                                </Space>
+                                            </div>
+                                            <Table
+                                                dataSource={filteredEmployees}
+                                                columns={columns}
+                                                rowKey="id"
+                                                pagination={{
+                                                    defaultPageSize: 10,
+                                                    showSizeChanger: true,
+                                                    pageSizeOptions: ['10', '20', '50', '100'],
+                                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhân viên`,
+                                                }}
+                                            />
+                                        </Card>
+                                    )
+                                }
+                                ,
+                                // isHR && {
+                                //     key: '2',
+                                //     label: <span><IdcardOutlined /> Hợp đồng</span>,
+                                //     children: (
+                                //         <Card>
+                                //             <Text>Quản lý hợp đồng lao động</Text>
+                                //         </Card>
+                                //     )
+                                // },
+                                // isHR && {
+                                //     key: '3',
+                                //     label: <span><FileTextOutlined /> Báo cáo</span>,
+                                //     children: (
+                                //         <Card>
+                                //             <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+                                //                 <Space>
+                                //                     <Input
+                                //                         placeholder="Tìm kiếm nhân viên, ID, phòng ban..."
+                                //                         prefix={<SearchOutlined />}
+                                //                         style={{ width: 300 }}
+                                //                         value={searchText}
+                                //                         onChange={e => setSearchText(e.target.value)}
+                                //                         allowClear
+                                //                     />
+                                //                     <Select
+                                //                         style={{ width: 200 }}
+                                //                         placeholder="Phòng ban"
+                                //                         value={filterDepartment}
+                                //                         onChange={setFilterDepartment}
+                                //                     >
+                                //                         <Option value="all">Tất cả phòng ban</Option>
+                                //                         {departments.map(dept => (
+                                //                             <Option key={dept._id} value={dept._id}>{dept.name}</Option>
+                                //                         ))}
+                                //                     </Select>
+                                //                     <Select
+                                //                         style={{ width: 200 }}
+                                //                         placeholder="Trạng thái"
+                                //                         value={filterStatus}
+                                //                         onChange={setFilterStatus}
+                                //                     >
+                                //                         <Option value="all">Tất cả trạng thái</Option>
+                                //                         <Option value="active">Đang làm việc</Option>
+                                //                         <Option value="inactive">Nghỉ việc</Option>
+                                //                         <Option value="leave">Nghỉ phép</Option>
+                                //                     </Select>
+                                //                 </Space>
+                                //                 <Space>
+                                //                     {isHR && (
+                                //                         <>
+                                //                             <Button icon={<FilterOutlined />}>Lọc</Button>
+                                //                             <Button icon={<ExportOutlined />}>Export</Button>
+                                //                             <Button
+                                //                                 type="primary"
+                                //                                 icon={<UserAddOutlined />}
+                                //                                 onClick={() => showModal('add')}
+                                //                             >
+                                //                                 Thêm nhân viên
+                                //                             </Button>
+                                //                         </>
+                                //                     )}
+                                //                 </Space>
+                                //             </div>
+                                //             <Table
+                                //                 dataSource={filteredEmployees}
+                                //                 columns={columns}
+                                //                 rowKey="id"
+                                //                 pagination={{
+                                //                     defaultPageSize: 10,
+                                //                     showSizeChanger: true,
+                                //                     pageSizeOptions: ['10', '20', '50', '100'],
+                                //                     showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhân viên`,
+                                //                 }}
+                                //             />
+                                //         </Card>
+                                //     )
+
+                                // },
+                                isManager && {
+                                    key: '4',
+                                    label: <span><BarChartOutlined /> Hiệu suất</span>,
+                                    children: (
+                                        <Card>
+                                            <Text>Phân tích hiệu suất nhân viên</Text>
+                                        </Card>
+                                    )
+                                }
+
+                            ].filter(Boolean)}
+                        />
+                    </ThreeDContainer>
+
+                    {/* Employee Details Modal */}
+                    <Modal
+                        title={modalType === 'view' ? 'Chi tiết nhân viên' : modalType === 'edit' ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
+                        open={isModalVisible}
+                        onCancel={handleCancel}
+                        footer={modalType === 'view' ? [
+                            <Button key="close" onClick={handleCancel}>
+                                Đóng
+                            </Button>
+                        ] : [
+                            <Button key="cancel" onClick={handleCancel}>
+                                Hủy
+                            </Button>,
+                            <Button key="submit" type="primary" onClick={() => form.submit()}>
+                                {modalType === 'edit' ? 'Cập nhật' : 'Thêm mới'}
+                            </Button>
+                        ]}
+                        width={800}
+                    >
+                        {modalType === 'view' ? (
+                            selectedEmployee && (
+                                <div style={{ padding: '24px', background: '#f4f6fa', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+                                    <Row gutter={[16, 16]} justify="center">
+                                        <Col span={24} style={{ textAlign: 'center', marginBottom: 16 }}>
+                                            <Avatar
+                                                size={100}
+                                                style={{ backgroundColor: '#fff', border: '3px solidrgb(205, 190, 225)', marginBottom: '12px' }}
+                                                src={fileAvatar}
+                                            >
+                                                {!selectedEmployee.avatar && selectedEmployee.fullName.charAt(0)}
+                                            </Avatar>
+
+                                            <Title level={2} style={{ marginTop: 12, marginBottom: 0, color: '#2d2d2d', fontWeight: 700 }}>
+                                                {selectedEmployee.fullName}
+                                            </Title>
+                                            <Text type="secondary" style={{ fontSize: '18px', color: '#722ed1', fontWeight: 500 }}>{selectedEmployee.positionId?.name}</Text>
+                                        </Col>
+                                    </Row>
+
+                                    <Divider orientation="left" style={{ color: '#722ed1', fontWeight: 'bold', fontSize: 18 }}>
+                                        <IdcardOutlined style={{ color: '#722ed1', marginRight: 8 }} />Thông tin cá nhân
+                                    </Divider>
+                                    <Card style={{ marginBottom: 16, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #eee' }} bordered={false}>
+                                        <Row gutter={[16, 16]}>
+                                            <Col span={12}><Text strong><IdcardOutlined /> Mã nhân viên:</Text> {selectedEmployee.code}</Col>
+                                            <Col span={12}><Text strong><Tag color={getStatusColor(selectedEmployee.status)}>{getStatusLabel(selectedEmployee.status)}</Tag></Text></Col>
+                                            <Col span={12}><Text strong><UserAddOutlined /> Giới tính:</Text> {selectedEmployee.gender === 'male' ? 'Nam' : selectedEmployee.gender === 'female' ? 'Nữ' : 'Khác'}</Col>
+                                            <Col span={12}><Text strong><HomeOutlined /> Địa chỉ:</Text> {selectedEmployee.address}</Col>
+                                            <Col span={12}><Text strong><CalendarOutlined /> Ngày sinh:</Text> {selectedEmployee.dob ? moment(selectedEmployee.dob).format('DD-MM-YYYY') : ''}</Col>
+                                        </Row>
+                                    </Card>
+
+                                    <Divider orientation="left" style={{ color: '#1890ff', fontWeight: 'bold', fontSize: 18 }}>
+                                        <LaptopOutlined style={{ color: '#1890ff', marginRight: 8 }} />Thông tin công việc
+                                    </Divider>
+                                    <Card style={{ marginBottom: 16, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #eee' }} bordered={false}>
+                                        <Row gutter={[16, 16]}>
+                                            <Col span={12}><Text strong><BankOutlined /> Phòng ban:</Text> {selectedEmployee.departmentId?.name}</Col>
+                                            <Col span={12}><Text strong><IdcardOutlined /> Vị trí:</Text> {selectedEmployee.positionId?.name}</Col>
+                                            <Col span={12}><Text strong><CalendarOutlined /> Ngày vào làm:</Text> {selectedEmployee.joinDate ? moment(selectedEmployee.joinDate).format('YYYY-MM-DD') : ''}</Col>
+                                            <Col span={12}><Text strong><CalendarOutlined /> Ngày hết hạn hợp đồng:</Text> {selectedEmployee.resignDate ? moment(selectedEmployee.resignDate).format('YYYY-MM-DD') : ''}</Col>
+                                            <Col span={12}><Text strong><FileTextOutlined /> Loại hợp đồng:</Text> {selectedEmployee.contractId?.contract_type}</Col>
+                                            <Col span={12}><Text strong><BarChartOutlined /> Hệ số lương:</Text> {selectedEmployee.salaryCoefficientId?.salary_coefficient}</Col>
+                                        </Row>
+                                    </Card>
+
+                                    <Divider orientation="left" style={{ color: '#13c2c2', fontWeight: 'bold', fontSize: 18 }}>
+                                        <MailOutlined style={{ color: '#13c2c2', marginRight: 8 }} />Thông tin liên hệ
+                                    </Divider>
+                                    <Card style={{ marginBottom: 16, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #eee' }} bordered={false}>
+                                        <Row gutter={[16, 16]}>
+                                            <Col span={12}><Text strong><MailOutlined /> Email:</Text> {selectedEmployee.email}</Col>
+                                            <Col span={12}><Text strong><PhoneOutlined /> Số điện thoại:</Text> {selectedEmployee.phone}</Col>
+                                        </Row>
+                                    </Card>
+
+                                    <Divider orientation="left" style={{ color: '#faad14', fontWeight: 'bold', fontSize: 18 }}>
+                                        <BankOutlined style={{ color: '#faad14', marginRight: 8 }} />Thông tin tài khoản
+                                    </Divider>
+                                    <Card style={{ background: '#fffbe6', borderRadius: 8, boxShadow: '0 2px 8px #eee' }} bordered={false}>
+                                        <Row gutter={[16, 16]}>
+                                            <Col span={12}><Text strong><BankOutlined /> Tài khoản ngân hàng:</Text> {selectedEmployee.bankAccount}</Col>
+                                            <Col span={12}><Text strong><BankOutlined /> Tên ngân hàng:</Text> {selectedEmployee.bankName}</Col>
+                                        </Row>
+                                    </Card>
+                                </div>
+                            )
+                        ) : (
+                            <Form
+                                form={form}
+                                layout="vertical"
+                                onFinish={handleFormSubmit}
+                            >
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="avatar"
+                                            label="Ảnh đại diện"
+                                        >
+                                            <UploadFileComponent uploadFileSuccess={setFileResponse} isSingle={true} files={fileResponse} />
+
+                                        </Form.Item>
+                                    </Col>
+                                    {/* Hiển thị hình ảnh avatar xem trước */}
+
+                                    {fileAvatar && (
+                                        <Col span={12}>
+                                            <div style={{ marginTop: 8 }}>
+                                                <Avatar
+                                                    size={100}
+                                                    src={fileAvatar}
+                                                    alt="Avatar Preview"
+                                                />
+                                            </div>
+                                        </Col>
+                                    )    }
+
+
+                                    {/* <Col span={12}>
+                                        <Form.Item
+                                            name="code"
+                                            label="Mã nhân viên"
+                                            rules={[{ required: true, message: 'Vui lòng nhập mã nhân viên' }]}
+                                        >
+                                            <Input placeholder="Ví dụ: EMP001" />
+                                        </Form.Item>
+                                    </Col> */}
+                                </Row>
+
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="fullName"
+                                            label="Họ và tên"
+                                            rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+                                        >
+                                            <Input placeholder="Nhập họ và tên" />
+                                        </Form.Item>
+                                    </Col>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="email"
+                                            label="Email"
+                                            rules={[
+                                                { required: true, message: 'Vui lòng nhập email' },
+                                                { type: 'email', message: 'Email không hợp lệ' }
+                                            ]}
+                                        >
+                                            <Input placeholder="example@company.com" />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="address"
+                                            label="Địa chỉ"
+                                            rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
+                                        >
+                                            <Input placeholder="Nhập địa chỉ" />
+                                        </Form.Item>
+                                    </Col>
+
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="phone"
+                                            label="Số điện thoại"
+                                            rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
+                                        >
+                                            <Input placeholder="Nhập số điện thoại" />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="gender"
+                                            label="Giới tính"
+                                            rules={[{ required: true, message: 'Vui lòng chọn giới tính' }]}
+                                        >
+                                            <Select placeholder="Chọn giới tính">
+                                                <Option value="male">Nam</Option>
+                                                <Option value="female">Nữ</Option>
+                                                <Option value="other">Khác</Option>
+                                            </Select>
+                                        </Form.Item>
+                                    </Col>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="dob"
+                                            label="Ngày sinh"
+                                            rules={[{ required: true, message: 'Vui lòng chọn ngày sinh' }]}
+                                        >
+                                            <DatePicker placeholder="Ngày sinh" format="DD-MM-YYYY" />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="departmentId"
+                                            label="Phòng ban"
+                                            rules={[{ required: true, message: 'Vui lòng chọn phòng ban' }]}
+                                        >
+                                            <Select placeholder="Chọn phòng ban">
+                                                {departments.map(dept => (
+                                                    <Option key={dept._id} value={dept._id}>{dept.name}</Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                    </Col>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="positionId"
+                                            label="Vị trí"
+                                            rules={[{ required: true, message: 'Vui lòng chọn vị trí' }]}
+                                        >
+                                            <Select placeholder="Chọn vị trí">
+                                                {positions.map(pos => (
+                                                    <Option key={pos._id} value={pos._id}>{pos.name}</Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="joinDate"
+                                            label="Ngày vào làm"
+                                            rules={[{ required: true, message: 'Vui lòng chọn ngày vào làm' }]}
+                                        >
+                                            <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+                                        </Form.Item>
+                                    </Col>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="resignDate"
+                                            label="Ngày hết hạn hợp đồng"
+                                            rules={[{ required: true, message: 'Vui lòng chọn ngày hết hạn' }]}
+                                        >
+                                            <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+
+
+
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="bankAccount"
+                                            label="Tài khoản ngân hàng"
+                                            rules={[{ required: true, message: 'Vui lòng nhập tài khoản ngân hàng' }]}
+                                        >
+                                            <Input placeholder="Nhập tài khoản ngân hàng" />
+                                        </Form.Item>
+                                    </Col>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="bankName"
+                                            label="Tên ngân hàng"
+                                            rules={[{ required: true, message: 'Vui lòng nhập tên ngân hàng' }]}
+                                        >
+                                            <Input placeholder="Nhập tên ngân hàng" />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="salaryCoefficientId"
+                                            label="Hệ số lương"
+                                            rules={[{ required: true, message: 'Vui lòng nhập hệ số lương' }]}
+                                        >
+                                            <Select placeholder="Chọn hệ số lương">
+                                                {salaryCoefficients.map(coefficient => (
+                                                    <Option key={coefficient._id} value={coefficient._id}>{coefficient.salary_coefficient}</Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                    </Col>
+
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name="contractId"
+                                            label="Loại hợp đồng"
+                                            rules={[{ required: true, message: 'Vui lòng chọn loại hợp đồng' }]}
+                                        >
+                                            <Select placeholder="Chọn loại hợp đồng">
+                                                {contracts.map(contract => (
+                                                    <Option key={contract._id} value={contract._id}>{contract.contract_type}</Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                    </Col>
+
+                                </Row>
+
+
+                            </Form>
+                        )}
+                    </Modal>
+
+                    {/* Activity Modal for Managers */}
+                    <Modal
+                        title="Hoạt động nhân viên"
+                        open={activityModalVisible}
+                        onCancel={() => setActivityModalVisible(false)}
+                        footer={null}
+                        width={800}
+                    >
+                        {selectedEmployee && (
+                            <div>
+                                <Row gutter={[16, 16]}>
+                                    <Col span={24} style={{ textAlign: 'center', marginBottom: 16 }}>
+                                        <Avatar size={80} style={{ backgroundColor: '#722ed1' }}>
+                                            {selectedEmployee.fullName.charAt(0)}
+                                        </Avatar>
+                                        <Title level={3} style={{ marginTop: 16, marginBottom: 0 }}>
+                                            {selectedEmployee.fullName}
+                                        </Title>
+                                        <Text type="secondary">{selectedEmployee.positionId?.name}</Text>
+                                    </Col>
+                                </Row>
+
+                                <Divider orientation="left">Thống kê hoạt động</Divider>
+                                <Row gutter={[16, 16]}>
+                                    <Col span={8}>
+                                        <Card>
+                                            <Statistic
+                                                title="Điểm chuyên cần"
+                                                value={95}
+                                                suffix="%"
+                                                valueStyle={{ color: '#3f8600' }}
+                                            />
+                                            <Progress percent={95} status="active" />
+                                        </Card>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Card>
+                                            <Statistic
+                                                title="Công việc hoàn thành"
+                                                value={85}
+                                                suffix="%"
+                                                valueStyle={{ color: '#3f8600' }}
+                                            />
+                                            <Progress percent={85} status="active" />
+                                        </Card>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Card>
+                                            <Statistic
+                                                title="Đánh giá hiệu suất"
+                                                value={4.5}
+                                                suffix="/5"
+                                                valueStyle={{ color: '#3f8600' }}
+                                            />
+                                            <Progress percent={90} status="active" />
+                                        </Card>
+                                    </Col>
+                                </Row>
+
+                                <Divider orientation="left">Lịch sử hoạt động</Divider>
+                                <Timeline>
+                                    <Timeline.Item color="green">
+                                        Hoàn thành báo cáo tuần - 2 giờ trước
+                                    </Timeline.Item>
+                                    <Timeline.Item color="blue">
+                                        Tham gia cuộc họp dự án - 4 giờ trước
+                                    </Timeline.Item>
+                                    <Timeline.Item color="blue">
+                                        Cập nhật tài liệu - 1 ngày trước
+                                    </Timeline.Item>
+                                    <Timeline.Item color="green">
+                                        Hoàn thành task sprint - 2 ngày trước
+                                    </Timeline.Item>
+                                </Timeline>
+                            </div>
+                        )}
+                    </Modal>
+                </Spin>
             </Card>
-          </Col>
-        </Row>
-        {/* Modal và các thành phần khác giữ nguyên, chỉ chỉnh lại style nếu cần */}
-        {/* ... giữ nguyên phần Modal, Activity Modal ... */}
-      </div>
-    </ThreeDContainer>
+        </div>
     );
 };
 
