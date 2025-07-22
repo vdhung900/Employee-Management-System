@@ -333,7 +333,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                         </Col>
                     </Row>
 
-                    <Form.List name={['dataReq', 'goals']}>
+                    <Form.List name={['dataReq', 'goals']} rules={[{required: true, message: 'Vui lòng nhập mục tiêu'}]}>
                         {(fields, {add, remove}) => (
                             <>
                                 {fields.map(({key, name, ...restField}) => (
