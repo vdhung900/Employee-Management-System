@@ -323,12 +323,12 @@ const MainLayout = () => {
             label: "Quản lý nhân viên",
             permission: "EMPLOYEE_STAFF_MANAGEMENT",
         },
-        // {
-        //     key: "/employee/team-management",
-        //     icon: <UserOutlined/>,
-        //     label: "Quản lý nhóm",
-        //     permission: "EMPLOYEE_TEAM_MANAGEMENT",
-        // },
+        {
+            key: "/employee/team-management",
+            icon: <UserOutlined/>,
+            label: "Quản lý nhóm",
+            permission: "EMPLOYEE_TEAM_MANAGEMENT",
+        },
         {
             key: "/employee/team-performance",
             icon: <DashboardOutlined/>,
@@ -365,12 +365,12 @@ const MainLayout = () => {
             label: "Hệ số lương",
             permission: "EMPLOYEE_SALARY_COEFFICIENT",
         },
-        {
-            key: "/employee/employee-statistics",
-            icon: <BarChartOutlined />,
-            label: "Thống kê nhân viên",
-            permission: "EMPLOYEE_EMPLOYEE_STATISTICS",
-        },
+        // {
+        //     key: "/employee/employee-statistics",
+        //     icon: <BarChartOutlined />,
+        //     label: "Thống kê nhân viên",
+        //     permission: "EMPLOYEE_EMPLOYEE_STATISTICS",
+        // },
         {
             key: "/employee/manager-statistics",
             icon: <BarChartOutlined />,
