@@ -85,6 +85,28 @@ export class SalaryCalculationService {
     this.logger.log('Tính lương tự động hoàn tất!');
   }
 
+  // Thêm hàm tính số ngày thường trong tháng
+  private getWorkingDaysInMonth(month: number, year: number): number {
+    // Lấy ngày đầu tiên và cuối cùng của tháng
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    
+    let workingDays = 0;
+    const currentDate = new Date(firstDay);
+    
+    // Lặp qua từng ngày trong tháng
+    while (currentDate <= lastDay) {
+        // Nếu không phải thứ 7 (6) hoặc chủ nhật (0)
+        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+            workingDays++;
+        }
+        // Tăng lên ngày tiếp theo
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return workingDays;
+  }
+
   // Hàm tính lương cho 1 nhân viên
   private async calculateSalaryForEmployee(
     emp: any,
@@ -102,11 +124,15 @@ export class SalaryCalculationService {
       const baseSalary = rank.salary_base;
       const salaryCoefficient = coef.salary_coefficient;
       let totalBaseSalary = Math.round(baseSalary * salaryCoefficient);
+
+      // Lấy số ngày làm việc trong tháng
+      const workingDays = this.getWorkingDaysInMonth(month, year);
+
       // Lấy attendance records trong tháng
       const attendances = attMap.get(emp._id.toString()) || [];
       // Tính nghỉ không phép
       const unpaidLeaveCount = attendances.filter(a => a.isPaid === false).length;
-      const unpaidLeave = Math.round((totalBaseSalary / 22) * unpaidLeaveCount);
+      const unpaidLeave = Math.round((totalBaseSalary / workingDays) * unpaidLeaveCount);
 
       // Phạt đi muộn/về sớm
       let cntLatePenalty = 0;
@@ -231,8 +257,10 @@ export class SalaryCalculationService {
             netSalary, //Lương thực nhận
             cntLatePenalty, //Số lần đi muộn
             latePenalty, //Tiền phạt đi muộn
-            totalTaxableIncome, //Tổng thu nhập chịu thuế
+            totalTaxableIncome, //Tổng thu nhập trước khấu trừ và bảo hiểm
             status: '00',
+            workingDays, // Số ngày làm việc
+            taxableIncome, //Thu nhập chịu thuế
           },
         },
         { upsert: true }

@@ -90,6 +90,8 @@ const EmployeePayroll = () => {
                         healthInsurance: item.healthInsurance,
                         unemploymentInsurance: item.unemploymentInsurance,
                         totalInsurance: item.totalInsurance,
+                        workingDays: item.workingDays,
+                        taxableIncome: item.taxableIncome,
                     };
                 });
                 setPayrollHistoryData(mapped);
@@ -298,10 +300,10 @@ const EmployeePayroll = () => {
                             <div>
                                 <Text>Tiến độ ngày công</Text>
                                 <Progress
-                                    percent={selectedPayslip ? Math.round(((22 - (selectedPayslip.unpaidLeaveCount || 0)) / 22) * 100) : 0}
+                                    percent={selectedPayslip ? Math.round(((selectedPayslip.workingDays - (selectedPayslip.unpaidLeaveCount || 0)) / selectedPayslip.workingDays) * 100) : 0}
                                     format={() => (
                                         <span style={{ color: '#1890ff' }}>
-                                            {selectedPayslip ? `${22 - (selectedPayslip.unpaidLeaveCount || 0)}/${22}` : `-/-`}
+                                            {selectedPayslip ? `${selectedPayslip.workingDays - (selectedPayslip.unpaidLeaveCount || 0)}/${selectedPayslip.workingDays}` : `-/-`}
                                         </span>
                                     )}
                                     strokeColor="#1890ff"
@@ -336,7 +338,7 @@ const EmployeePayroll = () => {
                                     >
                                         <Statistic
                                             title={<span style={{ color: '#389e0d', fontWeight: 600 }}>Số ngày làm việc</span>}
-                                            value={selectedPayslip ? 22 - (selectedPayslip.unpaidLeaveCount || 0) : 0}
+                                            value={selectedPayslip ? selectedPayslip.workingDays - (selectedPayslip.unpaidLeaveCount || 0) : 0}
                                             prefix={<TeamOutlined style={{ color: '#389e0d' }} />}
                                             valueStyle={{ fontSize: '24px', color: '#389e0d', fontWeight: 700 }}
                                         />
@@ -542,6 +544,34 @@ const EmployeePayroll = () => {
                             </Row>
                         </Card>
 
+                        {/* Phúc lợi và thu nhập chịu thuế */}
+                        <Card style={{ marginBottom: 16 }}>
+                            <Row>
+                                <Col span={12} style={{ borderRight: '1px solid #f0f0f0', padding: '0 24px' }}>
+                                    <Title level={5}>Phụ cấp và phúc lợi</Title>
+                                    <Statistic
+                                        value={Math.round(detailPayslip.benefit)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                        valueStyle={{ fontSize: 20 }}
+                                    />
+                                </Col>
+                                <Col span={12} style={{ padding: '0 24px' }}>
+                                    <Title level={5}>Thu nhập trước khấu trừ và bảo hiểm</Title>
+                                    <Statistic
+                                        value={Math.round(detailPayslip.totalTaxableIncome)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                        valueStyle={{ fontSize: 20, fontWeight: 'bold' }}
+                                    />
+                                    <Text type="secondary" style={{ fontSize: 12 }}>
+                                        (Lương cơ bản + Phúc lợi + OT - Nghỉ phép - Đi muộn)
+                                    </Text>
+                                </Col>
+                            </Row>
+                        </Card>
+
+
                         {/* Các khoản khấu trừ */}
                         <Card title="Các khoản khấu trừ bảo hiểm" style={{ marginBottom: 16 }}>
                             <Row gutter={[16, 16]}>
@@ -602,7 +632,7 @@ const EmployeePayroll = () => {
                                 <Col span={6}>
                                     <Statistic
                                         title="Thu nhập chịu thuế"
-                                        value={detailPayslip.totalTaxableIncome}
+                                        value={detailPayslip.taxableIncome}
                                         suffix="₫"
                                         groupSeparator="."
                                     />
