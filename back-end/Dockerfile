@@ -13,7 +13,11 @@ RUN apk add --no-cache \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    fontconfig \
+    msttcorefonts-installer && \
+    update-ms-fonts && \
+    fc-cache -f
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
@@ -30,14 +34,18 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/templates ./templates
 COPY package*.json ./
 
-# Cài Chromium cho production image
+# Cài Chromium và font cho production image
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    fontconfig \
+    msttcorefonts-installer && \
+    update-ms-fonts && \
+    fc-cache -f
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
