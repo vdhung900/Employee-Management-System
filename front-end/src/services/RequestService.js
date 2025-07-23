@@ -49,6 +49,13 @@ const RequestService = {
         }catch (e) {
             throw handleApiError(e);
         }
+    },
+    async checkByMonth(month){
+        try{
+            return await fetchWithAuth(`/request-manage/filter-by-month/${month}`, 'GET');
+        }catch (e) {
+            throw handleApiError(e);
+        }
     }
 }
 

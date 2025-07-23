@@ -8,6 +8,9 @@ import { AttendanceRecords, AttendanceRecordSchema } from '../../schemas/attenda
 import { SalaryCoefficient, SalaryCoefficientSchema } from '../../schemas/salaryCoefficents.schema';
 import { SalaryRank, SalaryRankSchema } from '../../schemas/salaryRank.schema';
 import { Benefits, BenefitSchema } from '../../schemas/benefits.schema';
+import {UploadModule} from "../minio/minio.module";
+import {Requests, RequestsSchema} from "../../schemas/requests.schema";
+import {Documents, DocumentsSchema} from "../../schemas/documents.schema";
 
 @Module({
   imports: [
@@ -18,7 +21,10 @@ import { Benefits, BenefitSchema } from '../../schemas/benefits.schema';
       { name: SalaryCoefficient.name, schema: SalaryCoefficientSchema },
       { name: SalaryRank.name, schema: SalaryRankSchema },
       { name: Benefits.name, schema: BenefitSchema },
+      { name: Requests.name, schema: RequestsSchema },
+      { name: Documents.name, schema: DocumentsSchema },
     ]),
+    UploadModule
   ],
   controllers: [SalaryCalculationController],
   providers: [SalaryCalculationService],

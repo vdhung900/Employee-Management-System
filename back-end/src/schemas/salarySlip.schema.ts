@@ -66,6 +66,9 @@ export class SalarySlip extends BaseSchema {
 
   @Prop({ default: 0 })
   benefit: number;
+
+  @Prop()
+  stt: number
   
 }
 
