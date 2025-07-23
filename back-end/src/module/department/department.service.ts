@@ -30,12 +30,7 @@ export class DepartmentService {
         return this.departmentModel.find()
             .populate({
                 path: 'managerId',
-                model: 'Account',
-                select: 'username role employeeId',
-                populate: {
-                    path: 'employeeId',
-                    select: 'fullName email'
-                }
+                select: 'fullName',
             })
             .exec();
     }
@@ -79,5 +74,10 @@ export class DepartmentService {
         const deleted = await this.departmentModel.findByIdAndDelete(id).exec();
         if (!deleted) throw new NotFoundException('Department not found');
         return deleted;
+    }
+
+    async findAllEmployeesWithFullName() {
+        const EmployeesModel = this.accountModel.db.model('Employees');
+        return EmployeesModel.find({}).select('_id fullName').exec();
     }
 } 

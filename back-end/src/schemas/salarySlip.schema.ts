@@ -1,54 +1,72 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { BaseSchema } from "./base.schema";
-import { Document, Types } from "mongoose";
-import { SalaryCoefficient } from "./salaryCoefficents.schema";
-import { Employees } from "./employees.schema";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+import {BaseSchema} from "./base.schema";
+import {Employees} from "./employees.schema";
 
 export type SalarySlipDocument = SalarySlip & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class SalarySlip extends BaseSchema {
-    @Prop({type: Types.ObjectId, ref: Employees.name})
-    employeeId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: Employees.name, required: true })
+  employeeId: Types.ObjectId;
 
-    @Prop({type: Types.ObjectId, ref: SalaryCoefficient.name})
-    salaryCoefficientId: Types.ObjectId;
+  @Prop({ required: true })
+  month: number;
 
-    @Prop()
-    month: Date;
+  @Prop({ required: true })
+  year: number;
 
-    @Prop()
-    year: Date;
+  @Prop() 
+  baseSalary: number;
 
-    @Prop()
-    baseSalary: number;
+  @Prop() 
+  salaryCoefficient: number;
 
-    @Prop()
-    allowances: number;
+  @Prop() 
+  totalBaseSalary: number;
 
-    @Prop()
-    insurance: number;
+  @Prop()
+  unpaidLeave: number;
 
-    @Prop()
-    tax: number;
+  @Prop()
+  latePenalty: number;
 
-    @Prop()
-    leaveDeduction: number;
+  @Prop()
+  otWeekday: number;
 
-    @Prop()
-    benefitTotal: number;
+  @Prop()
+  otWeekend: number;
 
-    @Prop()
-    performanceBonus: number;
+  @Prop()
+  otHoliday: number;
 
-    @Prop()
-    otherBonus: number;
+  @Prop()
+  insurance: number;
 
-    @Prop()
-    totalSalary: number;
+  @Prop()
+  personalIncomeTax: number;
 
-    @Prop()
-    pdfUrl: string;
+  @Prop()
+  familyDeduction: number;
+
+  @Prop()
+  netSalary: number;
+
+  @Prop({ default: '00' })
+  status: string;
+
+  @Prop()
+  totalOtSalary: number;
+
+  @Prop()
+  totalOtHour: number;
+
+  @Prop()
+  totalTaxableIncome: number;
+
+  @Prop({ default: 0 })
+  benefit: number;
+  
 }
 
 export const SalarySlipSchema = SchemaFactory.createForClass(SalarySlip);

@@ -46,6 +46,18 @@ export class RolePermissionService {
         return this.roleModel.find();
     }
 
+    async getRoleById(id: Types.ObjectId) {
+        try {
+            const role = await this.roleModel.findById(id);
+            if (!role) {
+                throw new Error("Role not found");
+            }
+            return role;
+        } catch (err) {
+            throw new Error(err.message);
+        }
+    }
+
     async getRoleByCode(code: string) {
         return this.roleModel.findOne({code: code}).exec();
     }

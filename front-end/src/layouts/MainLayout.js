@@ -1,4 +1,4 @@
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
 import {Outlet, useLocation, useNavigate} from "react-router-dom";
 import {
     Layout,
@@ -33,13 +33,19 @@ import {
     AuditOutlined,
     UnorderedListOutlined,
     GiftOutlined,
-    CheckCircleOutlined
+    CheckCircleOutlined,
+    CalculatorOutlined,
+    BarChartOutlined, FieldTimeOutlined
 } from '@ant-design/icons';
 import {logout, getCurrentUser} from '../utils/auth';
 import ThreeDButton from '../components/3d/ThreeDButton';
 import ThreeDContainer from '../components/3d/ThreeDContainer';
 import '../components/3d/ThreeDStyles.css';
 import {useLoading} from "../contexts/LoadingContext";
+import ProfileModal from '../components/profile/ProfileModal';
+import NotificationListener from "../components/notification/NotificationListener";
+import NotificationService from "../services/NotificationService";
+import NotificationDropdown from "../components/notification/NotificationDropdown";
 
 const {Header, Sider, Content, Footer} = Layout;
 const {Title} = Typography;
@@ -69,20 +75,112 @@ const MainLayout = () => {
     const navigate = useNavigate();
     const [permissions, setPermissions] = useState([]);
     const [role, setRole] = useState(null);
-
-    const {
-        token: {colorBgContainer},
-    } = theme.useToken();
+    const [notificationItem, setNotificationItem] = useState([]);
+    const [employeeData, setEmployeeData] = useState(null);
+    const [profileModalVisible, setProfileModalVisible] = useState(false);
+    const employeeId = JSON.parse(localStorage.getItem("user"))?.employeeId || null;
+    const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
+    const [notificationLoading, setNotificationLoading] = useState(false);
+    const dropdownRef = useRef();
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem("user"));
-        setCurrentUser(user);
-        const role = localStorage.getItem("role");
-        setRole(role)
-        const perms = JSON.parse(localStorage.getItem("permissions")) || [];
-        setPermissions(perms);
-        setColor(colorTheme.siderBg);
+        try{
+            const user = JSON.parse(localStorage.getItem("user"));
+            setCurrentUser(user);
+            const role = localStorage.getItem("role");
+            setRole(role)
+            const perms = JSON.parse(localStorage.getItem("permissions")) || [];
+            setPermissions(perms);
+            const employeeData = JSON.parse(localStorage.getItem("employee"));
+            setEmployeeData(employeeData);
+            loadNotification();
+            setColor(colorTheme.siderBg);
+        }catch (e) {
+            message.error(e.message)
+        }
     }, []);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (notificationDropdownOpen && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setNotificationDropdownOpen(false);
+            }
+        }
+        if (notificationDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [notificationDropdownOpen]);
+
+    const loadNotification = async () => {
+        setNotificationLoading(true);
+        try{
+            const response = await NotificationService.getNotificationByCode(employeeId);
+            if(response.success){
+                const data = response.data;
+                setNotificationItem(data);
+            }
+        }catch (e) {
+            message.error(e.message);
+        }
+        setNotificationLoading(false);
+    }
+
+    const handleReadAllNotifications = async () => {
+        try{
+            let body = {
+                employeeId: employeeId
+            }
+            const response = await NotificationService.markReadAll(body);
+            if(response.success){
+                const updated = notificationItem.map(n => ({...n, read: true}));
+                setNotificationItem(updated);
+            }else{
+                message.error(response.message || "Không thể đánh dấu tất cả thông báo là đã đọc");
+            }
+        }catch (e) {
+            message.error(e.message)
+        }
+    };
+
+    const handleDeleteAllNotification = async () => {
+        try{
+            let body = {
+                employeeId: employeeId
+            }
+            const response = await NotificationService.deleteAll(body);
+            if(response.success){
+                setNotificationItem([]);
+            }else{
+                message.error(response.message || "Không thể đánh dấu tất cả thông báo là đã đọc");
+            }
+        }catch (e) {
+            message.error(e.message)
+        }
+    };
+
+    const handleNotificationClick = async (item) => {
+        try{
+            let body = {
+                employeeId: employeeId,
+                notificationId: item._id
+            }
+            const response = await NotificationService.markReadOne(body);
+            if(response.success){
+                setNotificationItem(prev => prev.map(n => n._id === item._id ? {...n, read: true} : n));
+            }else{
+                message.error(response.message || "Không thể đánh dấu thông báo là đã đọc");
+            }
+        }catch (e) {
+            message.error(e.message);
+        }
+    };
+
+    const handleSocketNotification = (data) => {
+        setNotificationItem(prev => [data, ...prev]);
+    };
 
     const handleMenuClick = ({key}) => {
         navigate(key);
@@ -96,10 +194,10 @@ const MainLayout = () => {
 
     const userMenuItems = [
         {
-            key: "/employee/profile",
+            key: "profile",
             label: "Hồ sơ cá nhân",
             icon: <UserOutlined/>,
-            onClick: () => navigate("/employee/profile"),
+            onClick: () => setProfileModalVisible(true),
         },
         {
             type: "divider",
@@ -110,14 +208,6 @@ const MainLayout = () => {
             icon: <LogoutOutlined/>,
             danger: true,
             onClick: handleLogout,
-        },
-    ];
-
-    const notificationItems = [
-        {
-            key: "1",
-            label: "Your leave request has been approved",
-            onClick: () => navigate("/employee/leave-request"),
         },
     ];
 
@@ -179,24 +269,24 @@ const MainLayout = () => {
             label: "Dashboard",
             permission: "EMPLOYEE_DASHBOARD",
         },
-        {
-            key: "/employee/attendance-review",
-            icon: <ClockCircleOutlined/>,
-            label: "Chấm công",
-            permission: "EMPLOYEE_ATTENDANCE_REVIEW",
-        },
-        {
-            key: "/employee/calender",
-            icon: <CalendarOutlined/>,
-            label: "Lịch",
-            permission: "EMPLOYEE_CALENDAR",
-        },
-        {
-            key: "/employee/overtime",
-            icon: <ClockCircleOutlined/>,
-            label: "Làm thêm giờ",
-            permission: "EMPLOYEE_OVERTIME",
-        },
+        // {
+        //     key: "/employee/attendance-review",
+        //     icon: <ClockCircleOutlined/>,
+        //     label: "Chấm công",
+        //     permission: "EMPLOYEE_ATTENDANCE_REVIEW",
+        // },
+        // {
+        //     key: "/employee/calender",
+        //     icon: <CalendarOutlined/>,
+        //     label: "Lịch",
+        //     permission: "EMPLOYEE_CALENDAR",
+        // },
+        // {
+        //     key: "/employee/overtime",
+        //     icon: <ClockCircleOutlined/>,
+        //     label: "Làm thêm giờ",
+        //     permission: "EMPLOYEE_OVERTIME",
+        // },
         {
             key: "/employee/approve-request",
             icon: <CheckCircleOutlined/>,
@@ -215,12 +305,12 @@ const MainLayout = () => {
             label: "Bảng lương",
             permission: "EMPLOYEE_PAYROLL",
         },
-        {
-            key: "/employee/payroll-management",
-            icon: <FileTextOutlined/>,
-            label: "Quản lý lương",
-            permission: "EMPLOYEE_PAYROLL_MANAGEMENT",
-        },
+        // {
+        //     key: "/employee/payroll-management",
+        //     icon: <FileTextOutlined/>,
+        //     label: "Quản lý lương",
+        //     permission: "EMPLOYEE_PAYROLL_MANAGEMENT",
+        // },
         {
             key: "/employee/reports",
             icon: <FileTextOutlined/>,
@@ -233,12 +323,12 @@ const MainLayout = () => {
             label: "Quản lý nhân viên",
             permission: "EMPLOYEE_STAFF_MANAGEMENT",
         },
-        {
-            key: "/employee/team-management",
-            icon: <UserOutlined/>,
-            label: "Quản lý nhóm",
-            permission: "EMPLOYEE_TEAM_MANAGEMENT",
-        },
+        // {
+        //     key: "/employee/team-management",
+        //     icon: <UserOutlined/>,
+        //     label: "Quản lý nhóm",
+        //     permission: "EMPLOYEE_TEAM_MANAGEMENT",
+        // },
         {
             key: "/employee/team-performance",
             icon: <DashboardOutlined/>,
@@ -268,6 +358,30 @@ const MainLayout = () => {
             icon: <FileTextOutlined/>,
             label: "Quản lý tài liệu",
             permission: "EMPLOYEE_DOCUMENT_MANAGEMENT",
+        },
+        {
+            key: "/employee/salary-coefficient",
+            icon: <CalculatorOutlined />,
+            label: "Hệ số lương",
+            permission: "EMPLOYEE_SALARY_COEFFICIENT",
+        },
+        {
+            key: "/employee/employee-statistics",
+            icon: <BarChartOutlined />,
+            label: "Thống kê nhân viên",
+            permission: "EMPLOYEE_EMPLOYEE_STATISTICS",
+        },
+        {
+            key: "/employee/manager-statistics",
+            icon: <BarChartOutlined />,
+            label: "Thống kê nhân viên",
+            permission: "EMPLOYEE_MANAGER_STATISTICS",
+        },
+        {
+            key: "/employee/leave-balance",
+            icon: <FieldTimeOutlined />,
+            label: "Quỹ ngày nghỉ",
+            permission: "EMPLOYEE_LEAVE_BALANCE",
         },
     ];
 
@@ -300,6 +414,7 @@ const MainLayout = () => {
 
     return (
         <Layout style={{minHeight: "100vh"}}>
+            <NotificationListener employeeId={employeeId} onNewNotification={handleSocketNotification} />
             <Sider
                 trigger={null}
                 collapsible
@@ -354,7 +469,7 @@ const MainLayout = () => {
                                     fontSize: "20px",
                                 }}
                             >
-                                {getUserRole(role) || "Nhân viên"}
+                                {employeeData?.fullName || "Nhân viên"}
                             </div>
                             <div
                                 style={{
@@ -418,35 +533,55 @@ const MainLayout = () => {
                         </div>
                     </div>
                     <Space size="large" align="center">
-                        <Tag
-                            color={colorTheme.tagBg}
-                            style={{
-                                padding: "6px 16px",
-                                borderRadius: "50px",
-                                boxShadow: "0 2px 5px rgba(25, 118, 210, 0.08)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                fontSize: "15px",
-                                color: colorTheme.tagText,
-                                background: colorTheme.tagBg,
-                                fontWeight: 500,
-                            }}
-                        >
-                            <ClockCircleOutlined style={{color: "#1976d2"}}/> Trạng thái chấm công
-                        </Tag>
-                        <Dropdown
-                            menu={{
-                                items: notificationItems,
-                            }}
-                            placement="bottomRight"
-                            arrow
-                            trigger={["click"]}
-                        >
-                            <Badge count={3} overflowCount={99}>
-                                <BellOutlined/>
+                        {/*<Tag*/}
+                        {/*    color={colorTheme.tagBg}*/}
+                        {/*    style={{*/}
+                        {/*        padding: "6px 16px",*/}
+                        {/*        borderRadius: "50px",*/}
+                        {/*        boxShadow: "0 2px 5px rgba(25, 118, 210, 0.08)",*/}
+                        {/*        display: "flex",*/}
+                        {/*        alignItems: "center",*/}
+                        {/*        gap: "6px",*/}
+                        {/*        fontSize: "15px",*/}
+                        {/*        color: colorTheme.tagText,*/}
+                        {/*        background: colorTheme.tagBg,*/}
+                        {/*        fontWeight: 500,*/}
+                        {/*    }}*/}
+                        {/*>*/}
+                        {/*    <ClockCircleOutlined style={{color: "#1976d2"}}/> Trạng thái chấm công*/}
+                        {/*</Tag>*/}
+                        <div style={{ position: 'relative' }}>
+                            <Badge count={notificationItem.filter(n => !n.read).length} overflowCount={99}>
+                                <BellOutlined
+                                    style={{ fontSize: 22, cursor: 'pointer', color: notificationDropdownOpen ? '#1976d2' : undefined }}
+                                    onClick={() => setNotificationDropdownOpen(open => !open)}
+                                />
                             </Badge>
-                        </Dropdown>
+                            {notificationDropdownOpen && (
+                                <div
+                                    ref={dropdownRef}
+                                    style={{
+                                        position: 'absolute',
+                                        right: 0,
+                                        top: 36,
+                                        zIndex: 1001,
+                                        boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+                                        maxHeight: 400,
+                                        overflowY: 'auto',
+                                        background: '#fff',
+                                        borderRadius: 8,
+                                    }}
+                                >
+                                    <NotificationDropdown
+                                        notifications={notificationItem}
+                                        loading={notificationLoading}
+                                        onReadAll={handleReadAllNotifications}
+                                        onDeleteAll={handleDeleteAllNotification}
+                                        onItemClick={handleNotificationClick}
+                                    />
+                                </div>
+                            )}
+                        </div>
                         <Dropdown
                             menu={{
                                 items: userMenuItems,
@@ -501,26 +636,22 @@ const MainLayout = () => {
                         <Outlet/>
                     </Spin>
                 </Content>
-                {/*<Footer*/}
-                {/*    style={{*/}
-                {/*        textAlign: 'center',*/}
-                {/*        background: colorTheme.footerBg,*/}
-                {/*        color: colorTheme.footerText,*/}
-                {/*        padding: '12px 50px',*/}
-                {/*        height: '50px'*/}
-                {/*    }}*/}
-                {/*>*/}
-                {/*    <div style={{*/}
-                {/*        display: 'flex',*/}
-                {/*        justifyContent: 'space-between',*/}
-                {/*        alignItems: 'center',*/}
-                {/*        fontSize: '14px'*/}
-                {/*    }}>*/}
-                {/*        <div>Employee Management System ©{new Date().getFullYear()}</div>*/}
-                {/*        <div>Version 1.0.0</div>*/}
-                {/*    </div>*/}
-                {/*</Footer>*/}
             </Layout>
+            <ProfileModal
+                visible={profileModalVisible}
+                onCancel={() => setProfileModalVisible(false)}
+                userData={currentUser}
+                onSave={async (values) => {
+                    try {
+                        // TODO: Call API to update user profile
+                        console.log('Updated profile:', values);
+                        setProfileModalVisible(false);
+                        message.success('Cập nhật thông tin thành công!');
+                    } catch (error) {
+                        message.error('Có lỗi xảy ra khi cập nhật thông tin!');
+                    }
+                }}
+            />
             <style jsx>{`
                 .user-dropdown:hover {
                     background-color: rgba(82, 196, 26, 0.15);

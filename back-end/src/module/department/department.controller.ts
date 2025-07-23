@@ -42,6 +42,22 @@ export class DepartmentController {
         return BaseResponse.success(data, 'OK', 200);
     }
 
+    @Get('employees')
+    @ApiOperation({ summary: 'Get all employees (accounts) with fullName' })
+    async getAllEmployees() {
+        const employees = await this.departmentService.findAllEmployeesWithFullName();
+        return BaseResponse.success(employees, 'OK', 200);
+    }
+
+    @Get('employees-with-department')
+    @ApiOperation({ summary: 'Get all employees with fullName and departmentId' })
+    async getAllEmployeesWithDepartment() {
+        // Lấy model Employees từ mongoose
+        const EmployeesModel = this.departmentService['accountModel'].db.model('Employees');
+        const employees = await EmployeesModel.find({}).select('_id fullName departmentId').exec();
+        return { data: employees };
+    }
+
     @Get(':id')
     @ApiOperation({ summary: 'Get department by id' })
     @ApiResponse({ status: 200, description: 'Department detail', type: BaseResponse })

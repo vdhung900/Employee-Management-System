@@ -324,7 +324,7 @@ const Help = () => {
     ];
 
     return (
-        <div>
+        <div style={{ padding: '24px' }}>
             <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
                 <Col span={24}>
                     <Title level={2}>Trợ giúp</Title>
@@ -360,7 +360,7 @@ const Help = () => {
 
             <ThreeDContainer>
                 <Tabs activeKey={activeTab} onChange={setActiveTab}>
-                    <TabPane tab={<span><QuestionCircleOutlined /> Câu hỏi thường gặp</span>} key="1">
+                    <TabPane tab={<span>Câu hỏi thường gặp</span>} key="1">
                         <Card>
                             {filteredFaqs.length > 0 ? (
                                 <Collapse accordion>
@@ -392,7 +392,7 @@ const Help = () => {
                         </Card>
                     </TabPane>
 
-                    <TabPane tab={<span><BookOutlined /> Hướng dẫn sử dụng</span>} key="2">
+                    <TabPane tab={<span>Hướng dẫn sử dụng</span>} key="2">
                         <Card>
                             {filteredTutorials.length > 0 ? (
                                 <List
@@ -433,7 +433,7 @@ const Help = () => {
                         </Card>
                     </TabPane>
 
-                    <TabPane tab={<span><FileTextOutlined /> Tài liệu & Biểu mẫu</span>} key="3">
+                    <TabPane tab={<span>Tài liệu & Biểu mẫu</span>} key="3">
                         <Card>
                             {filteredDocuments.length > 0 ? (
                                 <List
@@ -476,7 +476,7 @@ const Help = () => {
                         </Card>
                     </TabPane>
 
-                    <TabPane tab={<span><ContactsOutlined /> Liên hệ hỗ trợ</span>} key="4">
+                    <TabPane tab={<span>Liên hệ hỗ trợ</span>} key="4">
                         <Card>
                             <List
                                 itemLayout="horizontal"

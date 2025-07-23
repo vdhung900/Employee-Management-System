@@ -7,10 +7,20 @@ import { Departments, DepartmentsSchema } from "src/schemas/departments.schema";
 import { Position, PositionSchema } from "src/schemas/position.schema";
 import { SalaryCoefficient, SalaryCoefficientSchema } from "src/schemas/salaryCoefficents.schema";
 import { Contract, ContractSchema } from "src/schemas/contracts.schema";
+import {SalaryRank, SalaryRankSchema} from "../../../schemas/salaryRank.schema";
+import {AttendanceRecords, AttendanceRecordSchema} from "../../../schemas/attendanceRecords.schema";
+import {MonthlyReview, MonthlyReviewSchema} from "../../../schemas/performanceReview.schema";
+import {SalarySlip, SalarySlipSchema} from "../../../schemas/salarySlip.schema";
 
 @Module({
     imports: [MongooseModule.forFeature([{ name: Employees.name, schema: EmployeesSchema }, { name: Departments.name, schema: DepartmentsSchema },
-         { name: Position.name, schema: PositionSchema }, { name: SalaryCoefficient.name, schema: SalaryCoefficientSchema }, { name: Contract.name, schema: ContractSchema }])],
+         { name: Position.name, schema: PositionSchema }, { name: SalaryCoefficient.name, schema: SalaryCoefficientSchema },
+        { name: Contract.name, schema: ContractSchema },
+        { name: SalaryRank.name, schema: SalaryRankSchema },
+        { name: AttendanceRecords.name, schema: AttendanceRecordSchema },
+        { name: MonthlyReview.name, schema: MonthlyReviewSchema },
+        { name: SalarySlip.name, schema: SalarySlipSchema },
+    ])],
 
     controllers: [UpdateEmployeeController],
     providers: [UpdateEmployeeService],

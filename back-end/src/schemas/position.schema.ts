@@ -19,6 +19,9 @@ export class Position extends BaseSchema {
     description: string;
 
     @Prop()
+    code: string;
+
+    @Prop()
     level: number;
 }
 

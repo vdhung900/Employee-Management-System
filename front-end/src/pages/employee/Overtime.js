@@ -31,6 +31,7 @@ import {
     SearchOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import UploadFileComponent from "../../components/file-list/FileList";
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
@@ -45,21 +46,20 @@ const Overtime = () => {
     const [editMode, setEditMode] = useState(false);
     const [currentRequest, setCurrentRequest] = useState(null);
     const [filterStatus, setFilterStatus] = useState('all');
+    const [files, setFiles] = useState([]);
     const [dateRange, setDateRange] = useState([
         dayjs().startOf('month'),
         dayjs().endOf('month'),
     ]);
 
-    // Get overtime requests on component mount
     useEffect(() => {
         fetchOvertimeRequests();
     }, []);
 
-    // Mock fetch data - would be API call in production
     const fetchOvertimeRequests = () => {
         setLoading(true);
         setTimeout(() => {
-            setRequests(mockRequests);
+            setRequests([]);
             setLoading(false);
         }, 1000);
     };
@@ -473,15 +473,53 @@ const Overtime = () => {
                     }}
                 >
                     <Form.Item
-                        name="date"
-                        label="Ngày làm thêm giờ"
-                        rules={[{ required: true, message: 'Vui lòng chọn ngày!' }]}
+                        name="requestId"
+                        hidden={true}
                     >
-                        <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                    </Form.Item>
+                    <Form.Item
+                        name="employeeId"
+                        hidden={true}
+                    >
+                    </Form.Item>
+                    <Form.Item
+                        name="typeCode"
+                        hidden={true}
+                    >
+                    </Form.Item>
+                    <Form.Item
+                        name="priority"
+                        label="Mức độ ưu tiên"
+                        rules={[{required: true, message: 'Vui lòng chọn mức độ ưu tiên'}]}
+                    >
+                        <Select placeholder="Chọn mức độ ưu tiên">
+                            <Option value="high">Cao</Option>
+                            <Option value="normal">Bình thường</Option>
+                            <Option value="low">Thấp</Option>
+                        </Select>
+                    </Form.Item>
+                    <Form.Item
+                        name="note"
+                        label="Ghi chú"
+                    >
+                        <Input.TextArea rows={4} placeholder="Nhập ghi chú (nếu có)"/>
                     </Form.Item>
 
                     <Form.Item
-                        name="timeRange"
+                        name="attachments"
+                    >
+                        <UploadFileComponent uploadFileSuccess={setFiles} isSingle={true} files={files}/>
+                    </Form.Item>
+                    <Form.Item
+                        name={['dataReq', 'startDate']}
+                        label="Ngày tăng ca"
+                        rules={[{required: true, message: 'Vui lòng chọn ngày tăng ca'}]}
+                    >
+                        <DatePicker style={{width: '100%'}}/>
+                    </Form.Item>
+
+                    <Form.Item
+                        name={['dataReq', 'hours']}
                         label="Thời gian làm thêm"
                         rules={[{ required: true, message: 'Vui lòng chọn thời gian!' }]}
                     >
@@ -492,14 +530,11 @@ const Overtime = () => {
                     </Form.Item>
 
                     <Form.Item
-                        name="reason"
-                        label="Lý do làm thêm giờ"
-                        rules={[{ required: true, message: 'Vui lòng nhập lý do!' }]}
+                        name={['dataReq', 'reason']}
+                        label="Lý do tăng ca"
+                        rules={[{required: true, message: 'Vui lòng nhập lý do tăng ca'}]}
                     >
-                        <TextArea
-                            rows={4}
-                            placeholder="Nhập lý do cần làm thêm giờ"
-                        />
+                        <Input.TextArea rows={4} placeholder="Nhập lý do tăng ca"/>
                     </Form.Item>
 
                     <Form.Item>

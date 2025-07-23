@@ -13,6 +13,8 @@ export class SalaryCoefficient extends BaseSchema {
     @Prop()
     salary_coefficient: number;
 
+    @Prop()
+    rank: number;
 }
 
 export const SalaryCoefficientSchema = SchemaFactory.createForClass(SalaryCoefficient);

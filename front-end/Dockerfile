@@ -17,9 +17,8 @@ WORKDIR /app
 # Install serve globally
 RUN npm install -g serve
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/.env ./.env
+COPY --from=builder /app/build ./build
 
 EXPOSE 3123
 
-CMD ["sh", "-c", "serve -s dist -l ${PORT:-3123}"] 
+CMD ["sh", "-c", "serve -s build -l ${PORT:-3123}"]

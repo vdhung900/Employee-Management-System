@@ -5,7 +5,7 @@ import {  Departments } from "./departments.schema";
 import { Position } from "./position.schema";
 import { SalaryCoefficient } from "./salaryCoefficents.schema";
 import { Contract } from "./contracts.schema";
-
+import {Documents} from "./documents.schema";
 
 export type EmployeesDocument = Employees & Document;
 
@@ -42,13 +42,16 @@ export class Employees extends BaseSchema{
     status: string;
 
     @Prop()
-    bankAccount: string;             
+    bankAccount: string;
 
     @Prop()
     bankName: string;
 
     @Prop()
-    document: string;
+    timeUpdateSalary: Date;
+
+    @Prop({ type: [{ type: Types.ObjectId, ref: Documents.name }] })
+    attachments: Types.ObjectId[];
 
     @Prop({type: Types.ObjectId, ref: Contract.name})
     contractId: Types.ObjectId;
@@ -56,7 +59,17 @@ export class Employees extends BaseSchema{
     @Prop({type: Types.ObjectId, ref: SalaryCoefficient.name})
     salaryCoefficientId: Types.ObjectId;
 
-   
+    @Prop()
+    address: string;
+
+    @Prop()
+    avatar: string;
+
+    @Prop()
+    code: string;
+
+    @Prop()
+    childDependents: Number;
 
 }
 

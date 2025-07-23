@@ -43,6 +43,30 @@ const Hr_ManageEmployee = {
             throw handleApiError(error);
         }
     },
+    async getEmployeeSalary(){
+        try{
+            return await fetchWithAuth('/hr/salary/employees')
+        }catch (e) {
+            throw handleApiError(e)
+        }
+    },
+    async getAnalyzeEmployeeByUserId(userId) {
+        try {
+            const response = await fetchWithAuth(`/hr/analyze/employees/${userId}`, 'GET');
+            return response;
+        } catch (error) {
+            throw handleApiError(error);
+        }
+    },
+    async getAvatar(key){
+        try{
+            const response = await fetchWithAuth(`/files/presigned/${key}`,'GET');
+            return response;
+
+        } catch(error){
+            throw handleApiError(error);
+        }
+    }
 
 
 

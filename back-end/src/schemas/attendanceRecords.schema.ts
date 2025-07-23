@@ -2,34 +2,60 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { BaseSchema } from "./base.schema";
 import { Types } from "mongoose";
 import { Employees } from "./employees.schema";
+import { typeRequest } from "./typeRequestCategory.schema";
 
 export type AttendanceRecordsDocument = AttendanceRecords & Document;
 
 @Schema()
 export class AttendanceRecords extends BaseSchema {
-    @Prop({type: Types.ObjectId, ref: Employees.name})
-    employeeId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: Employees.name })
+  employeeId: Types.ObjectId;
 
-    @Prop()
-    date: Date;
+  @Prop()
+  date: Date;
 
-    @Prop()
-    firstCheckIn: Date;
+  @Prop()
+  firstCheckIn: Date;
 
-    @Prop()
-    lastCheckIn: Date;
+  @Prop()
+  lastCheckOut: Date;
 
-    @Prop()
-    totalWorkingHours: number;
+  @Prop()
+  isLate: boolean;
 
-    @Prop()
-    leaveType: string;
+  @Prop()
+  totalWorkingHours: number;
 
-    @Prop()
-    status: string;
+  @Prop({
+    enum: ["Chưa checkout", "Vắng mặt", "Đi muộn", "Về sớm", "Đúng giờ"],
+    default: "Vắng mặt",
+  })
+  status: string;
 
-    @Prop()
-    note: string;
+  //Đi muộn hoặc về sớm: 8h30 - 17h30
+  @Prop()
+  isPenalty: boolean;
+
+  @Prop()
+  note: string;
+
+  @Prop({ default: false })
+  isOvertime: Boolean;
+
+  @Prop()
+  overtimeRange: string[];
+
+  @Prop({ default: false })
+  isLeave: Boolean;
+
+  @Prop({ default: false })
+  isEarlyTime: Boolean;
+
+  @Prop({ default: true })
+  isPaid: Boolean;
+
+  @Prop()
+  reason: string;
 }
 
 export const AttendanceRecordSchema = SchemaFactory.createForClass(AttendanceRecords);

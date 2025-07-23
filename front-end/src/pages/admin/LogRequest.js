@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Table, DatePicker, Button, Spin, Typography, Statistic, Select, Tag } from 'antd';
+import { Card, Row, Col, Table, DatePicker, Button, Spin, Typography, Statistic, Select, Tag, Modal } from 'antd';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { ReloadOutlined, RiseOutlined, FallOutlined } from '@ant-design/icons';
+import { EyeOutlined } from '@ant-design/icons';
+import { BarChartOutlined } from '@ant-design/icons';
 import RequestService from "../../services/RequestService";
 import { formatDate } from '../../utils/format';
 
@@ -9,21 +11,11 @@ const { Title } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
-// Mô phỏng dữ liệu thống kê
-const mockData = [
-    { date: '2023-07-01', totalRequests: 1200, successRequests: 1150, failedRequests: 50 },
-    { date: '2023-07-02', totalRequests: 980, successRequests: 950, failedRequests: 30 },
-    { date: '2023-07-03', totalRequests: 1350, successRequests: 1300, failedRequests: 50 },
-    { date: '2023-07-04', totalRequests: 1500, successRequests: 1450, failedRequests: 50 },
-    { date: '2023-07-05', totalRequests: 1100, successRequests: 1050, failedRequests: 50 },
-    { date: '2023-07-06', totalRequests: 900, successRequests: 850, failedRequests: 50 },
-    { date: '2023-07-07', totalRequests: 800, successRequests: 780, failedRequests: 20 },
-];
 
 const LogRequest = () => {
     const [loading, setLoading] = useState(false);
     const [timeRange, setTimeRange] = useState('week');
-    const [chartData, setChartData] = useState(mockData);
+    const [chartData, setChartData] = useState([]);
     const [tableData, setTableData] = useState([]);
     const [pagination, setPagination] = useState({
         current: 1,
@@ -33,6 +25,8 @@ const LogRequest = () => {
         pageSizeOptions: ['10', '20', '30', '40'],
         showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} bản ghi`
     });
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalContent, setModalContent] = useState({});
 
     useEffect(() => {
         loadData();
@@ -95,6 +89,14 @@ const LogRequest = () => {
         return '#d9d9d9';
     };
 
+    const showDetail = (record, type) => {
+        setModalContent({
+            title: type === 'body' ? 'Body' : 'Headers',
+            content: record[type] ? JSON.stringify(record[type], null, 2) : 'Không có dữ liệu'
+        });
+        setModalVisible(true);
+    };
+
     const columns = [
         {
             title: 'Ngày',
@@ -145,6 +147,22 @@ const LogRequest = () => {
             key: 'responseTime',
             sorter: (a, b) => a.responseTime - b.responseTime
         },
+        {
+            title: 'Body',
+            dataIndex: 'body',
+            key: 'body',
+            render: (body, record) => (
+                <Button size="small" icon={<EyeOutlined />} onClick={() => showDetail(record, 'body')} />
+            )
+        },
+        {
+            title: 'Headers',
+            dataIndex: 'headers',
+            key: 'headers',
+            render: (headers, record) => (
+                <Button size="small" icon={<EyeOutlined />} onClick={() => showDetail(record, 'headers')} />
+            )
+        },
     ];
 
     const refreshData = () => {
@@ -156,9 +174,12 @@ const LogRequest = () => {
     };
 
     return (
-        <div style={{ padding: '10px', maxWidth: '1800px', margin: '0 auto' }}>
+        <div style={{ padding: 24, maxWidth: '1800px', margin: '0 auto' }}>
             <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-                <Title level={3}>Thống kê lượt truy cập</Title>
+                <Title level={3} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <BarChartOutlined style={{ color: '#1890ff', fontSize: 28 }} />
+                    Thống kê lượt truy cập
+                </Title>
                 <div>
                     <Button
                         type="primary"
@@ -174,7 +195,7 @@ const LogRequest = () => {
             <Spin spinning={loading}>
                 <Row gutter={[16, 16]}>
                     <Col span={6}>
-                        <Card>
+                        <Card style={{ padding: 24 }}>
                             <Statistic
                                 title="Tổng số yêu cầu"
                                 value={totalRequests}
@@ -184,7 +205,7 @@ const LogRequest = () => {
                         </Card>
                     </Col>
                     <Col span={6}>
-                        <Card>
+                        <Card style={{ padding: 24 }}>
                             <Statistic
                                 title="Yêu cầu thành công"
                                 value={totalSuccess}
@@ -194,7 +215,7 @@ const LogRequest = () => {
                         </Card>
                     </Col>
                     <Col span={6}>
-                        <Card>
+                        <Card style={{ padding: 24 }}>
                             <Statistic
                                 title="Yêu cầu thất bại"
                                 value={totalFailed}
@@ -204,7 +225,7 @@ const LogRequest = () => {
                         </Card>
                     </Col>
                     <Col span={6}>
-                        <Card>
+                        <Card style={{ padding: 24 }}>
                             <Statistic
                                 title="Tỷ lệ thành công"
                                 value={successRate}
@@ -217,7 +238,7 @@ const LogRequest = () => {
                     </Col>
 
                     <Col span={24}>
-                        <Card title="Thống kê lượt truy cập theo thời gian">
+                        <Card title="Thống kê lượt truy cập theo thời gian" style={{ padding: 24 }}>
                             <ResponsiveContainer width="100%" height={300}>
                                 <LineChart
                                     data={chartData}
@@ -237,7 +258,7 @@ const LogRequest = () => {
                     </Col>
 
                     <Col span={24}>
-                        <Card title="Tỷ lệ yêu cầu thành công/thất bại">
+                        <Card title="Tỷ lệ yêu cầu thành công/thất bại" style={{ padding: 24 }}>
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart
                                     data={chartData}
@@ -256,7 +277,7 @@ const LogRequest = () => {
                     </Col>
 
                     <Col span={24}>
-                        <Card title="Chi tiết lượt truy cập theo ngày">
+                        <Card title="Chi tiết lượt truy cập theo ngày" style={{ padding: 24 }}>
                             <Table
                                 columns={columns}
                                 dataSource={tableData}
@@ -269,6 +290,15 @@ const LogRequest = () => {
                     </Col>
                 </Row>
             </Spin>
+            <Modal
+                title={modalContent.title}
+                open={modalVisible}
+                onCancel={() => setModalVisible(false)}
+                footer={null}
+                width={600}
+            >
+                <pre style={{ maxHeight: 400, overflow: 'auto' }}>{modalContent.content}</pre>
+            </Modal>
         </div>
     );
 };
