@@ -105,18 +105,44 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             <Form.Item
                                 name={['dataReq', 'startDate']}
                                 label="Ngày bắt đầu nghỉ"
-                                rules={[{required: true, message: 'Vui lòng chọn ngày bắt đầu'}]}
+                                rules={[
+                                    { required: true, message: 'Vui lòng chọn ngày bắt đầu' }
+                                ]}
                             >
-                                <DatePicker style={{width: '100%'}}/>
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    disabledDate={(current) => {
+                                        return current && current < dayjs().startOf('day');
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'endDate']}
                                 label="Ngày kết thúc nghỉ"
-                                rules={[{required: true, message: 'Vui lòng chọn ngày kết thúc'}]}
+                                dependencies={[['dataReq', 'startDate']]}
+                                rules={[
+                                    { required: true, message: 'Vui lòng chọn ngày kết thúc' },
+                                    ({ getFieldValue }) => ({
+                                        validator(_, value) {
+                                            const startDate = getFieldValue(['dataReq', 'startDate']);
+                                            if (!value || !startDate || value.valueOf() >= startDate.valueOf()) {
+                                                return Promise.resolve();
+                                            }
+                                            return Promise.reject(
+                                                new Error('Ngày kết thúc không được nhỏ hơn ngày bắt đầu')
+                                            );
+                                        }
+                                    }),
+                                ]}
                             >
-                                <DatePicker style={{width: '100%'}}/>
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    disabledDate={(current) => {
+                                        return current && current < dayjs().startOf('day');
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                     </Row>
@@ -145,30 +171,55 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             <Form.Item
                                 name={['dataReq', 'startDate']}
                                 label="Ngày tăng ca"
-                                rules={[{required: true, message: 'Vui lòng chọn ngày tăng ca'}]}
+                                rules={[{ required: true, message: 'Vui lòng chọn ngày tăng ca' }]}
                             >
-                                <DatePicker style={{width: '100%'}}/>
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    disabledDate={(current) => current && current < dayjs().startOf('day')}
+                                />
                             </Form.Item>
                         </Col>
+
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'hours']}
                                 label="Thời gian làm thêm"
-                                rules={[{required: true, message: 'Vui lòng chọn thời gian!'}]}
+                                rules={[
+                                    { required: true, message: 'Vui lòng chọn thời gian!' },
+                                    {
+                                        validator: (_, value) => {
+                                            if (!value || value.length !== 2) {
+                                                return Promise.reject(new Error('Vui lòng chọn thời gian!'));
+                                            }
+                                            const [startTime, endTime] = value;
+                                            if (endTime.isAfter(startTime)) {
+                                                return Promise.resolve();
+                                            }
+                                            return Promise.reject(new Error('Giờ kết thúc phải sau giờ bắt đầu!'));
+                                        }
+                                    }
+                                ]}
                             >
                                 <TimePicker.RangePicker
-                                    style={{width: '100%'}}
+                                    style={{ width: '100%' }}
                                     format="HH:mm"
                                 />
                             </Form.Item>
                         </Col>
                     </Row>
+
                     <Form.Item
                         name={['dataReq', 'reason']}
                         label="Lý do tăng ca"
-                        rules={[{required: true, message: 'Vui lòng nhập lý do tăng ca'}]}
+                        rules={[
+                            { required: true, message: 'Vui lòng nhập lý do tăng ca' },
+                            { min: 10, message: 'Lý do phải có ít nhất 10 ký tự' }
+                        ]}
                     >
-                        <Input.TextArea rows={4} placeholder="Nhập lý do tăng ca"/>
+                        <Input.TextArea
+                            rows={4}
+                            placeholder="Nhập lý do tăng ca"
+                        />
                     </Form.Item>
                 </>
             ),
@@ -184,60 +235,79 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
             fields: (
                 <>
                     <Row gutter={16}>
+                        {/* Họ và tên */}
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'fullName']}
                                 label="Họ và tên nhân viên"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập họ và tên'},
-                                    {min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự'}
+                                    { required: true, message: 'Vui lòng nhập họ và tên' },
+                                    { min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự' },
+                                    {
+                                        pattern: /^[A-Za-zÀ-ỹ\s]+$/, // ✅ chỉ chữ & khoảng trắng
+                                        message: 'Họ và tên chỉ được chứa chữ cái'
+                                    }
                                 ]}
                             >
-                                <Input placeholder="Nhập họ và tên nhân viên"/>
+                                <Input placeholder="Nhập họ và tên nhân viên" />
                             </Form.Item>
                         </Col>
+
+                        {/* Ngày bắt đầu làm việc */}
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'startDate']}
                                 label="Ngày bắt đầu làm việc"
-                                rules={[{required: true, message: 'Vui lòng chọn ngày bắt đầu'}]}
+                                rules={[
+                                    { required: true, message: 'Vui lòng chọn ngày bắt đầu' }
+                                ]}
                             >
-                                <DatePicker style={{width: '100%'}}/>
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    disabledDate={(current) =>
+                                        current && current < dayjs().startOf('day') // ✅ Không chọn ngày quá khứ
+                                    }
+                                />
                             </Form.Item>
                         </Col>
                     </Row>
+
                     <Row gutter={16}>
-                        <Col span={12}>
+                        {/* Email */}
+                        <Col span={8}>
                             <Form.Item
                                 name={['dataReq', 'email']}
                                 label="Email"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập email'},
-                                    {type: 'email', message: 'Email không hợp lệ'}
+                                    { required: true, message: 'Vui lòng nhập email' },
+                                    { type: 'email', message: 'Email không hợp lệ' }
                                 ]}
                             >
-                                <Input placeholder="Nhập email"/>
+                                <Input placeholder="Nhập email" />
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
+
+                        {/* Số điện thoại */}
+                        <Col span={8}>
                             <Form.Item
                                 name={['dataReq', 'phone']}
                                 label="Số điện thoại"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập số điện thoại'},
-                                    {pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại không hợp lệ'}
+                                    { required: true, message: 'Vui lòng nhập số điện thoại' },
+                                    {
+                                        pattern: /^[0-9]{10,11}$/,
+                                        message: 'Số điện thoại phải gồm 10-11 chữ số'
+                                    }
                                 ]}
                             >
-                                <Input placeholder="Nhập số điện thoại"/>
+                                <Input placeholder="Nhập số điện thoại" />
                             </Form.Item>
                         </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
+                        <Col span={8}>
                             <Form.Item
                                 name={['dataReq', 'department']}
                                 label="Phòng ban"
-                                rules={[{required: true, message: 'Vui lòng chọn phòng ban'}]}
+                                rules={[{ required: true, message: 'Vui lòng chọn phòng ban' }]}
                             >
                                 <Select
                                     placeholder="Chọn phòng ban"
@@ -247,7 +317,8 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                             pos.name.toLowerCase().includes(department?.name.toLowerCase())
                                         );
                                         form.setFieldValue(['dataReq', 'position'], matched?._id);
-                                    }}>
+                                    }}
+                                >
                                     {departments.map(department => (
                                         <Option key={department._id} value={department._id}>
                                             {department.name}
@@ -256,31 +327,37 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 </Select>
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name={['dataReq', 'position']}
-                                label="Chức vụ"
-                                rules={[{required: true, message: 'Vui lòng chọn chức vụ'}]}
-                            >
-                                <Select placeholder="Chọn chức vụ">
-                                    {positions.map(position => (
-                                        <Option key={position._id} value={position._id}>
-                                            {position.name}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        {/* Phòng ban */}
+
+
+                        {/* Chức vụ */}
+                        {/*<Col span={12}>*/}
+                        {/*    <Form.Item*/}
+                        {/*        name={['dataReq', 'position']}*/}
+                        {/*        label="Chức vụ"*/}
+                        {/*        rules={[{ required: true, message: 'Vui lòng chọn chức vụ' }]}*/}
+                        {/*    >*/}
+                        {/*        <Select placeholder="Chọn chức vụ">*/}
+                        {/*            {positions.map(position => (*/}
+                        {/*                <Option key={position._id} value={position._id}>*/}
+                        {/*                    {position.name}*/}
+                        {/*                </Option>*/}
+                        {/*            ))}*/}
+                        {/*        </Select>*/}
+                        {/*    </Form.Item>*/}
+                        {/*</Col>*/}
+
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'reason']}
                                 label="Chức vụ"
                                 hidden={true}
-                            >
-                            </Form.Item>
+                            />
                         </Col>
                     </Row>
-
                 </>
             ),
             initialValues: {
@@ -408,7 +485,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             <Form.Item
                                 name={['dataReq', 'employeeId']}
                                 label="Nhân viên"
-                                rules={[{required: true, message: 'Vui lòng chọn nhân viên'}]}
+                                rules={[{ required: true, message: 'Vui lòng chọn nhân viên' }]}
                             >
                                 <Select
                                     placeholder="Chọn nhân viên"
@@ -416,27 +493,40 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                     optionFilterProp="children"
                                     onChange={(value) => {
                                         const selectedEmployee = employees.find(emp => emp?._id === value);
+
                                         if (selectedEmployee) {
-                                            const nextCoefficient = coefficients.find(coef => coef.rank === (selectedEmployee.salaryCoefficientId?.rank + 1));
-                                            if (!nextCoefficient) {
-                                                message.error("Nhân viên đã đạt đến mức lương tối đa, vui lòng thử lại với nhân viên khác!")
-                                            }
+                                            const currentCoef = selectedEmployee.salaryCoefficientId;
+                                            const currentSalary =
+                                                currentCoef?.salary_coefficient *
+                                                currentCoef?.salary_rankId?.salary_base;
+
+                                            const availableCoefficients = coefficients.filter(
+                                                coef => coef.rank > (currentCoef?.rank || 0)
+                                            );
+
                                             form.setFieldsValue({
                                                 dataReq: {
                                                     ...form.getFieldValue('dataReq'),
                                                     department: selectedEmployee.departmentId?.name || '',
-                                                    currentCoefficient: selectedEmployee.salaryCoefficientId?.salary_coefficient || 0,
-                                                    currentSalary: formatNumber(selectedEmployee.salaryCoefficientId?.salary_coefficient * selectedEmployee.salaryCoefficientId?.salary_rankId?.salary_base) || 0,
-                                                    proposedCoefficient: nextCoefficient ? nextCoefficient.salary_coefficient : 0,
-                                                    proposedSalary: nextCoefficient ? formatNumber(nextCoefficient.salary_coefficient * nextCoefficient.salary_rankId?.salary_base) : 0,
-                                                    salaryCoefficientsId: nextCoefficient?._id,
-                                                    employeeSalaryIncreaseId: selectedEmployee?._id
-                                                }
+                                                    currentCoefficient: currentCoef?.salary_coefficient || 0,
+                                                    currentSalary: formatNumber(currentSalary || 0),
+                                                    employeeSalaryIncreaseId: selectedEmployee._id,
+                                                    currentRank: currentCoef?.rank || 0, // ✅ Lưu bậc hiện tại
+                                                    proposedCoefficient: undefined,
+                                                    proposedSalary: undefined,
+                                                    salaryCoefficientsId: undefined,
+                                                },
                                             });
+
+                                            if (availableCoefficients.length === 0) {
+                                                message.warning(
+                                                    'Nhân viên này đã đạt mức lương tối đa, không còn bậc để tăng!'
+                                                );
+                                            }
                                         }
                                     }}
                                 >
-                                    {employees.map(employee => (
+                                    {employees.map((employee) => (
                                         <Option key={employee._id} value={employee._id}>
                                             {employee.fullName} - {employee.email}
                                         </Option>
@@ -444,42 +534,42 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 </Select>
                             </Form.Item>
                         </Col>
+
                         <Col span={12}>
-                            <Form.Item
-                                name={['dataReq', 'department']}
-                                label="Bộ phận"
-                            >
-                                <Input disabled/>
+                            <Form.Item name={['dataReq', 'department']} label="Bộ phận">
+                                <Input disabled />
                             </Form.Item>
                         </Col>
                     </Row>
+
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'currentCoefficient']}
                                 label="Hệ số lương hiện tại"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập hệ số lương hiện tại'},
+                                    { required: true, message: 'Vui lòng nhập hệ số lương hiện tại' },
                                 ]}
                             >
                                 <InputNumber
-                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
+                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
                                     disabled
                                     precision={2}
                                     step={0.01}
                                 />
                             </Form.Item>
                         </Col>
+
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'currentSalary']}
                                 label="Số lương hiện tại"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập số lương hiện tại'},
+                                    { required: true, message: 'Vui lòng nhập số lương hiện tại' },
                                 ]}
                             >
                                 <InputNumber
-                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
+                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
                                     precision={2}
                                     step={0.01}
                                     disabled
@@ -487,46 +577,80 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             </Form.Item>
                         </Col>
                     </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name={['dataReq', 'proposedCoefficient']}
-                                label="Hệ số lương đề xuất"
-                                rules={[
-                                    {required: true, message: 'Vui lòng nhập hệ số lương hiện tại'},
-                                ]}
-                            >
-                                <InputNumber
-                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
-                                    disabled
-                                    precision={2}
-                                    step={0.01}
-                                />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name={['dataReq', 'proposedSalary']}
-                                label="Số lương đề xuất"
-                                rules={[
-                                    {required: true, message: 'Vui lòng nhập hệ số lương đề xuất'},
-                                ]}
-                            >
-                                <InputNumber
-                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
-                                    precision={2}
-                                    step={0.01}
-                                    disabled
-                                />
-                            </Form.Item>
-                            <Form.Item
-                                name={['dataReq', 'salaryCoefficientsId']}
-                                label="Số lương đề xuất"
-                                hidden={true}
-                            >
-                            </Form.Item>
-                        </Col>
-                    </Row>
+
+                    <Form.Item shouldUpdate={(prev, cur) =>
+                        prev.dataReq?.currentRank !== cur.dataReq?.currentRank
+                    }>
+                        {() => {
+                            const currentRank = form.getFieldValue(['dataReq', 'currentRank']) || 0;
+                            const availableCoefficients = coefficients.filter(coef => coef.rank > currentRank);
+
+                            return (
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name={['dataReq', 'proposedCoefficient']}
+                                            label="Hệ số lương đề xuất"
+                                            rules={[
+                                                { required: true, message: 'Vui lòng chọn hệ số lương đề xuất' },
+                                            ]}
+                                        >
+                                            <Select
+                                                placeholder="Chọn hệ số lương đề xuất"
+                                                onChange={(value) => {
+                                                    const selectedCoefficient = coefficients.find(
+                                                        coef => coef._id === value
+                                                    );
+                                                    if (selectedCoefficient) {
+                                                        const proposedSalary =
+                                                            selectedCoefficient.salary_coefficient *
+                                                            selectedCoefficient.salary_rankId?.salary_base;
+                                                        form.setFieldsValue({
+                                                            dataReq: {
+                                                                ...form.getFieldValue('dataReq'),
+                                                                proposedCoefficient:
+                                                                selectedCoefficient.salary_coefficient,
+                                                                proposedSalary: formatNumber(proposedSalary),
+                                                                salaryCoefficientsId: selectedCoefficient._id,
+                                                            },
+                                                        });
+                                                    }
+                                                }}
+                                            >
+                                                {availableCoefficients.map(coef => (
+                                                    <Option key={coef._id} value={coef._id}>
+                                                        {coef.salary_coefficient} (Bậc {coef.rank})
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                    </Col>
+
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name={['dataReq', 'proposedSalary']}
+                                            label="Số lương đề xuất"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message: 'Vui lòng chọn hệ số lương đề xuất',
+                                                },
+                                            ]}
+                                        >
+                                            <InputNumber
+                                                style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                                precision={2}
+                                                step={0.01}
+                                                disabled
+                                            />
+                                        </Form.Item>
+                                        {/* Ẩn để lưu ID hệ số lương */}
+                                        <Form.Item name={['dataReq', 'salaryCoefficientsId']} hidden />
+                                    </Col>
+                                </Row>
+                            );
+                        }}
+                    </Form.Item>
                     <Row gutter={16}>
                         <Col span={24}>
                             <Form.Item
@@ -565,6 +689,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                     currentSalary: undefined,
                     proposedCoefficient: undefined,
                     proposedSalary: undefined,
+                    currentRank: undefined,
                     salaryCoefficientsId: undefined,
                     effectiveDate: undefined,
                     reason: '',
@@ -586,27 +711,30 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                         <Form.Item
                             name={['dataReq', 'startDate']}
                             label="Ngày bắt đầu nghỉ"
-                            rules={[{required: true, message: 'Vui lòng chọn ngày bắt đầu'}]}
+                            rules={[
+                                { required: true, message: 'Vui lòng chọn ngày bắt đầu' }
+                            ]}
                         >
                             <DatePicker
-                                style={{width: '100%'}}
-                                onChange={date => {
+                                style={{ width: '100%' }}
+                                disabledDate={(current) => current && current < dayjs().startOf('day')}
+                                onChange={(date) => {
                                     if (date) {
                                         const endDate = date.clone().add(180, 'days');
                                         form.setFieldsValue({
                                             dataReq: {
                                                 ...form.getFieldValue('dataReq'),
                                                 startDate: date,
-                                                endDate: endDate
-                                            }
+                                                endDate: endDate,
+                                            },
                                         });
                                     } else {
                                         form.setFieldsValue({
                                             dataReq: {
                                                 ...form.getFieldValue('dataReq'),
                                                 startDate: null,
-                                                endDate: null
-                                            }
+                                                endDate: null,
+                                            },
                                         });
                                     }
                                 }}
@@ -617,18 +745,39 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                         <Form.Item
                             name={['dataReq', 'endDate']}
                             label="Ngày kết thúc nghỉ"
-                            rules={[{required: true, message: 'Vui lòng chọn ngày kết thúc'}]}
+                            dependencies={[['dataReq', 'startDate']]}
+                            rules={[
+                                { required: true, message: 'Vui lòng chọn ngày kết thúc' },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        const startDate = getFieldValue(['dataReq', 'startDate']);
+                                        if (!value || !startDate || value.valueOf() >= startDate.valueOf()) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(
+                                            new Error('Ngày kết thúc không được trước ngày bắt đầu')
+                                        );
+                                    },
+                                }),
+                            ]}
                         >
-                            <DatePicker style={{width: '100%'}}/>
+                            <DatePicker
+                                style={{ width: '100%' }}
+                                disabledDate={(current) => current && current < dayjs().startOf('day')}
+                            />
                         </Form.Item>
                     </Col>
                 </Row>
+
                 <Form.Item
                     name={['dataReq', 'reason']}
                     label="Lý do nghỉ phép"
-                    rules={[{required: true, message: 'Vui lòng nhập lý do nghỉ phép'}]}
+                    rules={[
+                        { required: true, message: 'Vui lòng nhập lý do nghỉ phép' },
+                        { min: 10, message: 'Lý do phải có ít nhất 10 ký tự' },
+                    ]}
                 >
-                    <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép"/>
+                    <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép" />
                 </Form.Item>
             </>
         );
@@ -883,7 +1032,7 @@ const Requests = () => {
                         email: request.dataReq.email || '',
                         phone: request.dataReq.phone || '',
                         department: request.dataReq.department || '',
-                        position: request.dataReq.position || '',
+                        // position: request.dataReq.position || '',
                         note: request.dataReq.note || '',
                         reason: request.dataReq.reason || ''
                     }

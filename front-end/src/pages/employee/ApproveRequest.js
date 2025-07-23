@@ -436,6 +436,8 @@ const ApproveRequest = () => {
                 const isSalaryApprovedPending =
                     record.typeRequest?.code === STATUS.SALARY_APPROVED &&
                     record.status === STATUS.PENDING;
+                const isSalaryApproved =
+                    record.typeRequest?.code === STATUS.SALARY_APPROVED;
 
                 return (
                     <Space size="small">
@@ -461,7 +463,7 @@ const ApproveRequest = () => {
                             </Tooltip>
                         ) : (
                             <>
-                                {isSalaryApprovedPending && (
+                                {isSalaryApproved && (
                                     <Tooltip title="Xem bảng lương PDF">
                                         <Button
                                             type="text"

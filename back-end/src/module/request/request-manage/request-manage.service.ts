@@ -102,7 +102,7 @@ export class RequestManageService {
                 requests = await this.requestService.findByEmployeeId(req.employeeId.toString());
             }
             if (!requests || requests.length === 0) {
-                throw new Error("No requests found for this employee");
+                return [];
             }
             const sorted = requests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
             return sorted;
@@ -429,6 +429,7 @@ export class RequestManageService {
                 if (!employee) {
                     throw new Error("Không tìm thấy nhân viên");
                 }
+                console.log(employee)
 
                 if (employee.timeUpdateSalary !== null) {
                     const lastUpdateTime = new Date(employee.timeUpdateSalary);

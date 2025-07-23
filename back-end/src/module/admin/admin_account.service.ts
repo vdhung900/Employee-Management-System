@@ -265,7 +265,7 @@ export class AdminAccountService {
 
   async createByInfo(info: any, files: any){
     try{
-      if(!info.fullName || !info.email || !info.department || !info.position) {
+      if(!info.fullName || !info.email || !info.department) {
         throw new Error('Thông tin không đầy đủ');
       }
       const username = await this.generateUserName(info.fullName);
@@ -284,7 +284,7 @@ export class AdminAccountService {
         email: info.email,
         phone: info.phone || null,
         departmentId: new Types.ObjectId(info.department),
-        positionId: new Types.ObjectId(info.position),
+        positionId: null,
         joinDate: new Date(info.startDate) || new Date(),
         dob: null,
         gender: null,
