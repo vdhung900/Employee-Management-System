@@ -95,7 +95,12 @@ export class RequestManageService {
 
     async getRequestByAccountId(req: CreateRequestDto) {
         try {
-            const requests = await this.requestService.findByEmployeeId(req.employeeId.toString());
+            let requests;
+            if(req.status){
+                requests = await this.requestService.findByEmployeeIdAndStatus(req.employeeId.toString(), req.status);
+            }else{
+                requests = await this.requestService.findByEmployeeId(req.employeeId.toString());
+            }
             if (!requests || requests.length === 0) {
                 throw new Error("No requests found for this employee");
             }
@@ -177,9 +182,9 @@ export class RequestManageService {
                     case STATUS.SALARY_INCREASE:
                         await this.updateCoefficient(req, data, typeRequest);
                         break;
-                    case STATUS.SALARY_APPROVED:
-                        await this.updateAndSendSalaryToEmployee(req);
-                        break;
+                    // case STATUS.SALARY_APPROVED:
+                    //     await this.updateAndSendSalaryToEmployee(req);
+                    //     break;
                     default:
                         throw new Error("Trạng thái đơn không hợp lệ!");
                 }
@@ -336,6 +341,7 @@ export class RequestManageService {
                         checkData.isOvertime = true;
                         checkData.overtimeRange = dataRequest.dataReq.hours;
                         checkData.reason = dataRequest.dataReq.reason;
+                        checkData.status = STATUS.OVERTIME
                         await checkData.save();
                     } else {
                         await this.attendanceRecordModel.insertOne({
@@ -507,5 +513,35 @@ export class RequestManageService {
                 status = '';
         }
         return status;
+    }
+
+    async checkSalaryApprovedByMonth(month: string) {
+        try {
+            const startOfMonth = new Date(month);
+            startOfMonth.setDate(1);
+            startOfMonth.setHours(0, 0, 0, 0);
+
+            const endOfMonth = new Date(startOfMonth);
+            endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+
+            const typeRequest = await this.typeRequestModel.findOne({
+                code: STATUS.SALARY_APPROVED
+            }).exec();
+
+            if (!typeRequest) {
+                throw new Error("Không tìm thấy loại yêu cầu SALARY_APPROVED");
+            }
+
+            const dataReq = await this.requestModel.findOne({
+                month: { $gte: startOfMonth, $lt: endOfMonth },
+                typeRequest: typeRequest._id,
+                status: STATUS.APPROVED
+            }).exec();
+
+            return dataReq;
+        } catch (e) {
+            console.error(e);
+            throw new Error(`Lỗi kiểm tra phê duyệt lương: ${e.message}`);
+        }
     }
 }

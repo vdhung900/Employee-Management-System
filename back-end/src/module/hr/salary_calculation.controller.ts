@@ -1,4 +1,4 @@
-import { Controller, Post, Req, Get, Param, UseGuards, HttpStatus, HttpException, Logger } from '@nestjs/common';
+import {Controller, Post, Req, Get, Param, UseGuards, HttpStatus, HttpException, Logger, Body} from '@nestjs/common';
 import { SalaryCalculationService } from './salary_calculation.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { Types } from 'mongoose';
@@ -13,6 +13,38 @@ export class SalaryCalculationController {
     constructor(private readonly salaryCalculationService: SalaryCalculationService) {
     }
   private readonly logger = new Logger(SalaryCalculationController.name);
+
+  @Post('sign')
+  async signPdf(@Body() dto: { month: string; signatureImage: string; originalHash: string }) : Promise<BaseResponse>{
+    try{
+      const { month, signatureImage, originalHash } = dto;
+      const resData = await this.salaryCalculationService.signSalarySlip(month, signatureImage, originalHash);
+      return BaseResponse.success(resData, 'Ký thành công!', HttpStatus.OK);
+    }catch (e) {
+      throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('sign-by-manage')
+  async signPdfByManage(@Body() dto: { requestId: string; signatureImage: string; status: string }) : Promise<BaseResponse>{
+    try{
+      const { requestId, signatureImage, status } = dto;
+      const resData = await this.salaryCalculationService.signSalarySlipByManage(requestId, signatureImage, status);
+      return BaseResponse.success(resData, 'Duyệt và ký thành công!', HttpStatus.OK);
+    }catch (e) {
+      throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  
+  @Get('generate-pdf/:month')
+  async generatePdf(@Param('month') month: string) : Promise<BaseResponse>{
+    try{
+      const resData = await this.salaryCalculationService.generatePdfBase64(month);
+      return BaseResponse.success(resData, 'Xem trước thành công', HttpStatus.OK);
+    }catch (e) {
+      throw new HttpException({ message: e.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
     @Post('run')
     async runSalaryCalculation(): Promise<BaseResponse> {

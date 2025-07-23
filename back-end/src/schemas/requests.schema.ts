@@ -19,6 +19,9 @@ export class Requests extends BaseSchema {
     @Prop({type: Types.ObjectId, ref: typeRequest.name})
     typeRequest: Types.ObjectId;
 
+    @Prop()
+    month: Date;
+
     @Prop({ type: Object })
     dataReq: Record<string, any>;
 

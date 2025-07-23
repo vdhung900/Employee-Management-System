@@ -37,7 +37,7 @@ export class BaseRequestService {
         return await this.requestModel.find({departmentId: new Types.ObjectId(departmentId)}).populate('employeeId').populate('departmentId').populate({
             path: 'typeRequest',
             match: {code: {$ne: code}}
-        }).exec();
+        }).populate('attachments').exec();
     }
 
     async findById(id: any) {
@@ -50,6 +50,10 @@ export class BaseRequestService {
 
     async findByEmployeeId(employeeId: string) {
         return await this.requestModel.find({employeeId: new Types.ObjectId(employeeId)}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
+    }
+
+    async findByEmployeeIdAndStatus(employeeId: string, status: string) {
+        return await this.requestModel.find({employeeId: new Types.ObjectId(employeeId), status: status}).populate('employeeId').populate('typeRequest').populate('attachments').exec();
     }
 
     async update(id: string, updateData: CreateRequestDto) {
