@@ -29,7 +29,16 @@ export class SalarySlip extends BaseSchema {
   unpaidLeave: number;
 
   @Prop()
+  cntLatePenalty: number;
+
+  @Prop()
   latePenalty: number;
+
+  @Prop()
+  otWeekdayHour: number;
+
+  @Prop()
+  otWeekendHour: number;
 
   @Prop()
   otWeekday: number;
@@ -41,10 +50,13 @@ export class SalarySlip extends BaseSchema {
   otHoliday: number;
 
   @Prop()
-  insurance: number;
+  totalOtHour: number;
 
   @Prop()
   personalIncomeTax: number;
+
+  @Prop()
+  numDependents: number;
 
   @Prop()
   familyDeduction: number;
@@ -59,14 +71,26 @@ export class SalarySlip extends BaseSchema {
   totalOtSalary: number;
 
   @Prop()
-  totalOtHour: number;
-
-  @Prop()
   totalTaxableIncome: number;
 
   @Prop({ default: 0 })
   benefit: number;
   
+  @Prop()
+  socialInsurance: number;
+
+  @Prop()
+  healthInsurance: number;
+
+  @Prop()
+  unemploymentInsurance: number;
+
+  @Prop()
+  totalInsurance: number;
+
+  @Prop()
+  unpaidLeaveCount: number;
+
 }
 
 export const SalarySlipSchema = SchemaFactory.createForClass(SalarySlip);
