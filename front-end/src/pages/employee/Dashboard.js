@@ -98,9 +98,7 @@ const EmployeeDashboard = () => {
         tmpDate.setDate(startOfWeek.getDate() + i);
         const tmpDateString = tmpDate.toISOString();
 
-        const record = attendances.find(
-          (a) => a.date.slice(0, 10) === tmpDateString.slice(0, 10)
-        );
+        const record = attendances.find((a) => a.date.slice(0, 10) === tmpDateString.slice(0, 10));
 
         weeklyAttendance.push(
           record
@@ -148,6 +146,7 @@ const EmployeeDashboard = () => {
           if (response.success) {
             message.success("Check-out thành công!");
             await fetchTodayAttendance();
+            fetchWeeklyAttendance();
           }
         } catch (error) {
           message.error(error.message || "Có lỗi xảy ra khi check-out");
@@ -175,17 +174,17 @@ const EmployeeDashboard = () => {
   };
 
   // Tính giờ dự kiến check-out (8 tiếng sau check-in)
-  const getExpectedCheckOut = () => {
-    if (!todayAttendance?.firstCheckIn) return "-";
-    const checkInTime = new Date(todayAttendance.firstCheckIn);
-    const expectedCheckOut = new Date(
-      checkInTime.getTime() + 8 * 60 * 60 * 1000
-    );
-    return expectedCheckOut.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  // const getExpectedCheckOut = () => {
+  //   if (!todayAttendance?.firstCheckIn) return "-";
+  //   const checkInTime = new Date(todayAttendance.firstCheckIn);
+  //   const expectedCheckOut = new Date(
+  //     checkInTime.getTime() + 8 * 60 * 60 * 1000
+  //   );
+  //   return expectedCheckOut.toLocaleTimeString("vi-VN", {
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //   });
+  // };
 
   // Mock data for employee stats
   const stats = [
@@ -313,13 +312,9 @@ const EmployeeDashboard = () => {
                 padding: "24px 0",
               }}
             >
-              <UserOutlined
-                style={{ fontSize: 32, color: "#1890ff", marginRight: 12 }}
-              />
+              <UserOutlined style={{ fontSize: 32, color: "#1890ff", marginRight: 12 }} />
               <Title level={3} style={{ margin: 0, fontWeight: "700" }}>
-                <span className="blue-gradient-text">
-                  Chào, {user?.name || "Nhân viên"}!
-                </span>
+                <span className="blue-gradient-text">Chào, {user?.name || "Nhân viên"}!</span>
               </Title>
             </div>
             <Text style={{ fontSize: "16px", color: "rgba(0, 0, 0, 0.65)" }}>
@@ -413,15 +408,11 @@ const EmployeeDashboard = () => {
                   </Col>
                   <Col span={12}>
                     <Statistic
-                      title={
-                        todayAttendance?.lastCheckOut
-                          ? "Giờ ra"
-                          : "Giờ ra (dự kiến)"
-                      }
+                      title={todayAttendance?.lastCheckOut ? "Giờ ra" : "Giờ ra (Dự kiến)"}
                       value={
                         todayAttendance?.lastCheckOut
                           ? formatTime(todayAttendance.lastCheckOut)
-                          : getExpectedCheckOut()
+                          : "17:30"
                       }
                       valueStyle={{ color: "#ff4d4f" }}
                     />
@@ -450,11 +441,7 @@ const EmployeeDashboard = () => {
                     Check-out
                   </ThreeDButton>
                 ) : (
-                  <ThreeDButton
-                    type="default"
-                    icon={<CheckCircleOutlined />}
-                    disabled
-                  >
+                  <ThreeDButton type="default" icon={<CheckCircleOutlined />} disabled>
                     Hoàn thành
                   </ThreeDButton>
                 )}
@@ -637,13 +624,10 @@ const EmployeeDashboard = () => {
                           }}
                         >
                           {record.firstCheckIn
-                            ? new Date(record.firstCheckIn).toLocaleTimeString(
-                                "vi-VN",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
+                            ? new Date(record.firstCheckIn).toLocaleTimeString("vi-VN", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             : "-"}
                         </td>
                         <td
@@ -654,28 +638,21 @@ const EmployeeDashboard = () => {
                           }}
                         >
                           {record.lastCheckOut
-                            ? new Date(record.lastCheckOut).toLocaleTimeString(
-                                "vi-VN",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
+                            ? new Date(record.lastCheckOut).toLocaleTimeString("vi-VN", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             : "-"}
                         </td>
                         <td
                           style={{
                             padding: "12px 8px",
                             borderBottom: "1px solid #f0f0f0",
-                            color: !record.totalWorkingHours
-                              ? "#bfbfbf"
-                              : "inherit",
+                            color: !record.totalWorkingHours ? "#bfbfbf" : "inherit",
                           }}
                         >
                           {record.totalWorkingHours
-                            ? `${Math.floor(
-                                record.totalWorkingHours
-                              )}h${Math.round(
+                            ? `${Math.floor(record.totalWorkingHours)}h${Math.round(
                                 (record.totalWorkingHours % 1) * 60
                               )
                                 .toString()
@@ -736,11 +713,7 @@ const EmployeeDashboard = () => {
               }))}
             />
             <div style={{ textAlign: "center", marginTop: "20px" }}>
-              <ThreeDButton
-                type="primary"
-                icon={<TeamOutlined />}
-                className="btn-blue-theme"
-              >
+              <ThreeDButton type="primary" icon={<TeamOutlined />} className="btn-blue-theme">
                 Xem lịch phòng ban
               </ThreeDButton>
             </div>

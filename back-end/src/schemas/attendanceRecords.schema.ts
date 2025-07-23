@@ -26,8 +26,15 @@ export class AttendanceRecords extends BaseSchema {
   @Prop()
   totalWorkingHours: number;
 
-  @Prop()
+  @Prop({
+    enum: ["Chưa checkout", "Vắng mặt", "Đi muộn", "Về sớm", "Đúng giờ"],
+    default: "Vắng mặt",
+  })
   status: string;
+
+  //Đi muộn hoặc về sớm: 8h30 - 17h30
+  @Prop()
+  isPenalty: boolean;
 
   @Prop()
   note: string;

@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsMongoId, IsOptional, IsString, IsDate, IsNumber } from "class-validator";
+import {
+  IsNotEmpty,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  IsDate,
+  IsNumber,
+  IsBoolean,
+} from "class-validator";
 
 import { Type } from "class-transformer";
 
@@ -18,6 +26,10 @@ export class CreateAttendanceRecordDto {
   @IsOptional()
   @IsDate()
   lastCheckOut: Date;
+
+  @IsOptional()
+  @IsBoolean()
+  isPenalty: boolean;
 
   @IsOptional()
   @IsDate()
