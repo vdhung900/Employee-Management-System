@@ -46,4 +46,10 @@ export class SalaryPreviewDto extends BaseReq {
     totalTax: string;
     @IsOptional()
     totalSalary: string;
+    @IsOptional()
+    totalOTEnd: string;
+    @IsOptional()
+    totalEndInsurance: string;
+    @IsOptional()
+    totalTaxable: string;
 }
