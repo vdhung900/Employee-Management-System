@@ -77,7 +77,6 @@ const EmployeePayroll = () => {
                         personalIncomeTax: item.personalIncomeTax,
                         familyDeduction: item.familyDeduction,
                         netSalary: item.netSalary,
-                        status: item.status === '00' ? 'pending' : 'paid',
                         paymentDate: item.updatedAt || '',
                         totalTaxableIncome: item.totalTaxableIncome,
                         benefit: item.benefit,
@@ -158,15 +157,6 @@ const EmployeePayroll = () => {
             dataIndex: 'netSalary',
             key: 'netSalary',
             render: (val) => `${Math.round(val)?.toLocaleString('vi-VN')} ₫`,
-        },
-        {
-            title: 'Trạng thái',
-            key: 'status',
-            render: (_, record) => (
-                <Tag color={record.status === 'paid' ? 'green' : 'orange'}>
-                    {record.status === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán'}
-                </Tag>
-            ),
         },
         {
             title: 'Ngày tạo phiếu',
@@ -370,12 +360,6 @@ const EmployeePayroll = () => {
                                     prefix={<ThunderboltOutlined />}
                                     valueStyle={{ color: selectedPayslip && selectedPayslip.latePenalty === 0 ? '#52c41a' : '#faad14' }}
                                 />
-                                <Progress
-                                    percent={selectedPayslip ? (selectedPayslip.latePenalty === 0 ? 100 : Math.max(100 - (selectedPayslip.latePenalty || 0) * 2, 80)) : 100}
-                                    status={selectedPayslip && selectedPayslip.latePenalty === 0 ? 'success' : 'normal'}
-                                    showInfo={false}
-                                    strokeColor={selectedPayslip && selectedPayslip.latePenalty === 0 ? '#52c41a' : '#faad14'}
-                                />
                             </Card>
                         </Space>
                     </Card>
@@ -409,11 +393,6 @@ const EmployeePayroll = () => {
                                         <CalendarOutlined style={{ marginRight: 8 }} />
                                         {detailPayslip.period}
                                     </Title>
-                                </Col>
-                                <Col>
-                                    <Tag color={detailPayslip.status === 'paid' ? 'success' : 'warning'} style={{ padding: '4px 12px', fontSize: 14 }}>
-                                        {detailPayslip.status === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán'}
-                                    </Tag>
                                 </Col>
                             </Row>
                         </Card>

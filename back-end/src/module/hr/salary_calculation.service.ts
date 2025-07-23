@@ -258,7 +258,6 @@ export class SalaryCalculationService {
             cntLatePenalty, //Số lần đi muộn
             latePenalty, //Tiền phạt đi muộn
             totalTaxableIncome, //Tổng thu nhập trước khấu trừ và bảo hiểm
-            status: '00',
             workingDays, // Số ngày làm việc
             taxableIncome, //Thu nhập chịu thuế
           },
