@@ -445,7 +445,8 @@ const MonthlyPerformanceReview = () => {
   return (
     <div style={{ padding: 24 }}>
       <Title level={2}>
-        <BarChartOutlined style={{ marginRight: 8 }} /> Đánh giá hiệu suất nhân viên
+        <BarChartOutlined style={{ marginRight: 8 }} /> Đánh giá hiệu suất nhân
+        viên
       </Title>
       <Divider />
 
@@ -472,13 +473,19 @@ const MonthlyPerformanceReview = () => {
                     marginBottom: 16,
                   }}
                 >
-                  <Avatar size="large" icon={<UserOutlined />} style={{ marginRight: 16 }} />
+                  <Avatar
+                    size="large"
+                    icon={<UserOutlined />}
+                    style={{ marginRight: 16 }}
+                  />
                   <div>
                     <Text strong style={{ fontSize: 16 }}>
                       {selectedGoal.employee?.fullName || "N/A"}
                     </Text>
                     <div>
-                      <Text type="secondary">{selectedGoal.employee?.email || "N/A"}</Text>
+                      <Text type="secondary">
+                        {selectedGoal.employee?.email || "N/A"}
+                      </Text>
                     </div>
                   </div>
                 </div>
@@ -496,7 +503,11 @@ const MonthlyPerformanceReview = () => {
                     },
                   ]}
                 >
-                  <DatePicker.MonthPicker format="MM/YYYY" style={{ width: "100%" }} disabled />
+                  <DatePicker.MonthPicker
+                    format="MM/YYYY"
+                    style={{ width: "100%" }}
+                    disabled
+                  />
                 </Form.Item>
               </Col>
 
@@ -513,12 +524,18 @@ const MonthlyPerformanceReview = () => {
                             </Form.Item>
                           </Col>
                           <Col span={6}>
-                            <Form.Item name={[name, "goalTitle"]} label="Mục tiêu">
+                            <Form.Item
+                              name={[name, "goalTitle"]}
+                              label="Mục tiêu"
+                            >
                               <Input disabled />
                             </Form.Item>
                           </Col>
                           <Col span={5}>
-                            <Form.Item name={[name, "targetValue"]} label="Chỉ tiêu">
+                            <Form.Item
+                              name={[name, "targetValue"]}
+                              label="Chỉ tiêu"
+                            >
                               <InputNumber disabled style={{ width: "100%" }} />
                             </Form.Item>
                           </Col>
@@ -531,9 +548,19 @@ const MonthlyPerformanceReview = () => {
                                   required: true,
                                   message: "Vui lòng nhập giá trị thực tế",
                                 },
+                                {
+                                  type: "number",
+                                  min: 0,
+                                  max: 100,
+                                  message: "Giá trị thực tế phải từ 0 đến 100",
+                                },
                               ]}
                             >
-                              <InputNumber style={{ width: "100%" }} />
+                              <InputNumber
+                                min={0}
+                                max={100}
+                                style={{ width: "100%" }}
+                              />
                             </Form.Item>
                           </Col>
                           <Col span={6}>
@@ -545,9 +572,20 @@ const MonthlyPerformanceReview = () => {
                                   required: true,
                                   message: "Vui lòng nhập điểm đánh giá",
                                 },
+                                {
+                                  type: "number",
+                                  min: 0,
+                                  max: 10,
+                                  message: "Điểm đánh giá phải từ 0 đến 10",
+                                },
                               ]}
                             >
-                              <InputNumber min={0} max={10} style={{ width: "100%" }} />
+                              <InputNumber
+                                min={0}
+                                max={10}
+                                step={0.1}
+                                style={{ width: "100%" }}
+                              />
                             </Form.Item>
                           </Col>
                         </Row>
@@ -566,9 +604,20 @@ const MonthlyPerformanceReview = () => {
                       required: true,
                       message: "Vui lòng nhập điểm tổng thể",
                     },
+                    {
+                      type: "number",
+                      min: 0,
+                      max: 10,
+                      message: "Điểm tổng thể phải từ 0 đến 10",
+                    },
                   ]}
                 >
-                  <InputNumber min={0} max={10} style={{ width: "100%" }} />
+                  <InputNumber
+                    min={0}
+                    max={10}
+                    step={0.1}
+                    style={{ width: "100%" }}
+                  />
                 </Form.Item>
               </Col>
 
@@ -581,11 +630,21 @@ const MonthlyPerformanceReview = () => {
                       required: true,
                       message: "Vui lòng nhập nhận xét đánh giá",
                     },
+                    {
+                      max: 500,
+                      message: "Nhận xét không được dài hơn 500 ký tự",
+                    },
+                    {
+                      whitespace: true,
+                      message: "Nhận xét không được để trống",
+                    },
                   ]}
                 >
                   <TextArea
                     rows={4}
                     placeholder="Nhập nhận xét chi tiết về hiệu suất làm việc của nhân viên"
+                    maxLength={500}
+                    showCount
                   />
                 </Form.Item>
               </Col>
@@ -595,7 +654,9 @@ const MonthlyPerformanceReview = () => {
       </Modal>
 
       <Modal
-        title={`Chi tiết mục tiêu - ${selectedEmployeeStats?.employee?.fullName || "N/A"}`}
+        title={`Chi tiết mục tiêu - ${
+          selectedEmployeeStats?.employee?.fullName || "N/A"
+        }`}
         open={isStatsModalVisible}
         onCancel={() => setIsStatsModalVisible(false)}
         width={1000}
@@ -618,16 +679,25 @@ const MonthlyPerformanceReview = () => {
               </Col>
               <Col span={8}>
                 <ThreeDCard>
-                  <Statistic title="Số mục tiêu" value={selectedEmployeeStats.goals?.length || 0} />
+                  <Statistic
+                    title="Số mục tiêu"
+                    value={selectedEmployeeStats.goals?.length || 0}
+                  />
                 </ThreeDCard>
               </Col>
               <Col span={8}>
                 <ThreeDCard>
                   <Statistic
                     title="Trạng thái"
-                    value={selectedEmployeeStats.isReviewed ? "Đã đánh giá" : "Chờ đánh giá"}
+                    value={
+                      selectedEmployeeStats.isReviewed
+                        ? "Đã đánh giá"
+                        : "Chờ đánh giá"
+                    }
                     valueStyle={{
-                      color: selectedEmployeeStats.isReviewed ? "#52c41a" : "#faad14",
+                      color: selectedEmployeeStats.isReviewed
+                        ? "#52c41a"
+                        : "#faad14",
                     }}
                   />
                 </ThreeDCard>
@@ -663,7 +733,9 @@ const MonthlyPerformanceReview = () => {
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <Text strong>Họ tên: </Text>
-                  <Text>{selectedEmployeeStats.employee?.fullName || "N/A"}</Text>
+                  <Text>
+                    {selectedEmployeeStats.employee?.fullName || "N/A"}
+                  </Text>
                 </Col>
                 <Col span={12}>
                   <Text strong>Email: </Text>
@@ -675,7 +747,11 @@ const MonthlyPerformanceReview = () => {
                 </Col>
                 <Col span={12}>
                   <Text strong>Ngày tạo: </Text>
-                  <Text>{dayjs(selectedEmployeeStats.createdAt).format("DD/MM/YYYY HH:mm")}</Text>
+                  <Text>
+                    {dayjs(selectedEmployeeStats.createdAt).format(
+                      "DD/MM/YYYY HH:mm"
+                    )}
+                  </Text>
                 </Col>
               </Row>
             </Card>
