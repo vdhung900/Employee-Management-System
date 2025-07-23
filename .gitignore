@@ -28,3 +28,5 @@ Thumbs.db
 /front-end/src/config.js
 src/config.js
 front-end/src/config.js
+
+docker-compose.yml
