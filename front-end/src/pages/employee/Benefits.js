@@ -20,6 +20,8 @@ const Benefits = () => {
     const [benefits, setBenefits] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [employees, setEmployees] = useState([]);
+    const [filteredEmployees, setFilteredEmployees] = useState([]); // Thêm state này
+    const [selectedDepartments, setSelectedDepartments] = useState([]); // Thêm state này
     const [modalVisible, setModalVisible] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form] = Form.useForm();
@@ -29,6 +31,17 @@ const Benefits = () => {
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterMonth, setFilterMonth] = useState('all');
     const userRole = localStorage.getItem('role');
+
+    // State cho disable các trường
+    const [disableDepartments, setDisableDepartments] = useState(false);
+    const [disableEmployees, setDisableEmployees] = useState(false);
+    const [disableMonths, setDisableMonths] = useState(false);
+    const [employeeDropdownOpen, setEmployeeDropdownOpen] = useState(false);
+    const [employeesSelected, setEmployeesSelected] = useState([]); // State quản lý nhân viên đã chọn
+
+    // Add state for name and amount
+    const [benefitName, setBenefitName] = useState("");
+    const [benefitAmount, setBenefitAmount] = useState();
 
     useEffect(() => {
         fetchBenefits();
@@ -66,7 +79,8 @@ const Benefits = () => {
     const fetchEmployees = async () => {
         try {
             const token = localStorage.getItem('accessToken');
-            const res = await fetch(`${APIConfig.baseUrl}/departments/employees`, {
+            // Gọi API mới lấy cả departmentId
+            const res = await fetch(`${APIConfig.baseUrl}/departments/employees-with-department`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
@@ -74,26 +88,137 @@ const Benefits = () => {
         } catch (err) { }
     };
 
+    // Lọc nhân viên theo phòng ban đã chọn
+    useEffect(() => {
+        if (!modalVisible) return;
+        if (!selectedDepartments || selectedDepartments.length === 0) {
+            setFilteredEmployees([]);
+            form.setFieldsValue({ employees: [] });
+            return;
+        }
+        // Lấy hợp các nhân viên thuộc các phòng ban đã chọn
+        const filtered = employees.filter(e => selectedDepartments.includes(e.departmentId?.toString?.() || e.departmentId));
+        setFilteredEmployees(filtered);
+        // Nếu danh sách nhân viên hiện tại không còn hợp lệ, reset
+        const currentSelected = form.getFieldValue('employees') || [];
+        const validIds = filtered.map(e => e._id);
+        const stillValid = currentSelected.filter(id => validIds.includes(id));
+        if (stillValid.length !== currentSelected.length) {
+            form.setFieldsValue({ employees: stillValid });
+        }
+    }, [selectedDepartments, employees, modalVisible]);
+
+    // Khi thay đổi applyAll
+    const handleApplyAllChange = (e) => {
+        const checked = e.target.checked;
+        form.setFieldsValue({ applyAll: checked });
+        setDisableDepartments(checked);
+        setDisableEmployees(checked);
+        if (checked) {
+            // Set tất cả phòng ban và nhân viên
+            const allDeptIds = departments.map(d => d._id);
+            setSelectedDepartments(allDeptIds);
+            form.setFieldsValue({ departments: allDeptIds });
+            setFilteredEmployees(employees);
+            setEmployeesSelected(employees.map(e => e._id));
+            form.setFieldsValue({ employees: employees.map(e => e._id) });
+        } else {
+            setSelectedDepartments([]);
+            setFilteredEmployees([]);
+            setEmployeesSelected([]);
+            form.setFieldsValue({ departments: [], employees: [] });
+        }
+    };
+
+    // Khi thay đổi status
+    const handleStatusChange = (value) => {
+        form.setFieldsValue({ status: value });
+        if (value === 'auto') {
+            // Chọn hết các tháng còn lại, disable select tháng
+            form.setFieldsValue({ effective: futureMonths.map(m => m.value) });
+            setDisableMonths(true);
+        } else {
+            form.setFieldsValue({ effective: [] });
+            setDisableMonths(false);
+        }
+    };
+
+    // Khi mở modal edit, set disable theo giá trị và đồng bộ employeesSelected
+    const handleEdit = (record) => {
+        setEditing(record);
+        const depts = record.departments?.map(d => typeof d === 'object' ? d._id : d) || [];
+        setSelectedDepartments(depts);
+        const empIds = record.employees?.map(e => typeof e === 'object' ? e._id : e) || [];
+        setEmployeesSelected(empIds);
+        setBenefitName(record.name ?? "");
+        setBenefitAmount(record.amount ?? undefined);
+        // Chỉ setFieldsValue khi mở modal
+        form.setFieldsValue({
+            ...record,
+            amount: record.amount ?? '',
+            name: record.name ?? '',
+            effective: record.effective || [],
+            employees: empIds,
+            departments: depts,
+            applyAll: !!record.applyAll,
+            status: record.status || 'auto',
+        });
+        setDisableDepartments(!!record.applyAll);
+        setDisableEmployees(!!record.applyAll);
+        setDisableMonths(record.status === 'auto');
+        setModalVisible(true);
+    };
+
+    // Khi mở modal add, reset disable và employeesSelected
     const handleAdd = () => {
         setEditing(null);
+        setSelectedDepartments([]);
+        setFilteredEmployees([]);
+        setDisableDepartments(false);
+        setDisableEmployees(false);
+        setDisableMonths(false);
+        setEmployeesSelected([]);
+        setBenefitName("");
+        setBenefitAmount(undefined);
+        // Chỉ resetFields khi mở modal add
         form.resetFields();
         setModalVisible(true);
     };
 
-    const handleEdit = (record) => {
-        setEditing(record);
-        form.setFieldsValue({
-            ...record,
-            amount: Number(record.amount) || 0,
-            name: record.name || '',
-            effective: record.effective || [],
-            employees: record.employees?.map(e => typeof e === 'object' ? e._id : e),
-            departments: record.departments?.map(d => typeof d === 'object' ? d._id : d),
-            applyAll: !!record.applyAll,
-            status: record.status || 'auto',
-        });
-        setModalVisible(true);
+    // Xử lý chọn phòng ban trong form
+    const handleDepartmentsChange = (value) => {
+        setSelectedDepartments(value);
     };
+
+    // Xử lý chọn nhân viên, hỗ trợ chọn tất cả
+    const handleEmployeesChange = (value) => {
+        if (value.includes('ALL')) {
+            // Nếu chọn ALL, set toàn bộ id nhân viên hiện tại
+            setEmployeesSelected(filteredEmployees.map(e => e._id));
+            form.setFieldsValue({ employees: filteredEmployees.map(e => e._id) });
+        } else {
+            setEmployeesSelected(value);
+            form.setFieldsValue({ employees: value });
+        }
+    };
+
+    // Khi filteredEmployees thay đổi (do chọn phòng ban), nếu applyAll hoặc đang chọn ALL thì sync lại employeesSelected
+    useEffect(() => {
+        if (disableEmployees) {
+            setEmployeesSelected(filteredEmployees.map(e => e._id));
+            form.setFieldsValue({ employees: filteredEmployees.map(e => e._id) });
+        }
+    }, [filteredEmployees, disableEmployees]);
+
+    // Đảm bảo dropdown nhân viên luôn hiện khi click
+    const handleEmployeeDropdownVisibleChange = (open) => {
+        setEmployeeDropdownOpen(open);
+    };
+
+    // Tính toán các tháng còn lại của năm
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // JS getMonth() từ 0
+    const futureMonths = months.filter(m => m.value > currentMonth);
 
     const handleDelete = async (id) => {
         try {
@@ -110,6 +235,8 @@ const Benefits = () => {
     };
 
     const handleOk = async () => {
+        // Debug: log current form values before validation
+        console.log('Current form values before validate:', form.getFieldsValue(true));
         try {
             const values = await form.validateFields();
             console.log('Form values:', values); // Log payload khi submit thành công
@@ -209,8 +336,8 @@ const Benefits = () => {
         <div style={{ padding: 24, minHeight: '100vh', background: '#fff' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <Title level={3} style={{ margin: 0 }}>
-                  <GiftOutlined style={{ color: '#52c41a', marginRight: 8 }} />
-                  Quản lý benefits
+                    <GiftOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                    Quản lý benefits
                 </Title>
                 {userRole === 'hr' && (
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
@@ -286,62 +413,87 @@ const Benefits = () => {
                     <Row gutter={24}>
                         <Col span={12}>
                             <Form.Item name="name" label={<><GiftOutlined style={{ marginRight: 6 }} />Tên</>} rules={[{ required: true, message: 'Nhập tên phúc lợi' }]}>
-                                <Input placeholder="Nhập tên phúc lợi" />
+                                <Input
+                                    placeholder="Nhập tên phúc lợi"
+                                    autoComplete="off"
+                                    onChange={e => {
+                                        setBenefitName(e.target.value);
+                                        form.setFieldsValue({ name: e.target.value });
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item name="amount" label={<><DollarOutlined style={{ marginRight: 6 }} />Số tiền (VND)</>} rules={[{ required: true, message: 'Nhập số tiền' }]}>
-                                <InputNumber min={0} style={{ width: '100%' }} placeholder="Nhập số tiền" />
+                                <InputNumber
+                                    min={0}
+                                    style={{ width: '100%' }}
+                                    placeholder="Nhập số tiền"
+                                    autoComplete="off"
+                                    onChange={value => {
+                                        setBenefitAmount(value);
+                                        form.setFieldsValue({ amount: value });
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                     </Row>
                     <Row gutter={24}>
                         <Col span={12}>
-                            <Form.Item name="status" label="Trạng thái" rules={[{ required: true, message: 'Chọn trạng thái' }]}>
-                                <Select>
-                                    <Option value="auto">Tự động</Option>
-                                    <Option value="manual">Thủ công</Option>
-                                </Select>
-                            </Form.Item>
+                            <Form.Item name="status" label="Trạng thái" rules={[{ required: true, message: 'Chọn trạng thái' }]}> <Select onChange={handleStatusChange}> <Option value="auto">Tự động</Option> <Option value="manual">Thủ công</Option> </Select> </Form.Item>
                         </Col>
                         <Col span={12} style={{ display: 'flex', alignItems: 'center' }}>
-                            <Form.Item name="applyAll" valuePropName="checked" style={{ marginTop: 32 }}>
-                                <Checkbox>Áp dụng cho tất cả phòng ban</Checkbox>
+                            <Form.Item name="applyAll" valuePropName="checked" style={{ marginTop: 32 }}> <Checkbox onChange={handleApplyAllChange}>Áp dụng cho tất cả phòng ban</Checkbox> </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={24}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="departments"
+                                label={<><TeamOutlined style={{ marginRight: 6 }} />Phòng ban</>}
+                                dependencies={["applyAll"]}
+                                rules={[({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        if (getFieldValue('applyAll') || (value && value.length > 0)) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(new Error('Chọn phòng ban'));
+                                    }
+                                })]}
+                            >
+                                <Select mode="multiple" placeholder="Chọn phòng ban" disabled={disableDepartments} onChange={handleDepartmentsChange} value={selectedDepartments}> {departments.map(d => <Option key={d._id} value={d._id}>{d.name}</Option>)} </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="employees"
+                                label={<><UserOutlined style={{ marginRight: 6 }} />Nhân viên</>}
+                                rules={[{ required: true, type: 'array', min: 1, message: 'Chọn ít nhất 1 nhân viên' }]}
+                            >
+                                <Select mode="multiple" placeholder="Chọn nhân viên" value={employeesSelected} onChange={handleEmployeesChange} maxTagCount={4} disabled={disableEmployees} open={employeeDropdownOpen} onDropdownVisibleChange={handleEmployeeDropdownVisibleChange}> {filteredEmployees.length > 0 && <Option key="ALL" value="ALL">Chọn tất cả</Option>} {filteredEmployees.map(e => (<Option key={e._id} value={e._id}> {e.fullName || e.username || e._id} </Option>))} </Select>
                             </Form.Item>
                         </Col>
                     </Row>
                     <Row gutter={24}>
                         <Col span={12}>
-                            <Form.Item name="departments" label={<><TeamOutlined style={{ marginRight: 6 }} />Phòng ban</>} dependencies={["applyAll"]}>
-                                <Select mode="multiple" placeholder="Chọn phòng ban" disabled={form.getFieldValue('applyAll')}>
-                                    {departments.map(d => <Option key={d._id} value={d._id}>{d.name}</Option>)}
-                                </Select>
+                            <Form.Item
+                                name="effective"
+                                label={<><CalendarOutlined style={{ marginRight: 6 }} />Tháng hiệu lực</>}
+                                dependencies={["status"]}
+                                rules={[({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        if (getFieldValue('status') !== 'manual' || (value && value.length > 0)) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(new Error('Chọn tháng hiệu lực'));
+                                    }
+                                })]}
+                            >
+                                <Select mode="multiple" placeholder="Chọn tháng" disabled={disableMonths}> {futureMonths.map(m => <Option key={m.value} value={m.value}>{m.label}</Option>)} </Select>
                             </Form.Item>
                         </Col>
                         <Col span={12}>
-                            <Form.Item name="employees" label={<><UserOutlined style={{ marginRight: 6 }} />Nhân viên</>}>
-                                <Select mode="multiple" placeholder="Chọn nhân viên">
-                                    {employees.map(e => (
-                                        <Option key={e._id} value={e._id}>
-                                            {e.fullName || e.username || e._id}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="effective" label={<><CalendarOutlined style={{ marginRight: 6 }} />Tháng hiệu lực</>} rules={[{ required: form.getFieldValue('status') === 'manual', message: 'Chọn tháng hiệu lực' }]}>
-                                <Select mode="multiple" placeholder="Chọn tháng">
-                                    {months.map(m => <Option key={m.value} value={m.value}>{m.label}</Option>)}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="description" label={<><InfoCircleOutlined style={{ marginRight: 6 }} />Mô tả</>}>
-                                <Input.TextArea rows={2} />
-                            </Form.Item>
+                            <Form.Item name="description" label={<><InfoCircleOutlined style={{ marginRight: 6 }} />Mô tả</>}> <Input.TextArea rows={2} /> </Form.Item>
                         </Col>
                     </Row>
                 </Form>
