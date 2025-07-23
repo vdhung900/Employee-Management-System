@@ -1,28 +1,9 @@
 import React, { useState, useEffect } from "react";
-import {
-  Modal,
-  Table,
-  Button,
-  DatePicker,
-  Select,
-  Space,
-  Typography,
-  Row,
-  Col,
-  Badge,
-  Statistic,
-  Card,
-  Spin,
-  Empty,
-  message,
-  Tag,
-} from "antd";
+import { Modal, Button, Select, Space, Typography, Row, Col, Statistic, Card, message } from "antd";
 import {
   CalendarOutlined,
-  ClockCircleOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
-  CloseCircleOutlined,
   FieldTimeOutlined,
   LeftOutlined,
   RightOutlined,
@@ -30,8 +11,9 @@ import {
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import AttendanceService from "../../services/AttendanceService";
+import AttendanceTable from "./AttendanceTable";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
 
 dayjs.locale("vi");
@@ -67,7 +49,7 @@ const AttendanceHistoryModal = ({ visible, onClose }) => {
         );
       } else {
         // Tuần hiện tại
-        const weekStart = currentMonth.startOf("week").format("YYYY-MM-DD");
+        const weekStart = currentMonth.format("YYYY-MM-DD");
         response = await AttendanceService.getWeeklyAttendance(weekStart);
       }
 
@@ -109,30 +91,11 @@ const AttendanceHistoryModal = ({ visible, onClose }) => {
     setStatistics(stats);
   };
 
-  const formatTime = (dateString) => {
-    if (!dateString) return "-";
-    return dayjs(dateString).format("HH:mm");
-  };
-
-  const formatDate = (dateString) => {
-    return dayjs(dateString).format("DD/MM/YYYY");
-  };
-
   const formatHours = (hours) => {
     if (!hours) return "-";
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h}h${m.toString().padStart(2, "0")}m`;
-  };
-
-  const getStatusBadge = (record) => {
-    if (!record.firstCheckIn) {
-      return <Badge status="error" text="Vắng mặt" />;
-    }
-    if (record.isLate) {
-      return <Badge status="warning" text="Đi muộn" />;
-    }
-    return <Badge status="success" text="Đúng giờ" />;
   };
 
   const goToPrevious = () => {
@@ -151,67 +114,13 @@ const AttendanceHistoryModal = ({ visible, onClose }) => {
     }
   };
 
-  const columns = [
-    {
-      title: "Ngày",
-      dataIndex: "date",
-      key: "date",
-      render: (date) => (
-        <div>
-          <div>{formatDate(date)}</div>
-          <Text type="secondary" style={{ fontSize: "12px" }}>
-            {dayjs(date).format("dddd")}
-          </Text>
-        </div>
-      ),
-      width: 120,
-    },
-    {
-      title: "Giờ vào",
-      dataIndex: "firstCheckIn",
-      key: "firstCheckIn",
-      render: (time, record) => (
-        <Text style={{ color: record.isLate ? "#ff4d4f" : "#52c41a" }}>
-          {formatTime(time)}
-        </Text>
-      ),
-      width: 80,
-    },
-    {
-      title: "Giờ ra",
-      dataIndex: "lastCheckOut",
-      key: "lastCheckOut",
-      render: formatTime,
-      width: 80,
-    },
-    {
-      title: "Tổng giờ",
-      dataIndex: "totalWorkingHours",
-      key: "totalWorkingHours",
-      render: formatHours,
-      width: 100,
-    },
-    {
-      title: "Trạng thái",
-      key: "status",
-      render: (_, record) => getStatusBadge(record),
-      width: 120,
-    },
-    {
-      title: "Ghi chú",
-      dataIndex: "note",
-      key: "note",
-      render: (note) => note || "-",
-    },
-  ];
-
   const getTitle = () => {
     if (viewType === "month") {
       return `Lịch sử điểm danh - ${currentMonth.format("MMMM YYYY")}`;
     }
-    return `Lịch sử điểm danh - Tuần ${currentMonth.format(
-      "DD/MM"
-    )} - ${currentMonth.endOf("week").format("DD/MM/YYYY")}`;
+    return `Lịch sử điểm danh - Tuần ${currentMonth.format("DD/MM")} - ${currentMonth
+      .endOf("week")
+      .format("DD/MM/YYYY")}`;
   };
 
   return (
@@ -312,23 +221,7 @@ const AttendanceHistoryModal = ({ visible, onClose }) => {
         </Col>
       </Row>
 
-      <Spin spinning={loading}>
-        {attendanceData.length === 0 && !loading ? (
-          <Empty description="Không có dữ liệu điểm danh" />
-        ) : (
-          <Table
-            dataSource={attendanceData}
-            columns={columns}
-            rowKey="_id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: false,
-              showQuickJumper: true,
-            }}
-            size="small"
-          />
-        )}
-      </Spin>
+      <AttendanceTable attendanceData={attendanceData} loading={loading} />
     </Modal>
   );
 };

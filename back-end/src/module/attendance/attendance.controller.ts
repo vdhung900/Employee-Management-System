@@ -77,7 +77,6 @@ export class AttendanceController {
       const now = new Date();
       const time_8h30 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 30, 0);
       const time_17h30 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 30, 0);
-
       if (existingRecord.firstCheckIn > time_8h30) {
         updateDto.status = STATUS.LATE;
       } else if (now < time_17h30) {
@@ -138,10 +137,10 @@ export class AttendanceController {
   @Get("weekly")
   async getWeeklyAttendance(
     @Req() req: any,
-    @Query("weekStart") weekStart?: string
+    @Query("week_date") weekDate?: string
   ): Promise<BaseResponse> {
     try {
-      const weekStartDate = weekStart ? new Date(weekStart) : undefined;
+      const weekStartDate = weekDate ? new Date(weekDate) : undefined;
       const result = await this.attendanceRecordService.getWeeklyAttendance(
         req?.user?.employeeId,
         weekStartDate
