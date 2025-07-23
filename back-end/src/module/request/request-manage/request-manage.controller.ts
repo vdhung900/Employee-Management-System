@@ -36,6 +36,16 @@ export class RequestManageController {
         }
     }
 
+    @Get('/filter-by-month/:month')
+    async getReqByMonth(@Param('month') month: string): Promise<BaseResponse> {
+        try {
+            const resData = await this.hrRequestService.checkSalaryApprovedByMonth(month);
+            return BaseResponse.success(resData, 'Check success!', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @Post('/create')
     async createRequest(@Body() req: CreateRequestDto): Promise<BaseResponse>{
         try{

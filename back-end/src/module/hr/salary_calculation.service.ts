@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {BadRequestException, Injectable, Logger} from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -8,6 +8,20 @@ import { AttendanceRecords } from '../../schemas/attendanceRecords.schema';
 import { SalaryCoefficient } from '../../schemas/salaryCoefficents.schema';
 import { SalaryRank } from '../../schemas/salaryRank.schema';
 import { Benefits } from '../../schemas/benefits.schema';
+import puppeteer from "puppeteer";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import * as Mustache from "mustache";
+import {SalaryPreviewDto} from "./dto/salaryPreview.dto";
+import {formatNumber, numberToVietnameseCurrency} from "../../utils/format";
+import * as crypto from 'crypto';
+import {PDFDocument} from 'pdf-lib';
+import * as pdfjsLib from 'pdfjs-dist/build/pdf.js';
+import {base64ToMulterFile} from "../../utils/transfer";
+import {UploadService} from "../minio/minio.service";
+import {Documents, DocumentsDocument} from "../../schemas/documents.schema";
+import {Requests, RequestsDocument} from "../../schemas/requests.schema";
+import {STATUS} from "../../enum/status.enum";
 
 @Injectable()
 export class SalaryCalculationService {
@@ -21,6 +35,9 @@ export class SalaryCalculationService {
     @InjectModel(SalaryCoefficient.name) private coefModel: Model<SalaryCoefficient>,
     @InjectModel(SalaryRank.name) private rankModel: Model<SalaryRank>,
     @InjectModel(Benefits.name) private benefitModel: Model<Benefits>,
+    @InjectModel(Documents.name) private documentModel: Model<DocumentsDocument>,
+    @InjectModel(Requests.name) private requestModel: Model<RequestsDocument>,
+    private readonly uploadService: UploadService
   ) {}
 
   @Cron('0 59 23 L * *') // 23:59 ngày cuối cùng mỗi tháng
@@ -93,7 +110,7 @@ export class SalaryCalculationService {
 
       // Phạt đi muộn/về sớm
       let latePenalty = 0;
-      
+
       // Hàm tính tổng số giờ OT từ mảng overtimeRange
       function getTotalOtHours(overtimeRange: string[]): number {
         let total = 0;
@@ -268,5 +285,245 @@ export class SalaryCalculationService {
         }
       }
     ]).exec();
+  }
+
+  async generatePdfBase64(month: string){
+    try{
+      let checkDataTable = false;
+      let dataPreview = {} as SalaryPreviewDto;
+      dataPreview.unitName = "Công ty TNHH MTV F";
+      dataPreview.department= "Phòng hành chính - nhân sự";
+      const monthDate = new Date(month);
+      dataPreview.month = monthDate.getMonth() + 1;
+      dataPreview.year = monthDate.getFullYear();
+      const dataSal = await this.getSalarySlipByMonth(month);
+      if(dataSal.length > 0){
+        checkDataTable = true;
+      }
+      const formattedSalarys = dataSal.map((slip, index) => ({
+        stt: index + 1,
+        employeeId: slip.employeeId,
+        month: slip.month,
+        year: slip.year,
+        status: slip.status,
+        baseSalary: formatNumber(slip.baseSalary),
+        totalBaseSalary: formatNumber(slip.totalBaseSalary),
+        salaryCoefficient: formatNumber(slip.salaryCoefficient),
+        unpaidLeave: formatNumber(slip.unpaidLeave),
+        latePenalty: formatNumber(slip.latePenalty),
+        otWeekday: formatNumber(slip.otWeekday),
+        otWeekend: formatNumber(slip.otWeekend),
+        otHoliday: formatNumber(slip.otHoliday),
+        insurance: formatNumber(slip.insurance),
+        personalIncomeTax: formatNumber(slip.personalIncomeTax),
+        familyDeduction: formatNumber(slip.familyDeduction),
+        netSalary: formatNumber(slip.netSalary),
+        totalOtSalary: formatNumber(slip.totalOtSalary),
+        totalOtHour: formatNumber(slip.totalOtHour),
+        totalTaxableIncome: formatNumber(slip.totalTaxableIncome),
+        benefit: formatNumber(slip.benefit),
+      })) as any;
+      dataPreview.salarys = formattedSalarys;
+      let totalSalary = 0;
+      let totalBasicSalaryAll = 0;
+      let totalPositionSalary = 0;
+      let totalFamilyDeduction = 0;
+      let totalAllowance = 0;
+      let totalOTDaily = 0;
+      let totalOTWeekend = 0;
+      let totalOTHoliday = 0;
+      let totalBhxh = 0;
+      let totalBhyt = 0;
+      let totalBhtn = 0;
+      let totalTax = 0;
+      dataSal.forEach((salary) => {
+        totalSalary += salary.netSalary || 0;
+        totalBasicSalaryAll += salary.baseSalary || 0;
+        totalPositionSalary += salary.totalBaseSalary || 0;
+        totalFamilyDeduction += salary.familyDeduction || 0;
+        totalAllowance += salary.benefit || 0;
+        totalTax += salary.personalIncomeTax || 0;
+      })
+      dataPreview.totalInWords = numberToVietnameseCurrency(totalSalary);
+      dataPreview.totalSalary = formatNumber(totalSalary);
+      dataPreview.totalPositionSalary = formatNumber(totalPositionSalary);
+      dataPreview.totalFamilyDeduction = formatNumber(totalFamilyDeduction);
+      dataPreview.totalAllowance = formatNumber(totalAllowance);
+      dataPreview.totalOTDaily = formatNumber(totalOTDaily);
+      dataPreview.totalOTWeekend = formatNumber(totalOTWeekend);
+      dataPreview.totalOTHoliday = formatNumber(totalOTHoliday);
+      dataPreview.totalBhxh = formatNumber(totalBhxh);
+      dataPreview.totalBhyt = formatNumber(totalBhyt);
+      dataPreview.totalBhtn = formatNumber(totalBhtn);
+      dataPreview.totalTax = formatNumber(totalTax);
+      const dateSign = new Date();
+      dataPreview.signDay = dateSign.getDay();
+      dataPreview.signMonth = dateSign.getMonth() + 1;
+      dataPreview.signYear = dateSign.getFullYear();
+      const rawData = JSON.stringify(dataPreview);
+      const hash = crypto.createHash('sha256').update(rawData).digest('hex');
+      const templatePath = path.join(process.cwd(), "templates", "bang_luong.html");
+      const templateHtml = fs.readFileSync(templatePath, "utf8");
+      const html = Mustache.render(templateHtml, dataPreview);
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: "networkidle0" });
+
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        landscape: true,
+        margin: { top: "10mm", right: "10mm", bottom: "10mm", left: "10mm" }
+      });
+
+      await browser.close();
+
+      return {
+        pdfPreview: Buffer.from(pdfBuffer).toString("base64"),
+        dataTable: checkDataTable,
+        pdfHash: hash
+      }
+    }catch (e) {
+      throw e;
+    }
+  }
+
+  async findTextPosition(pdfBuffer, searchText) {
+    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(pdfBuffer) });
+    const pdf = await loadingTask.promise;
+    const totalPages = pdf.numPages;
+
+    for (let i = 1; i <= totalPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+
+      for (const item of textContent.items) {
+        if (item.str && item.str.includes(searchText)) {
+          return {
+            pageIndex: i - 1, // pdf-lib dùng index từ 0
+            x: item.transform[4],
+            y: item.transform[5]
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  async signSalarySlip(month: string, signatureImage: string, originalHash: string) {
+    try {
+      const { pdfPreview, pdfHash } = await this.generatePdfBase64(month);
+      const pdfBuffer = Buffer.from(pdfPreview, 'base64');
+      const hash = crypto.createHash('sha256').update(pdfBuffer).digest('hex');
+      if (pdfHash !== originalHash) {
+        throw new BadRequestException('PDF đã bị sửa trước khi ký');
+      }
+      const pdfDoc = await PDFDocument.load(new Uint8Array(pdfBuffer));
+      const firstPage = pdfDoc.getPages()[0];
+      const sigBytes = Uint8Array.from(Buffer.from(signatureImage, 'base64'));
+      const pngImage = await pdfDoc.embedPng(sigBytes);
+      const pngDims = pngImage.scale(0.4);
+      const { width, height } = firstPage.getSize();
+      const pos = await this.findTextPosition(pdfBuffer, 'Người làm đơn');
+      let targetPage = firstPage;
+      const offsetY = 10;
+      const offsetX = 30;
+      if (pos) {
+        const allPages = pdfDoc.getPages();
+        const targetPage = allPages[pos.pageIndex];
+        targetPage.drawImage(pngImage, {
+          x: pos.x - offsetX,
+          y: pos.y - pngDims.height - offsetY,
+          width: pngDims.width,
+          height: pngDims.height,
+        });
+      } else {
+        const firstPage = pdfDoc.getPages()[0];
+        const { width } = firstPage.getSize();
+        firstPage.drawImage(pngImage, {
+          x: width - pngDims.width - 40,
+          y: 40,
+          width: pngDims.width,
+          height: pngDims.height,
+        });
+      }
+      const signedPdfBytes = await pdfDoc.save();
+      const signedPdfBase64 = Buffer.from(signedPdfBytes).toString('base64');
+
+      const signedFile = base64ToMulterFile(
+          signedPdfBase64,
+          `bang-luong-thang-ky-${month}.pdf`
+      );
+      const uploadedFileInfo = await this.uploadService.uploadFile(signedFile, true);
+      return {
+        signFile: uploadedFileInfo
+      };
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  }
+
+  async signSalarySlipByManage(requestId: string, signatureImage: string, status: string){
+    try{
+      const dataRequest = await this.requestModel.findById(new Types.ObjectId(requestId)).exec();
+      if (!dataRequest || !dataRequest.attachments?.length) {
+        throw new Error("No attachment found");
+      }
+      const dataDocument = await this.documentModel.findById(dataRequest?.attachments[0]).exec();
+      if (!dataDocument) {
+        throw new Error("Document not found");
+      }
+      const key = dataDocument.key;
+      const pdfBuffer = await this.uploadService.getFileBuffer(key);
+      const pdfDoc = await PDFDocument.load(new Uint8Array(pdfBuffer));
+      const firstPage = pdfDoc.getPages()[0];
+      const sigBytes = Uint8Array.from(Buffer.from(signatureImage, 'base64'));
+      const pngImage = await pdfDoc.embedPng(sigBytes);
+      const pngDims = pngImage.scale(0.4);
+      const { width, height } = firstPage.getSize();
+      const pos = await this.findTextPosition(pdfBuffer, 'Quản lý');
+      let targetPage = firstPage;
+      const offsetY = 10;
+      const offsetX = 30;
+      if (pos) {
+        const allPages = pdfDoc.getPages();
+        const targetPage = allPages[pos.pageIndex];
+        targetPage.drawImage(pngImage, {
+          x: pos.x - offsetX,
+          y: pos.y - pngDims.height - offsetY,
+          width: pngDims.width,
+          height: pngDims.height,
+        });
+      } else {
+        const firstPage = pdfDoc.getPages()[0];
+        const { width } = firstPage.getSize();
+        firstPage.drawImage(pngImage, {
+          x: width - pngDims.width - 40,
+          y: 40,
+          width: pngDims.width,
+          height: pngDims.height,
+        });
+      }
+      const signedPdfBytes = await pdfDoc.save();
+      const signedPdfBase64 = Buffer.from(signedPdfBytes).toString('base64');
+
+      const success = await this.uploadService.uploadSignedPdf(key, signedPdfBytes);
+
+      if(success){
+        dataRequest.status = status;
+        await dataRequest.save();
+        return dataRequest;
+      }else{
+        dataRequest.status = STATUS.REJECTED;
+        await dataRequest.save();
+        throw new Error("Duyệt và ký số thất bại")
+      }
+    }catch (e) {
+      console.error(e);
+      throw e;
+    }
   }
 }

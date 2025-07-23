@@ -5,7 +5,7 @@ import FileService from "../../services/FileService";
 
 const { Text } = Typography;
 
-export default function UploadFileComponent({files = [], uploadFileSuccess, isSingle = false}) {
+export default function UploadFileComponent({files = [], uploadFileSuccess, isSingle = false, disableFile = false}) {
     const [fileList, setFileList] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -48,7 +48,8 @@ export default function UploadFileComponent({files = [], uploadFileSuccess, isSi
     const handleDownload = async (key) => {
         setLoading(true);
         try {
-            const blob = await FileService.getFile(key)
+            const safeKey = encodeURIComponent(key);
+            const blob = await FileService.getFile(safeKey)
             if(blob){
                 const url = window.URL.createObjectURL(blob)
                 const link = document.createElement('a');
@@ -97,40 +98,65 @@ export default function UploadFileComponent({files = [], uploadFileSuccess, isSi
                     handleUpload(file);
                     setTimeout(() => onSuccess && onSuccess('ok'), 0);
                 }}
-                disabled={loading || (isSingle && fileList.length > 0)}
+                disabled={loading || disableFile || (isSingle && fileList.length > 0)}
             >
-                <Button icon={<UploadOutlined />} size="small" style={{ fontSize: 13, marginBottom: 8 }} loading={loading} disabled={loading || (isSingle && fileList.length > 0)} >
-                    Chọn file
-                </Button>
+                {!disableFile && (
+                    <Button
+                        icon={<UploadOutlined />}
+                        size="small"
+                        style={{ fontSize: 13, marginBottom: 8 }}
+                        loading={loading}
+                        disabled={loading || (isSingle && fileList.length > 0)}
+                    >
+                        Chọn file
+                    </Button>
+                )}
             </Upload>
             <Spin spinning={loading} size="small">
                 <List
                     size="small"
                     style={{ marginTop: 4, fontSize: 13 }}
                     dataSource={fileList}
-                    locale={{ emptyText: <Text type="secondary" style={{ fontSize: 12 }}>Chưa có file</Text> }}
-                    renderItem={key => (
+                    locale={{
+                        emptyText: (
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                                Chưa có file
+                            </Text>
+                        ),
+                    }}
+                    renderItem={(key) => (
                         <List.Item
                             style={{ padding: '4px 0' }}
-                            actions={[
-                                <Button
-                                    icon={<DownloadOutlined />}
-                                    onClick={() => handleDownload(key.key)}
-                                    size="small"
-                                    key="download"
-                                />,
-                                <Popconfirm
-                                    title="Xóa file này?"
-                                    onConfirm={() => handleDelete(key.key)}
-                                    okText="Xóa"
-                                    cancelText="Hủy"
-                                    key="delete"
-                                >
-                                    <Button icon={<DeleteOutlined />} danger size="small" />
-                                </Popconfirm>
-                            ]}
+                            actions={
+                                disableFile
+                                    ? [<Button
+                                        icon={<DownloadOutlined />}
+                                        onClick={() => handleDownload(key.key)}
+                                        size="small"
+                                        key="download"
+                                    />,]
+                                    : [
+                                        <Button
+                                            icon={<DownloadOutlined />}
+                                            onClick={() => handleDownload(key.key)}
+                                            size="small"
+                                            key="download"
+                                        />,
+                                        <Popconfirm
+                                            title="Xóa file này?"
+                                            onConfirm={() => handleDelete(key.key)}
+                                            okText="Xóa"
+                                            cancelText="Hủy"
+                                            key="delete"
+                                        >
+                                            <Button icon={<DeleteOutlined />} danger size="small" />
+                                        </Popconfirm>,
+                                    ]
+                            }
                         >
-                            <Text style={{ fontSize: 13 }}><FileOutlined/> {key.originalName}</Text>
+                            <Text style={{ fontSize: 13 }}>
+                                <FileOutlined /> {key.originalName}
+                            </Text>
                         </List.Item>
                     )}
                 />

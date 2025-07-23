@@ -18,16 +18,18 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
 export class UploadService {
-    private readonly bucketName = 'employee';
+    private bucketName = 'employee';
     private readonly minioEndpoint: string;
 
     constructor(private configService: ConfigService, @InjectModel(Documents.name) private documentsModel: Model<DocumentsDocument>,) {
         this.minioEndpoint = this.configService.get('MINIO_ENDPOINT') || 'http://localhost:9000';
     }
 
-    async uploadFile(file: Express.Multer.File): Promise<FileResponseDto> {
-        const key = `${uuid()}-${file.originalname}`;
-
+    async uploadFile(file: Express.Multer.File, isSignFile = false): Promise<FileResponseDto> {
+        let key = `${uuid()}-${file.originalname}`;
+        if(isSignFile){
+            key = `signfile/${uuid()}-${file.originalname}`;
+        }
         const command = new PutObjectCommand({
             Bucket: this.bucketName,
             Key: key,
@@ -51,6 +53,24 @@ export class UploadService {
             url: `${this.minioEndpoint}/${this.bucketName}/${key}`,
         });
     }
+    async uploadSignedPdf(key: string, signedPdfBytes: Uint8Array): Promise<boolean> {
+        const command = new PutObjectCommand({
+            Bucket: this.bucketName,
+            Key: key,
+            Body: signedPdfBytes,
+            ContentType: 'application/pdf',
+        });
+
+        const response = await s3Client.send(command);
+
+        if (response.ETag) {
+            console.log(`✅ File ghi đè thành công: ${key}, ETag: ${response.ETag}`);
+            return true;
+        }
+        console.error(`❌ Upload không trả về ETag: ${key}`);
+        return false;
+    }
+
 
     async deleteFile(key: string) {
         const command = new DeleteObjectCommand({
@@ -80,6 +100,24 @@ export class UploadService {
             contentType: data.ContentType || 'application/octet-stream'
         };
     }
+
+    async getFileBuffer(key: string): Promise<Buffer> {
+        const command = new GetObjectCommand({
+            Bucket: this.bucketName,
+            Key: key,
+        });
+
+        const data = await s3Client.send(command);
+
+        if (!data.Body) throw new Error('No file data received');
+
+        const chunks: Buffer[] = [];
+        for await (const chunk of data.Body as any) {
+            chunks.push(chunk as Buffer);
+        }
+        return Buffer.concat(chunks);
+    }
+
 
     async saveAndReplace(req: FileRequestDto[]) {
         try {

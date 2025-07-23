@@ -18,6 +18,30 @@ const SalaryService = {
         } catch (e) {
             throw handleApiError(e);
         }
+    },
+    async getSalaryPreviewByMonth(month){
+        try {
+            const res = await fetchWithAuth(`${endpointService}/generate-pdf/${month}`, 'GET');
+            return res;
+        } catch (e) {
+            throw handleApiError(e);
+        }
+    },
+    async signSalaryPdf(payload){
+        try {
+            const res = await fetchWithAuth(`${endpointService}/sign`, 'POST', payload);
+            return res;
+        } catch (e) {
+            throw handleApiError(e);
+        }
+    },
+    async signSalaryPdfByManage(payload){
+        try {
+            const res = await fetchWithAuth(`${endpointService}/sign-by-manage`, 'POST', payload);
+            return res;
+        } catch (e) {
+            throw handleApiError(e);
+        }
     }
 };
 

@@ -74,6 +74,10 @@ import { renderRequestDetailByType } from '../../utils/render';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import dayjs from "dayjs";
+import SignatureCanvas from 'react-signature-canvas';
+import StatisticCard from "../../components/card/StatisticCard";
+import RequestService from "../../services/RequestService";
 
 const {Title, Text, Paragraph} = Typography;
 const {Option} = Select;
@@ -653,7 +657,19 @@ const Requests = () => {
     const [editingRowId, setEditingRowId] = useState(null);
     const [editedRows, setEditedRows] = useState({});
     const {showLoading, hideLoading} = useLoading();
-
+    const [salarySlipPreview, setSalarySlipPreview] = useState(null); // base64 PDF
+    const [showSignModal, setShowSignModal] = useState(false);
+    const [signing, setSigning] = useState(false);
+    const [signType, setSignType] = useState('draw'); // 'draw' | 'image'
+    const [signaturePad, setSignaturePad] = useState(null);
+    const [signatureImage, setSignatureImage] = useState(null); // base64 ảnh upload
+    const [signedPdf, setSignedPdf] = useState(null); // base64 PDF đã ký
+    const [selectedMonth, setSelectedMonth] = useState(null);
+    const [salarySlipHash, setSalarySlipHash] = useState(null);
+    const [disabledFile, setDisabledFile] = useState(false);
+    const [selectedStatus, setSelectedStatus] = useState(null);
+    const [originalData, setOriginalData] = useState([]);
+    const [salaryEmpty, setSalaryEmpty] = useState(false);
 
     useEffect(() => {
         try {
@@ -691,15 +707,21 @@ const Requests = () => {
         }
     }
 
-    const loadDataReq = async () => {
+    const loadDataReq = async (status?) => {
         try {
             const user = JSON.parse(localStorage.getItem("user"));
             if (!user) throw new Error("Bạn chưa đăng nhập !!!");
             let body = {
                 employeeId: user.employeeId,
+                status: status
             }
             const response = await requestService.getByAccountId(body);
             if (response.success) {
+                if(!status){
+                    console.log('run')
+                    console.log(status)
+                    setOriginalData(response.data)
+                }
                 setRequests(response.data);
             }
         } catch (e) {
@@ -847,6 +869,7 @@ const Requests = () => {
                 employeeId: request.employeeId,
                 departmentId: request.departmentId,
                 typeCode: request.typeRequest.code,
+                month: request.month ? moment(request.month) : null,
                 priority: request.priority,
                 note: request.note,
                 attachments: request.attachments
@@ -925,6 +948,59 @@ const Requests = () => {
         setSelectedRequestType(null);
         setFileResponse([])
         setIsEdit(false);
+        setSalarySlipPreview(null);
+        setDisabledFile(false);
+        setSalaryEmpty(true);
+    };
+
+    const handleSignModalOk = async () => {
+        if (!signaturePad || signaturePad.isEmpty()) {
+            message.warning("Vui lòng ký vào ô ký số!");
+            return;
+        }
+        const files = form.getFieldValue('attachments');
+        if ((files && files.length > 0) || (fileResponse && fileResponse.length > 0)) {
+            const file = files[0] || fileResponse[0];
+            if (file.originalName?.startsWith('bang-luong-thang-ky')) {
+                form.submit();
+                setSigning(false)
+                return;
+            }
+        }
+        setSigning(true);
+        try {
+            const signatureDataUrl = signaturePad.getTrimmedCanvas().toDataURL("image/png");
+            const signatureBase64 = signatureDataUrl.split(",")[1];
+            const pdfHash = salarySlipHash;
+            const payload = {
+                month: selectedMonth,
+                signatureImage: signatureBase64,
+                originalHash: pdfHash,
+            };
+            const response = await SalaryService.signSalaryPdf(payload);
+            if(response.success){
+                const fileData = response.data.signFile;
+                setFileResponse([fileData]);
+                const currentValues = form.getFieldsValue(true);
+                form.setFieldsValue({
+                    ...currentValues,
+                    attachments: fileData
+                });
+
+                setTimeout(() => {
+                    form.submit();
+                }, 0);
+            }else{
+                message.error(response.message);
+            }
+
+            setShowSignModal(false);
+        } catch (e) {
+            message.error(e.message);
+        } finally {
+            setSignaturePad(null)
+            setSigning(false);
+        }
     };
 
     const handleFormSubmit = async (values) => {
@@ -940,9 +1016,11 @@ const Requests = () => {
             } else {
                 body.attachments = [];
             }
-            // Nếu là SALARY_APPROVED thì chỉ gửi mảng các _id phiếu lương
-            if (body.typeCode === STATUS.SALARY_APPROVED) {
-                body.dataReq = salarySlips.map(slip => slip._id);
+            if(body.typeCode === STATUS.SALARY_APPROVED) {
+                if(!body.attachments && !body.attachments.length > 0) {
+                    message.error("Không thể gửi và ký khi không có bảng lương!")
+                    return;
+                }
             }
             if (body.requestId) {
                 const response = await requestService.updateRequest(body);
@@ -956,7 +1034,11 @@ const Requests = () => {
                 body.departmentId = employee.departmentId._id;
                 const response = await requestService.createRequest(body);
                 if (response.success) {
-                    message.success(response.message);
+                    if(body.typeCode === STATUS.SALARY_APPROVED){
+                        message.success("Ký và gửi duyệt thành công!");
+                    }else{
+                        message.success("Gửi duyệt thành công!");
+                    }
                 }
             }
         } catch (e) {
@@ -967,6 +1049,9 @@ const Requests = () => {
             setFileResponse([])
             form.resetFields();
             setSelectedDataType(null);
+            setSalarySlipPreview(null);
+            setSelectedMonth(null)
+            setDisabledFile(false);
         }
     };
 
@@ -978,9 +1063,8 @@ const Requests = () => {
         } else if (value === STATUS.SALARY_INCREASE) {
             loadEmployees();
             loadCoefficient();
-        }
-        if (value === STATUS.SALARY_APPROVED) {
-            loadSalarySlip();
+        }else if(value === STATUS.SALARY_APPROVED){
+            setDisabledFile(true)
         }
         const formFields = {
             LEAVE_REQUEST: {
@@ -1043,6 +1127,80 @@ const Requests = () => {
         setDrawerVisible(false);
     };
 
+    const checkFileValid = () => {
+        const files = form.getFieldValue('attachments');
+        if ((files && files.length > 0) || (fileResponse && fileResponse.length > 0)) {
+            const file = files[0] || fileResponse[0];
+            if (file.originalName?.startsWith('bang-luong-thang-ky')) {
+                form.submit();
+                setSigning(false)
+                return;
+            }
+        }else if(salaryEmpty) {
+            message.error("Không thể gửi và ký khi không có bảng lương!")
+            return;
+        } else {
+            setShowSignModal(true);
+        }
+    }
+
+    const checkByMonth = async (month) => {
+        try{
+            const response = await RequestService.checkByMonth(month);
+            if(response.success){
+                if(response.data !== null || response.data || response.data.length > 0){
+                    return false;
+                }else{
+                    return true;
+                }
+            }else {
+                return false;
+            }
+        }catch (e) {
+            message.error(e.message);
+        }
+    }
+
+    const handleChangeMonth = async (date) => {
+        try{
+            showLoading()
+            setSalaryEmpty(false);
+            if (date) {
+                const selectedMonth = date.format("YYYY-MM");
+                const checkDataValid = await checkByMonth(selectedMonth);
+                if(!checkDataValid){
+                    message.error("Bảng lương của tháng này đã được phê duyệt, vui lòng thử lại với tháng khác!");
+                    return;
+                }
+                setSelectedMonth(selectedMonth)
+                const response = await SalaryService.getSalaryPreviewByMonth(selectedMonth)
+                if(response.success){
+                    const base64 = response.data?.pdfPreview;
+                    setSalarySlipPreview(base64 || null);
+                    setSalarySlipHash(response.data?.pdfHash)
+                }else{
+                    setSalarySlipPreview(null);
+                    setDisabledFile(false);
+                    setSalaryEmpty(true);
+                    message.error(response.message);
+                }
+            } else {
+                setSalarySlipPreview(null);
+            }
+        }catch (e) {
+            setSalaryEmpty(true)
+            setSalarySlipPreview(null);
+            message.error(e.message);
+        }finally {
+            hideLoading()
+        }
+    };
+
+    const handleStatusChange = (status) => {
+        loadDataReq(status);
+    };
+
+
     const confirmDelete = (request) => {
         Modal.confirm({
             title: 'Xác nhận hủy yêu cầu',
@@ -1072,66 +1230,6 @@ const Requests = () => {
             },
         });
     };
-
-    const salarySlipColumns = [
-        {title: 'STT', dataIndex: 'index', key: 'index', render: (text, record, index) => index + 1},
-        {
-            title: 'Nhân viên',
-            dataIndex: ['employeeId', 'fullName'],
-            key: 'employee',
-            align: 'center',
-            render: (text, record) => <span>{record.employeeId?.fullName}</span>
-        },
-        {
-            title: 'Lương cơ bản',
-            dataIndex: 'baseSalary',
-            key: 'baseSalary',
-            align: 'right',
-            render: text => <span>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Hệ số lương',
-            dataIndex: 'salaryCoefficient',
-            key: 'salaryCoefficient',
-            align: 'right',
-            render: text => <span>{text}</span>
-        },
-        {
-            title: 'Tổng lương cơ bản',
-            dataIndex: 'totalBaseSalary',
-            key: 'totalBaseSalary',
-            align: 'right',
-            render: text => <span style={{fontWeight: 'bold', color: '#1677ff'}}>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Bảo hiểm',
-            dataIndex: 'insurance',
-            key: 'insurance',
-            align: 'right',
-            render: text => <span>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Khấu trừ gia cảnh',
-            dataIndex: 'familyDeduction',
-            key: 'familyDeduction',
-            align: 'right',
-            render: text => <span>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Thuế TNCN',
-            dataIndex: 'personalIncomeTax',
-            key: 'personalIncomeTax',
-            align: 'right',
-            render: text => <span>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Lương thực nhận',
-            dataIndex: 'totalSalary',
-            key: 'totalSalary',
-            align: 'right',
-            render: text => <span style={{fontWeight: 'bold', color: '#1677ff'}}>{formatNumber(text)}</span>
-        },
-    ];
 
     const columns = [
         {
@@ -1171,11 +1269,11 @@ const Requests = () => {
             ),
             sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
         },
-        {
-            title: 'Thời gian giải quyết',
-            dataIndex: 'timeResolve',
-            key: 'timeResolve',
-        },
+        // {
+        //     title: 'Thời gian giải quyết',
+        //     dataIndex: 'timeResolve',
+        //     key: 'timeResolve',
+        // },
         {
             title: 'Ghi chú',
             dataIndex: 'note',
@@ -1249,12 +1347,11 @@ const Requests = () => {
         },
     ];
 
-    const pendingRequests = requests.filter(r => r.status === 'Pending').length;
-    const approvedRequests = requests.filter(r => r.status === 'Approved').length;
-    const rejectedRequests = requests.filter(r => r.status === 'Rejected').length;
-    const cancelledRequests = requests.filter(r => r.status === 'Cancelled').length;
+    const pendingRequests = originalData.filter(r => r.status === 'Pending').length;
+    const approvedRequests = originalData.filter(r => r.status === 'Approved').length;
+    const rejectedRequests = originalData.filter(r => r.status === 'Rejected').length;
+    const cancelledRequests = originalData.filter(r => r.status === 'Cancelled').length;
 
-    // Thêm hàm xuất Excel
     const exportExcel = (data) => {
         const exportData = data.map((item, idx) => ({
             'STT': idx + 1,
@@ -1272,9 +1369,6 @@ const Requests = () => {
         XLSX.utils.book_append_sheet(wb, ws, 'Requests');
         XLSX.writeFile(wb, 'requests.xlsx');
     };
-
-    // XÓA HÀM exportPDF
-    // Chỉ giữ lại exportExcel
 
     return (
         <div style={{padding: '24px'}}>
@@ -1313,69 +1407,53 @@ const Requests = () => {
             <Row gutter={[16, 16]} style={{marginBottom: '16px'}}>
                 <Col xs={24} sm={12} lg={6}>
                     <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Đang chờ duyệt"
-                                value={pendingRequests}
-                                valueStyle={{color: '#1890ff'}}
-                                prefix={<ClockCircleOutlined/>}
-                            />
-                            <div style={{marginTop: 8}}>
-                                <Progress percent={Math.round((pendingRequests / requests.length) * 100)} size="small"
-                                          strokeColor="#1890ff"/>
-                            </div>
-                        </Card>
+                        <StatisticCard
+                            title="Đang chờ duyệt"
+                            value={pendingRequests}
+                            total={originalData.length}
+                            color="#1890ff"
+                            prefix={<ClockCircleOutlined />}
+                            onClick={() => handleStatusChange(STATUS.PENDING)}
+                        />
                     </ThreeDContainer>
                 </Col>
 
                 <Col xs={24} sm={12} lg={6}>
                     <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Đã phê duyệt"
-                                value={approvedRequests}
-                                valueStyle={{color: '#52c41a'}}
-                                prefix={<CheckCircleOutlined/>}
-                            />
-                            <div style={{marginTop: 8}}>
-                                <Progress percent={Math.round((approvedRequests / requests.length) * 100)} size="small"
-                                          strokeColor="#52c41a"/>
-                            </div>
-                        </Card>
+                        <StatisticCard
+                            title="Đã phê duyệt"
+                            value={approvedRequests}
+                            total={originalData.length}
+                            color="#52c41a"
+                            prefix={<CheckCircleOutlined />}
+                            onClick={() => handleStatusChange(STATUS.APPROVED)}
+                        />
                     </ThreeDContainer>
                 </Col>
 
                 <Col xs={24} sm={12} lg={6}>
                     <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Từ chối"
-                                value={rejectedRequests}
-                                valueStyle={{color: '#ff4d4f'}}
-                                prefix={<CloseCircleOutlined/>}
-                            />
-                            <div style={{marginTop: 8}}>
-                                <Progress percent={Math.round((rejectedRequests / requests.length) * 100)} size="small"
-                                          strokeColor="#ff4d4f"/>
-                            </div>
-                        </Card>
+                        <StatisticCard
+                            title="Từ chối"
+                            value={rejectedRequests}
+                            total={originalData.length}
+                            color="#ff4d4f"
+                            prefix={<CloseCircleOutlined />}
+                            onClick={() => handleStatusChange(STATUS.REJECTED)}
+                        />
                     </ThreeDContainer>
                 </Col>
 
                 <Col xs={24} sm={12} lg={6}>
                     <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Đã hủy"
-                                value={cancelledRequests}
-                                valueStyle={{color: '#d9d9d9'}}
-                                prefix={<CloseOutlined/>}
-                            />
-                            <div style={{marginTop: 8}}>
-                                <Progress percent={Math.round((cancelledRequests / requests.length) * 100)} size="small"
-                                          strokeColor="#d9d9d9"/>
-                            </div>
-                        </Card>
+                        <StatisticCard
+                            title="Đã hủy"
+                            value={cancelledRequests}
+                            total={originalData.length}
+                            color="#d9d9d9"
+                            prefix={<CloseOutlined />}
+                            onClick={() => handleStatusChange(STATUS.CANCELLED)}
+                        />
                     </ThreeDContainer>
                 </Col>
             </Row>
@@ -1411,82 +1489,6 @@ const Requests = () => {
                             />
                         </Card>
                     </TabPane>
-                    <TabPane
-                        tab={<span><ClockCircleOutlined/> Đang chờ duyệt</span>}
-                        key="2"
-                    >
-                        <Card>
-                            <div style={{marginBottom: 16, display: 'flex', justifyContent: 'space-between'}}>
-                                <Input
-                                    placeholder="Tìm kiếm theo tên, ID, số yêu cầu..."
-                                    prefix={<SearchOutlined/>}
-                                    style={{width: 300}}
-                                    value={searchText}
-                                    onChange={e => setSearchText(e.target.value)}
-                                    allowClear
-                                />
-                                <Space>
-                                    <RangePicker placeholder={['Từ ngày', 'Đến ngày']} style={{marginRight: 8}}/>
-                                    <Button icon={<FilterOutlined/>} style={{marginRight: 8}}>
-                                        Lọc
-                                    </Button>
-                                    <Button icon={<ExportOutlined/>}>
-                                        Export
-                                    </Button>
-                                </Space>
-                            </div>
-
-                            <Table
-                                dataSource={requests.filter(item => item.status === "Pending")}
-                                columns={columns}
-                                rowKey="id"
-                                pagination={{
-                                    defaultPageSize: 10,
-                                    showSizeChanger: true,
-                                    pageSizeOptions: ['10', '20', '50', '100'],
-                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} yêu cầu`,
-                                }}
-                            />
-                        </Card>
-                    </TabPane>
-                    <TabPane
-                        tab={<span><CheckCircleOutlined/> Đã phê duyệt</span>}
-                        key="3"
-                    >
-                        <Card>
-                            <div style={{marginBottom: 16, display: 'flex', justifyContent: 'space-between'}}>
-                                <Input
-                                    placeholder="Tìm kiếm theo tên, ID, số yêu cầu..."
-                                    prefix={<SearchOutlined/>}
-                                    style={{width: 300}}
-                                    value={searchText}
-                                    onChange={e => setSearchText(e.target.value)}
-                                    allowClear
-                                />
-                                <Space>
-                                    <RangePicker placeholder={['Từ ngày', 'Đến ngày']} style={{marginRight: 8}}/>
-                                    <Button icon={<FilterOutlined/>} style={{marginRight: 8}}>
-                                        Lọc
-                                    </Button>
-                                    <Button icon={<ExportOutlined/>}>
-                                        Export
-                                    </Button>
-                                </Space>
-                            </div>
-
-                            <Table
-                                dataSource={requests.filter(item => item.status === "Approved")}
-                                columns={columns}
-                                rowKey="id"
-                                pagination={{
-                                    defaultPageSize: 10,
-                                    showSizeChanger: true,
-                                    pageSizeOptions: ['10', '20', '50', '100'],
-                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} yêu cầu`,
-                                }}
-                            />
-                        </Card>
-                    </TabPane>
                 </Tabs>
             </ThreeDContainer>
 
@@ -1498,13 +1500,23 @@ const Requests = () => {
                     <Button key="back" onClick={handleCancel}>
                         Hủy
                     </Button>,
-                    <Button
-                        key="submit"
-                        type="primary"
-                        onClick={() => form.submit()}
-                    >
-                        {selectedRequest ? 'Lưu thay đổi' : 'Gửi yêu cầu'}
-                    </Button>,
+                    (selectedRequestType === STATUS.SALARY_APPROVED && !isEdit ? (
+                        <Button
+                            key="signsubmit"
+                            type="primary"
+                            onClick={() => checkFileValid()}
+                        >
+                            Gửi yêu cầu và ký
+                        </Button>
+                    ) : (
+                        <Button
+                            key="submit"
+                            type="primary"
+                            onClick={() => form.submit()}
+                        >
+                            {selectedRequest ? 'Lưu thay đổi' : 'Gửi yêu cầu'}
+                        </Button>
+                    ))
                 ]}
                 width={1100}
             >
@@ -1543,6 +1555,21 @@ const Requests = () => {
                             ))}
                         </Select>
                     </Form.Item>
+                    {selectedRequestType === STATUS.SALARY_APPROVED && (
+                        <Form.Item
+                            name="month"
+                            label="Chọn tháng"
+                            rules={[{ required: true, message: "Vui lòng chọn tháng" }]}
+                        >
+                            <DatePicker
+                                picker="month"
+                                placeholder="Chọn tháng"
+                                onChange={handleChangeMonth}
+                                format={(value) => `Tháng ${value.format("M/YYYY")}`}
+                                disabled={isEdit}
+                            />
+                        </Form.Item>
+                    )}
                     <Form.Item
                         name="priority"
                         label="Mức độ ưu tiên"
@@ -1564,29 +1591,47 @@ const Requests = () => {
                     <Form.Item
                         name="attachments"
                     >
-                        <UploadFileComponent uploadFileSuccess={setFileResponse} isSingle={true} files={fileResponse}/>
+                        <UploadFileComponent uploadFileSuccess={setFileResponse} isSingle={true} files={fileResponse} disableFile={disabledFile}/>
                     </Form.Item>
+                    {selectedRequestType === STATUS.SALARY_APPROVED && salarySlipPreview && (
+                        <div style={{ marginBottom: 24 }}>
+                            <label style={{ fontWeight: 'bold' }}>Preview bảng lương tháng đã chọn</label>
+                            <iframe
+                                src={`data:application/pdf;base64,${salarySlipPreview}`}
+                                width="100%"
+                                height="600px"
+                                style={{ border: 'none' }}
+                            />
+                        </div>
+                    )}
                     {selectedRequestType && (
                         <>
                             {renderRequestTypeFields()}
                         </>
                     )}
-                    {selectedRequestType === STATUS.SALARY_APPROVED && salarySlips.length > 0 && (
-                        <div style={{overflowX: 'auto', width: '100%'}}>
-                            <Table
-                                dataSource={salarySlips}
-                                columns={getDynamicSalarySlipColumns(salarySlips)}
-                                rowKey="_id"
-                                pagination={false}
-                                bordered
-                                size="small"
-                                className="salary-slip-table"
-                                style={{borderRadius: 12, background: '#fff', minWidth: 600, maxWidth: 1000, margin: '0 auto'}}
-                                scroll={{ x: 'max-content' }}
-                            />
-                        </div>
-                    )}
                 </Form>
+                <Modal
+                    title="Ký bảng lương"
+                    open={showSignModal}
+                    onOk={handleSignModalOk}
+                    onCancel={() => setShowSignModal(false)}
+                    okText="Ký"
+                    cancelText="Hủy"
+                    confirmLoading={signing}
+                >
+                    <div style={{ border: '1px solid #ccc', borderRadius: 4, padding: 8, marginBottom: 8 }}>
+                        <SignatureCanvas
+                            penColor="black"
+                            canvasProps={{ width: 400, height: 120, className: 'sigCanvas' }}
+                            ref={ref => setSignaturePad(ref)}
+                            backgroundColor="#fff"
+                        />
+                        <div style={{ marginTop: 8 }}>
+                            <Button onClick={() => signaturePad && signaturePad.clear()}>Xóa chữ ký</Button>
+                        </div>
+                    </div>
+                    <p style={{ marginTop: 16 }}>Sau khi ký, chữ ký sẽ được gửi kèm với bảng lương PDF.</p>
+                </Modal>
             </Modal>
 
             <Drawer
