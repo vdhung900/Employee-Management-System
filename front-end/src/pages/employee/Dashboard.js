@@ -12,6 +12,7 @@ import {
   Space,
   Tooltip,
   message,
+  Modal,
 } from "antd";
 import {
   CheckCircleOutlined,
@@ -24,6 +25,7 @@ import {
   TeamOutlined,
   LogoutOutlined,
   LoginOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import ThreeDCard from "../../components/3d/ThreeDCard";
 import ThreeDButton from "../../components/3d/ThreeDButton";
@@ -129,20 +131,30 @@ const EmployeeDashboard = () => {
     }
   };
 
-  // Xử lý check-out
-  const handleCheckOut = async () => {
-    try {
-      setLoading(true);
-      const response = await AttendanceService.checkOut();
-      if (response.success) {
-        message.success("Check-out thành công!");
-        await fetchTodayAttendance();
-      }
-    } catch (error) {
-      message.error(error.message || "Có lỗi xảy ra khi check-out");
-    } finally {
-      setLoading(false);
-    }
+  // Xử lý check-out với modal xác nhận
+  const handleCheckOut = () => {
+    Modal.confirm({
+      title: "Xác nhận check-out",
+      icon: <ExclamationCircleOutlined />,
+      content: "Bạn có chắc chắn muốn checkout không?",
+      okText: "Đồng ý",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          setLoading(true);
+          const response = await AttendanceService.checkOut();
+          if (response.success) {
+            message.success("Check-out thành công!");
+            await fetchTodayAttendance();
+            fetchWeeklyAttendance();
+          }
+        } catch (error) {
+          message.error(error.message || "Có lỗi xảy ra khi check-out");
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   // Format thời gian
@@ -162,15 +174,17 @@ const EmployeeDashboard = () => {
   };
 
   // Tính giờ dự kiến check-out (8 tiếng sau check-in)
-  const getExpectedCheckOut = () => {
-    if (!todayAttendance?.firstCheckIn) return "-";
-    const checkInTime = new Date(todayAttendance.firstCheckIn);
-    const expectedCheckOut = new Date(checkInTime.getTime() + 8 * 60 * 60 * 1000);
-    return expectedCheckOut.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  // const getExpectedCheckOut = () => {
+  //   if (!todayAttendance?.firstCheckIn) return "-";
+  //   const checkInTime = new Date(todayAttendance.firstCheckIn);
+  //   const expectedCheckOut = new Date(
+  //     checkInTime.getTime() + 8 * 60 * 60 * 1000
+  //   );
+  //   return expectedCheckOut.toLocaleTimeString("vi-VN", {
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //   });
+  // };
 
   // Mock data for employee stats
   const stats = [
@@ -290,7 +304,14 @@ const EmployeeDashboard = () => {
               border: "1px solid rgba(24, 144, 255, 0.2)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "24px 0" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "24px 0",
+              }}
+            >
               <UserOutlined style={{ fontSize: 32, color: "#1890ff", marginRight: 12 }} />
               <Title level={3} style={{ margin: 0, fontWeight: "700" }}>
                 <span className="blue-gradient-text">Chào, {user?.name || "Nhân viên"}!</span>
@@ -387,11 +408,11 @@ const EmployeeDashboard = () => {
                   </Col>
                   <Col span={12}>
                     <Statistic
-                      title={todayAttendance?.lastCheckOut ? "Giờ ra" : "Giờ ra (dự kiến)"}
+                      title={todayAttendance?.lastCheckOut ? "Giờ ra" : "Giờ ra (Dự kiến)"}
                       value={
                         todayAttendance?.lastCheckOut
                           ? formatTime(todayAttendance.lastCheckOut)
-                          : getExpectedCheckOut()
+                          : "17:30"
                       }
                       valueStyle={{ color: "#ff4d4f" }}
                     />

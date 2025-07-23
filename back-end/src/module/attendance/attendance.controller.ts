@@ -26,11 +26,8 @@ export class AttendanceController {
   async checkIn(@Req() req: any): Promise<BaseResponse> {
     try {
       const createAttendanceDto = new CreateAttendanceRecordDto();
-
       //Authorization (temporary)
 
-      // Check if attendance record already exists for today
-      // const employee =
       const existingRecord = await this.attendanceRecordService.findByEmployeeIdToday(
         req.user.employeeId
       );
@@ -46,8 +43,11 @@ export class AttendanceController {
       createAttendanceDto.date = now; // Set the current date
       createAttendanceDto.firstCheckIn = now; // Set the check-in time to now
 
-      const eightAM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
-      createAttendanceDto.isLate = createAttendanceDto.firstCheckIn > eightAM;
+      const time_8h30 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 30, 0);
+      const isLate = createAttendanceDto.firstCheckIn > time_8h30;
+      createAttendanceDto.isLate = isLate;
+      createAttendanceDto.status = isLate ? "Đi muộn" : "Chưa checkout";
+      createAttendanceDto.isPenalty = isLate;
 
       // Create a new attendance record
       const savedRecord = await this.attendanceRecordService.create(createAttendanceDto);
@@ -74,10 +74,21 @@ export class AttendanceController {
       }
 
       //Attach data to the DTO and update the existing record
-      updateDto.lastCheckOut = new Date(); // Set the check-out time to now
-      updateDto.totalWorkingHours = Math.abs(
-        (updateDto.lastCheckOut.getTime() - existingRecord.firstCheckIn.getTime()) / 36e5
-      ); // Calculate total working hours in hours
+      const now = new Date();
+      updateDto.lastCheckOut = now; // Set the check-out time to now
+      const time_17h30 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 30, 0);
+      const goHomeEarly = now < time_17h30;
+      updateDto.isPenalty = goHomeEarly; //Go home early
+
+      if (!existingRecord.isLate) {
+        updateDto.status = goHomeEarly ? "Về sớm" : "Đúng giờ";
+      }
+
+      if (updateDto.lastCheckOut)
+        updateDto.totalWorkingHours = Math.abs(
+          (updateDto.lastCheckOut.getTime() - existingRecord.firstCheckIn.getTime()) / 36e5
+        ); // Calculate total working hours in hours
+
       const updatedRecord = await this.attendanceRecordService.update(existingRecord.id, updateDto);
 
       return BaseResponse.success(updatedRecord, "Attendance record updated successfully", 200);
