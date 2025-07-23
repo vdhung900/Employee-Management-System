@@ -364,6 +364,7 @@ export class SalaryCalculationService {
         numDependents: slip.numDependents,
         otWeekend: slip.otWeekend,
         otHoliday: slip.otHoliday,
+        workingDays: slip.workingDays,
         totalOtSalary: formatNumber(slip.totalOtSalary),
         totalInsurance: formatNumber(slip.totalInsurance),
         socialInsurance: formatNumber(slip.socialInsurance),

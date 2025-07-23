@@ -55,7 +55,7 @@ import {
     TagOutlined,
     RiseOutlined,
     DollarOutlined,
-    StarOutlined
+    StarOutlined, FilePdfOutlined
 } from '@ant-design/icons';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
 import CategoryService from "../../services/CategoryService";
@@ -78,6 +78,7 @@ import dayjs from "dayjs";
 import SignatureCanvas from 'react-signature-canvas';
 import StatisticCard from "../../components/card/StatisticCard";
 import RequestService from "../../services/RequestService";
+import FileService from "../../services/FileService";
 
 const {Title, Text, Paragraph} = Typography;
 const {Option} = Select;
@@ -819,6 +820,9 @@ const Requests = () => {
     const [selectedStatus, setSelectedStatus] = useState(null);
     const [originalData, setOriginalData] = useState([]);
     const [salaryEmpty, setSalaryEmpty] = useState(false);
+    const [previewVisible, setPreviewVisible] = useState(false);
+    const [previewFile, setPreviewFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState('');
 
     useEffect(() => {
         try {
@@ -1380,6 +1384,27 @@ const Requests = () => {
         });
     };
 
+    const handlePreviewDoc = async (doc) => {
+        try {
+            showLoading()
+            console.log(doc)
+            const key = encodeURIComponent(doc.key);
+            const blob = await FileService.getFile(key);
+            if (blob) {
+                const url = window.URL.createObjectURL(blob);
+                setPreviewFile(doc);
+                setPreviewUrl(url);
+                setPreviewVisible(true);
+            } else {
+                message.error('Không thể xem trước file');
+            }
+        } catch (e) {
+            message.error('Không thể xem trước file');
+        }finally {
+            hideLoading()
+        }
+    };
+
     const columns = [
         {
             title: 'Người gửi yêu cầu',
@@ -1466,13 +1491,23 @@ const Requests = () => {
             key: 'action',
             render: (_, record) => (
                 <Space size="small">
-                    <Tooltip title="Xem chi tiết">
-                        <Button
-                            type="text"
-                            icon={<EyeOutlined/>}
-                            onClick={() => showDrawer(record)}
-                        />
-                    </Tooltip>
+                    {record?.typeRequest?.code === STATUS.SALARY_APPROVED ? (
+                        <Tooltip title="Xem bảng lương PDF">
+                            <Button
+                                type="text"
+                                icon={<FilePdfOutlined style={{ color: "#fa541c" }} />}
+                                onClick={() => handlePreviewDoc(record.attachments[0])}
+                            />
+                        </Tooltip>
+                        ) : (
+                        <Tooltip title="Xem chi tiết">
+                            <Button
+                                type="text"
+                                icon={<EyeOutlined/>}
+                                onClick={() => showDrawer(record)}
+                            />
+                        </Tooltip>
+                    )}
                     {record.status === 'Pending' && (
                         <>
                             <Tooltip title="Chỉnh sửa">
@@ -1810,7 +1845,7 @@ const Requests = () => {
                         }}>
                             <div>
                                 <Title level={4} style={{marginBottom: 4}}>
-                                    Yêu cầu {selectedRequest.typeRequest.name}
+                                    {selectedRequest.typeRequest.name}
                                 </Title>
                                 <Tag color={getStatusColor(selectedRequest.status)}>
                                     {getStatusLabel(selectedRequest.status)}
@@ -1820,10 +1855,10 @@ const Requests = () => {
                                 </Tag>
                             </div>
                             <div>
-                                <Space>
-                                    <Button icon={<PrinterOutlined/>}>In yêu cầu</Button>
-                                    <Button icon={<MailOutlined/>}>Gửi email</Button>
-                                </Space>
+                                {/*<Space>*/}
+                                {/*    <Button icon={<PrinterOutlined/>}>In yêu cầu</Button>*/}
+                                {/*    <Button icon={<MailOutlined/>}>Gửi email</Button>*/}
+                                {/*</Space>*/}
                             </div>
                         </div>
 
@@ -1875,7 +1910,6 @@ const Requests = () => {
                         {/* Hiển thị chi tiết dataReq theo loại yêu cầu */}
                         <Divider orientation="left">Chi tiết yêu cầu</Divider>
                         {renderRequestDetailByType(selectedRequest)}
-
                         <Divider orientation="left">Ghi chú</Divider>
                         <Paragraph>{selectedRequest.note}</Paragraph>
 
@@ -1905,6 +1939,25 @@ const Requests = () => {
                     </>
                 )}
             </Drawer>
+            <Modal
+                open={previewVisible}
+                title={`Xem trước: ${previewFile?.originalName}`}
+                footer={null}
+                onCancel={() => {
+                    setPreviewVisible(false);
+                    setPreviewUrl('');
+                    setPreviewFile(null);
+                }}
+                width={1000}
+            >
+                {previewUrl && (
+                    previewFile?.originalName?.toLowerCase().endsWith('.pdf') ? (
+                        <iframe src={previewUrl} width="100%" height="700px" title="preview" />
+                    ) : (
+                        <img src={previewUrl} alt="preview" style={{ maxWidth: '100%', maxHeight: 600 }} />
+                    )
+                )}
+            </Modal>
         </div>
     );
 };
