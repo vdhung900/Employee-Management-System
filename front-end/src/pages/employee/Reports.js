@@ -532,9 +532,9 @@ const Reports = () => {
             dataIndex: 'onTime',
             key: 'onTime',
             render: (_, record) => {
-                if (!record.total) return '0%';
+                if (!record.total) return '0.00%';
                 const onTimePercent = 100 - (record.late / record.total * 100);
-                return <span>{onTimePercent.toFixed(1)}%</span>;
+                return <span>{onTimePercent.toFixed(2)}%</span>;
             },
             sorter: (a, b) => {
                 if (!a.total) return -1;
@@ -735,6 +735,7 @@ const Reports = () => {
                                     (attendanceReportData.reduce((sum, d) => sum + d.total, 0)) * 100) : 0
                                 }
                                 suffix="%"
+                                precision={2}
                                 prefix={<ClockCircleOutlined />}
                                 valueStyle={{ color: '#52c41a' }}
                             />
@@ -1027,17 +1028,17 @@ const Reports = () => {
                                         <Statistic
                                             title="Tỷ lệ đi làm đúng giờ"
                                             value={attendanceReportData.length > 0 && attendanceReportData.reduce((sum, d) => sum + d.total, 0) > 0 ? 
-                                                100 - (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / 
-                                                (attendanceReportData.reduce((sum, d) => sum + d.total, 0)) * 100).toFixed(1) : 0
+                                                (100 - (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / 
+                                                (attendanceReportData.reduce((sum, d) => sum + d.total, 0)) * 100)).toFixed(2) : 0
                                             }
                                             suffix="%"
-                                            precision={1}
+                                            precision={2}
                                             valueStyle={{ color: '#52c41a' }}
                                         />
                                         <Progress 
                                             percent={attendanceReportData.length > 0 && attendanceReportData.reduce((sum, d) => sum + d.total, 0) > 0 ? 
-                                                100 - (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / 
-                                                (attendanceReportData.reduce((sum, d) => sum + d.total, 0)) * 100) : 0
+                                                (100 - (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / 
+                                                (attendanceReportData.reduce((sum, d) => sum + d.total, 0)) * 100)) : 0
                                             } 
                                             size="small" 
                                             status="success" 
@@ -1048,24 +1049,41 @@ const Reports = () => {
                                     <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#faad14'}}/>Tỷ lệ đi muộn</span>}>
                                         <Statistic
                                             title="Tỷ lệ đi muộn"
-                                            value={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100).toFixed(1) : 0}
+                                            value={attendanceReportData.length > 0 ? 
+                                                (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / 
+                                                (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100).toFixed(2) : 0
+                                            }
                                             suffix="%"
-                                            precision={1}
+                                            precision={2}
                                             valueStyle={{ color: '#faad14' }}
                                         />
-                                        <Progress percent={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100) : 0} size="small" status="warning" />
+                                        <Progress 
+                                            percent={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100) : 0} 
+                                            size="small" 
+                                            status="warning" 
+                                            strokeColor="#faad14"
+                                            format={() => <ClockCircleOutlined style={{color:'#faad14'}} />}
+                                        />
                                     </Card>
                                 </Col>
                                 <Col span={6}>
                                     <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#ff4d4f'}}/>Tỷ lệ vắng mặt</span>}>
                                         <Statistic
                                             title="Tỷ lệ vắng mặt"
-                                            value={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.absent, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100).toFixed(1) : 0}
+                                            value={attendanceReportData.length > 0 ? 
+                                                (attendanceReportData.reduce((sum, d) => sum + d.absent, 0) / 
+                                                (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100).toFixed(2) : 0
+                                            }
                                             suffix="%"
-                                            precision={1}
+                                            precision={2}
                                             valueStyle={{ color: '#ff4d4f' }}
                                         />
-                                        <Progress percent={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.absent, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100) : 0} size="small" status="exception" />
+                                        <Progress 
+                                            percent={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.absent, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100) : 0} 
+                                            size="small" 
+                                            status="exception" 
+                                            strokeColor="#ff4d4f"
+                                        />
                                     </Card>
                                 </Col>
                                 <Col span={6}>
@@ -1108,7 +1126,7 @@ const Reports = () => {
                                             <Table.Summary.Cell>Tổng cộng</Table.Summary.Cell>
                                             <Table.Summary.Cell>{totalDays}</Table.Summary.Cell>
                                             <Table.Summary.Cell>
-                                                {totalDays - totalLate} ({totalDays > 0 ? (100 - (totalLate/totalDays * 100)).toFixed(1) : 0}%)
+                                                {totalDays - totalLate} ({totalDays > 0 ? (100 - (totalLate/totalDays * 100)).toFixed(2) : '0.00'}%)
                                             </Table.Summary.Cell>
                                             <Table.Summary.Cell>
                                                 <span style={{ color: '#faad14' }}>{totalLate}</span>
