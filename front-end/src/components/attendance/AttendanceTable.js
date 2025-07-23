@@ -19,13 +19,18 @@ const AttendanceTable = ({
   };
 
   const getStatusBadge = (record) => {
-    if (!record.firstCheckIn) {
-      return <Badge status="error" text="Vắng mặt" />;
+    if (record.status) {
+      if (record.status === "present") {
+        return <Badge status="success" text="Đúng giờ" />;
+      } else if (record.status === "late") {
+        return <Badge status="warning" text="Đi muộn" />;
+      } else if (record.status === "leave_early") {
+        return <Badge status="warning" text="Về sớm" />;
+      } else if (record.status === "overtime") {
+        return <Badge status="warning" text="Làm thêm giờ" />;
+      }
     }
-    if (record.isLate) {
-      return <Badge status="warning" text="Đi muộn" />;
-    }
-    return <Badge status="success" text="Đúng giờ" />;
+    return <Badge status="error" text="Vắng mặt" />;
   };
 
   const formatHours = (hours) => {
