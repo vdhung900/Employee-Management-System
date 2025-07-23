@@ -44,7 +44,7 @@ export class SalaryCalculationService {
   async handleSalaryCalculation() {
     this.logger.log('Bắt đầu tính lương tự động cuối tháng...');
     const now = new Date();
-    const month = 4;
+    const month = now.getMonth() + 1;
     const year = now.getFullYear();
 
     // Lấy toàn bộ nhân viên còn làm việc
