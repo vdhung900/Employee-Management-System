@@ -1148,7 +1148,7 @@ const Requests = () => {
         try{
             const response = await RequestService.checkByMonth(month);
             if(response.success){
-                if(response.data !== null || response.data || response.data.length > 0){
+                if(response.data !== null || response.data){
                     return false;
                 }else{
                     return true;
