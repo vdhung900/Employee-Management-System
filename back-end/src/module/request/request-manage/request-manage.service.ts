@@ -83,10 +83,29 @@ export class RequestManageService {
             if (!req.departmentId) {
                 throw new Error("Phòng ban không hợp lệ");
             }
-            const data = await this.requestService.findByFilterCode(req.departmentId.toString(), STATUS.ACCOUNT_CREATE_REQUEST);
+
+            let data = await this.requestService.findByFilterCode(
+                req.departmentId.toString(),
+                STATUS.ACCOUNT_CREATE_REQUEST
+            );
+
+            if(req.status !== null){
+                data = data.filter(item => item.status === req.status);
+            }
+
             const resData = data
                 .filter(item => item.typeRequest !== null)
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                .sort((a, b) => {
+                    const aPending = a.status === STATUS.PENDING ? 1 : 0;
+                    const bPending = b.status === STATUS.PENDING ? 1 : 0;
+
+                    if (aPending !== bPending) {
+                        return bPending - aPending;
+                    }
+
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                });
+
             return paginate(resData, req?.page, req?.limit);
         } catch (e) {
             throw new Error(e);
@@ -102,7 +121,7 @@ export class RequestManageService {
                 requests = await this.requestService.findByEmployeeId(req.employeeId.toString());
             }
             if (!requests || requests.length === 0) {
-                throw new Error("No requests found for this employee");
+                return [];
             }
             const sorted = requests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
             return sorted;
@@ -429,6 +448,7 @@ export class RequestManageService {
                 if (!employee) {
                     throw new Error("Không tìm thấy nhân viên");
                 }
+                console.log(employee)
 
                 if (employee.timeUpdateSalary !== null) {
                     const lastUpdateTime = new Date(employee.timeUpdateSalary);

@@ -96,7 +96,7 @@ const ApproveRequest = () => {
         }
     }, []);
 
-    const loadRequests = async (page = 1, size = 10) => {
+    const loadRequests = async (page = 1, size = 10, status = null) => {
         setLoading(true);
         try{
             const employee = JSON.parse(localStorage.getItem('employee'));
@@ -104,6 +104,7 @@ const ApproveRequest = () => {
             body.departmentId = employee?.departmentId?._id;
             body.page = page;
             body.limit = size;
+            body.status = status;
             const response = await RequestService.getByFilterCode(body);
             if(response.success){
                 setRequests(response.data.content || []);
@@ -134,8 +135,13 @@ const ApproveRequest = () => {
         }
     };
 
+    const handleClickStatus = (status) => {
+        loadRequests(pagination.current, pagination.pageSize, status)
+    }
+
     const handlePreviewDoc = async (doc) => {
         try {
+            showLoading()
             console.log(doc)
             const key = encodeURIComponent(doc.key);
             const blob = await FileService.getFile(key);
@@ -149,6 +155,9 @@ const ApproveRequest = () => {
             }
         } catch (e) {
             message.error('Không thể xem trước file');
+        }
+        finally {
+            hideLoading()
         }
     };
 
@@ -436,6 +445,8 @@ const ApproveRequest = () => {
                 const isSalaryApprovedPending =
                     record.typeRequest?.code === STATUS.SALARY_APPROVED &&
                     record.status === STATUS.PENDING;
+                const isSalaryApproved =
+                    record.typeRequest?.code === STATUS.SALARY_APPROVED;
 
                 return (
                     <Space size="small">
@@ -461,7 +472,7 @@ const ApproveRequest = () => {
                             </Tooltip>
                         ) : (
                             <>
-                                {isSalaryApprovedPending && (
+                                {isSalaryApproved && (
                                     <Tooltip title="Xem bảng lương PDF">
                                         <Button
                                             type="text"
@@ -550,7 +561,7 @@ const ApproveRequest = () => {
 
                 <Col xs={24} sm={12} lg={8}>
                     <ThreeDContainer>
-                        <Card bordered={false} style={{ borderRadius: 8 }}>
+                        <Card bordered={false} style={{ borderRadius: 8 }} onClick={() => handleClickStatus(STATUS.PENDING)}>
                             <Statistic
                                 title={
                                     <Text strong style={{ fontSize: 16 }}>
@@ -573,7 +584,7 @@ const ApproveRequest = () => {
 
                 <Col xs={24} sm={12} lg={8}>
                     <ThreeDContainer>
-                        <Card bordered={false} style={{ borderRadius: 8 }}>
+                        <Card bordered={false} style={{ borderRadius: 8 }}  onClick={() => handleClickStatus(STATUS.APPROVED)}>
                             <Statistic
                                 title={
                                     <Text strong style={{ fontSize: 16 }}>
@@ -596,7 +607,7 @@ const ApproveRequest = () => {
 
                 <Col xs={24} sm={12} lg={8}>
                     <ThreeDContainer>
-                        <Card bordered={false} style={{ borderRadius: 8 }}>
+                        <Card bordered={false} style={{ borderRadius: 8 }}  onClick={() => handleClickStatus(STATUS.REJECTED)}>
                             <Statistic
                                 title={
                                     <Text strong style={{ fontSize: 16 }}>

@@ -359,14 +359,19 @@ export class SalaryCalculationService {
         salaryCoefficient: formatNumber(slip.salaryCoefficient),
         unpaidLeave: formatNumber(slip.unpaidLeave),
         latePenalty: formatNumber(slip.latePenalty),
-        otWeekday: formatNumber(slip.otWeekday),
-        otWeekend: formatNumber(slip.otWeekend),
-        otHoliday: formatNumber(slip.otHoliday),
-        insurance: formatNumber(slip.totalInsurance),
+        otWeekday: slip.otWeekday,
+        numDependents: slip.numDependents,
+        otWeekend: slip.otWeekend,
+        otHoliday: slip.otHoliday,
+        workingDays: slip.workingDays,
+        totalOtSalary: formatNumber(slip.totalOtSalary),
+        totalInsurance: formatNumber(slip.totalInsurance),
+        socialInsurance: formatNumber(slip.socialInsurance),
+        healthInsurance: formatNumber(slip.healthInsurance),
+        unemploymentInsurance: formatNumber(slip.unemploymentInsurance),
         personalIncomeTax: formatNumber(slip.personalIncomeTax),
         familyDeduction: formatNumber(slip.familyDeduction),
         netSalary: formatNumber(slip.netSalary),
-        totalOtSalary: formatNumber(slip.totalOtSalary),
         totalOtHour: formatNumber(slip.totalOtHour),
         totalTaxableIncome: formatNumber(slip.totalTaxableIncome),
         benefit: formatNumber(slip.benefit),
@@ -384,6 +389,9 @@ export class SalaryCalculationService {
       let totalBhyt = 0;
       let totalBhtn = 0;
       let totalTax = 0;
+      let totalOTEnd = 0;
+      let totalTaxable = 0;
+      let totalEndInsurance = 0;
       dataSal.forEach((salary) => {
         totalSalary += salary.netSalary || 0;
         totalBasicSalaryAll += salary.baseSalary || 0;
@@ -391,6 +399,12 @@ export class SalaryCalculationService {
         totalFamilyDeduction += salary.familyDeduction || 0;
         totalAllowance += salary.benefit || 0;
         totalTax += salary.personalIncomeTax || 0;
+        totalOTEnd += salary.totalOtSalary || 0;
+        totalTaxable += salary.totalTaxableIncome || 0;
+        totalBhxh += salary.socialInsurance || 0;
+        totalBhyt += salary.healthInsurance || 0;
+        totalBhtn += salary.unemploymentInsurance || 0;
+        totalEndInsurance += salary.totalInsurance || 0;
       })
       dataPreview.totalInWords = numberToVietnameseCurrency(totalSalary);
       dataPreview.totalSalary = formatNumber(totalSalary);
@@ -404,6 +418,10 @@ export class SalaryCalculationService {
       dataPreview.totalBhyt = formatNumber(totalBhyt);
       dataPreview.totalBhtn = formatNumber(totalBhtn);
       dataPreview.totalTax = formatNumber(totalTax);
+      dataPreview.totalBasicSalaryAll = formatNumber(totalBasicSalaryAll);
+      dataPreview.totalOTEnd = formatNumber(totalOTEnd);
+      dataPreview.totalTaxable = formatNumber(totalTaxable);
+      dataPreview.totalEndInsurance = formatNumber(totalEndInsurance);
       const dateSign = new Date();
       dataPreview.signDay = dateSign.getDay();
       dataPreview.signMonth = dateSign.getMonth() + 1;

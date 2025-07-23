@@ -129,31 +129,30 @@
                 <th rowspan="3">Họ và tên</th>
                 <th rowspan="3">Hệ số</th>
                 <th rowspan="3">Lương cơ bản</th>
-                <th colspan="5">Tổng lương cơ bản</th>
-                <th rowspan="2">Khấu trừ gia cảnh</th>
+                <th colspan="4">Tổng lương cơ bản</th>
+                <th colspan="2">Khấu trừ gia cảnh</th>
                 <th rowspan="2">Phụ cấp và các khoản khác</th>
-                <th colspan="2">OT ngày thường</th>
-                <th colspan="2">OT ngày cuối tuần</th>
-                <th colspan="2">OT ngày lễ</th>
+                <th colspan="4">Làm thêm giờ</th>
                 <th colspan="4">Các khoản phải khấu trừ vào lương</th>
+                <th rowspan="2">Thu nhập chịu thuế</th>
+                <th rowspan="2">Thuế TNCN phải nộp</th>
                 <th rowspan="2">Lương thực nhận</th>
             </tr>
             <tr class="header-row-2">
                 <th>Số ngày công thực tế trong tháng</th>
-                <th>Số ngày nghỉ có lương</th>
                 <th>Số ngày nghỉ không lương</th>
                 <th>Số ngày đi muộn về sớm</th>
                 <th>Tổng số tiền</th>
-                <th>Số giờ</th>
-                <th>Tổng tiền OT</th>
-                <th>Số giờ</th>
-                <th>Tổng tiền OT</th>
-                <th>Số giờ</th>
+                <th>Tổng số thành viên</th>
+                <th>Tổng số tiền</th>
+                <th>Trong tuần</th>
+                <th>Cuối tuần</th>
+                <th>Ngày Lễ</th>
                 <th>Tổng tiền OT</th>
                 <th>BHXH</th>
                 <th>BHYT</th>
                 <th>BHTN</th>
-                <th>Thuế TNCN phải nộp</th>
+                <th>Tổng tiền bảo hiểm</th>
             </tr>
             <tr class="column-letters">
                 <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td>
@@ -166,22 +165,22 @@
                 <td class="col-name">{{employeeId.fullName}}</td>
                 <td>{{salaryCoefficient}}</td>
                 <td class="col-money">{{baseSalary}}</td>
-                <td>0</td> <!-- Số ngày công thực tế trong tháng -->
-                <td>0</td> <!-- Số ngày nghỉ có lương -->
+                <td>{{workingDays}}</td> <!-- Số ngày công thực tế trong tháng -->
                 <td>{{unpaidLeave}}</td>
                 <td>{{latePenalty}}</td>
                 <td class="col-money">{{totalBaseSalary}}</td>
-                <td>{{benefit}}</td>
+                <td>{{numDependents}}</td>
                 <td>{{familyDeduction}}</td>
+                <td>{{benefit}}</td>
                 <td>{{otWeekday}}</td>
-                <td class="col-money">0</td>
                 <td>{{otWeekend}}</td>
-                <td class="col-money">0</td>
                 <td>{{otHoliday}}</td>
-                <td class="col-money">0</td>
-                <td>{{insurance}}</td>
-                <td>0</td> <!-- BHYT -->
-                <td>0</td> <!-- BHTN -->
+                <td class="col-money">{{totalOtSalary}}</td>
+                <td>{{socialInsurance}}</td>
+                <td>{{healthInsurance}}</td> <!-- BHYT -->
+                <td>{{unemploymentInsurance}}</td> <!-- BHTN -->
+                <td>{{totalInsurance}}</td> <!-- BHTN -->
+                <td>{{totalTaxableIncome}}</td>
                 <td>{{personalIncomeTax}}</td>
                 <td class="col-total">{{netSalary}}</td>
             </tr>
@@ -194,19 +193,19 @@
                 <td>{{totalBasicSalaryAll}}</td><td></td>
                 <td></td>
                 <td></td>
-                <td></td>
                 <td>{{totalPositionSalary}}</td>
+                <td></td>
                 <td>{{totalFamilyDeduction}}</td>
                 <td>{{totalAllowance}}</td>
                 <td></td>
-                <td>{{totalOTDaily}}</td>
                 <td></td>
-                <td>{{totalOTWeekend}}</td>
                 <td></td>
-                <td>{{totalOTHoliday}}</td>
+                <td>{{totalOTEnd}}</td>
                 <td>{{totalBhxh}}</td>
                 <td>{{totalBhyt}}</td>
                 <td>{{totalBhtn}}</td>
+                <td>{{totalEndInsurance}}</td>
+                <td>{{totalTaxable}}</td>
                 <td>{{totalTax}}</td>
                 <td>{{totalSalary}}</td>
             </tr>
