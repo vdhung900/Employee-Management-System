@@ -531,10 +531,16 @@ const Reports = () => {
             title: 'Đúng giờ',
             dataIndex: 'onTime',
             key: 'onTime',
-            render: (value, record) => (
-                <span>{value} ({Math.round((value/record.total) * 100)}%)</span>
-            ),
-            sorter: (a, b) => a.onTime - b.onTime,
+            render: (_, record) => {
+                if (!record.total) return '0%';
+                const onTimePercent = 100 - (record.late / record.total * 100);
+                return <span>{onTimePercent.toFixed(1)}%</span>;
+            },
+            sorter: (a, b) => {
+                if (!a.total) return -1;
+                if (!b.total) return 1;
+                return ((a.total - a.late) / a.total) - ((b.total - b.late) / b.total);
+            },
         },
         {
             title: 'Đi muộn',
@@ -724,7 +730,10 @@ const Reports = () => {
                         <Card>
                             <Statistic
                                 title="Tỷ lệ đúng giờ 6 tháng"
-                                value={attendanceReportData.length > 0 ? ((attendanceReportData.reduce((sum, d) => sum + d.onTime, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1)) * 100).toFixed(1) : 0}
+                                value={attendanceReportData.length > 0 && attendanceReportData.reduce((sum, d) => sum + d.total, 0) > 0 ? 
+                                    100 - (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / 
+                                    (attendanceReportData.reduce((sum, d) => sum + d.total, 0)) * 100) : 0
+                                }
                                 suffix="%"
                                 prefix={<ClockCircleOutlined />}
                                 valueStyle={{ color: '#52c41a' }}
@@ -1003,7 +1012,118 @@ const Reports = () => {
                                 </Col>
                         </Row>
                     </TabPane>
+                    <TabPane
+                        tab={<span><ClockCircleOutlined /> Báo cáo chấm công</span>}
+                        key="4"
+                    >
+                        <Card>
+                            <Paragraph>
+                                Báo cáo thống kê về tình hình chấm công, đi muộn, vắng mặt và tăng ca của nhân viên.
+                            </Paragraph>
+                            {error && <Text type="danger">{error}</Text>}
+                            <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
+                                <Col span={6}>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#52c41a'}}/>Tỷ lệ đi làm đúng giờ</span>}>
+                                        <Statistic
+                                            title="Tỷ lệ đi làm đúng giờ"
+                                            value={attendanceReportData.length > 0 && attendanceReportData.reduce((sum, d) => sum + d.total, 0) > 0 ? 
+                                                100 - (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / 
+                                                (attendanceReportData.reduce((sum, d) => sum + d.total, 0)) * 100).toFixed(1) : 0
+                                            }
+                                            suffix="%"
+                                            precision={1}
+                                            valueStyle={{ color: '#52c41a' }}
+                                        />
+                                        <Progress 
+                                            percent={attendanceReportData.length > 0 && attendanceReportData.reduce((sum, d) => sum + d.total, 0) > 0 ? 
+                                                100 - (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / 
+                                                (attendanceReportData.reduce((sum, d) => sum + d.total, 0)) * 100) : 0
+                                            } 
+                                            size="small" 
+                                            status="success" 
+                                        />
+                                    </Card>
+                                </Col>
+                                <Col span={6}>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#faad14'}}/>Tỷ lệ đi muộn</span>}>
+                                        <Statistic
+                                            title="Tỷ lệ đi muộn"
+                                            value={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100).toFixed(1) : 0}
+                                            suffix="%"
+                                            precision={1}
+                                            valueStyle={{ color: '#faad14' }}
+                                        />
+                                        <Progress percent={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.late, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100) : 0} size="small" status="warning" />
+                                    </Card>
+                                </Col>
+                                <Col span={6}>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#ff4d4f'}}/>Tỷ lệ vắng mặt</span>}>
+                                        <Statistic
+                                            title="Tỷ lệ vắng mặt"
+                                            value={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.absent, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100).toFixed(1) : 0}
+                                            suffix="%"
+                                            precision={1}
+                                            valueStyle={{ color: '#ff4d4f' }}
+                                        />
+                                        <Progress percent={attendanceReportData.length > 0 ? (attendanceReportData.reduce((sum, d) => sum + d.absent, 0) / (attendanceReportData.reduce((sum, d) => sum + d.total, 0) || 1) * 100) : 0} size="small" status="exception" />
+                                    </Card>
+                                </Col>
+                                <Col span={6}>
+                                    <Card title={<span style={{display:'flex',alignItems:'center',gap:8}}><ClockCircleOutlined style={{color:'#1890ff'}}/>Tổng giờ tăng ca</span>}>
+                                        <Statistic
+                                            title="Tổng giờ tăng ca"
+                                            value={attendanceReportData.reduce((sum, d) => sum + d.overtime, 0)}
+                                            suffix="giờ"
+                                            precision={0}
+                                            valueStyle={{ color: '#1890ff' }}
+                                        />
+                                    </Card>
+                                </Col>
+                            </Row>
+                            <Table
+                                loading={loading}
+                                dataSource={attendanceReportData}
+                                columns={attendanceColumns}
+                                rowKey="month"
+                                pagination={false}
+                                summary={pageData => {
+                                    let totalDays = 0;
+                                    let totalOnTime = 0;
+                                    let totalLate = 0;
+                                    let totalAbsent = 0;
+                                    let totalLeave = 0;
+                                    let totalOvertime = 0;
 
+                                    pageData.forEach(({ total, onTime, late, absent, leave, overtime }) => {
+                                        totalDays += total;
+                                        totalOnTime += onTime;
+                                        totalLate += late;
+                                        totalAbsent += absent;
+                                        totalLeave += leave;
+                                        totalOvertime += overtime;
+                                    });
+
+                                    return (
+                                        <Table.Summary.Row style={{ fontWeight: 'bold' }}>
+                                            <Table.Summary.Cell>Tổng cộng</Table.Summary.Cell>
+                                            <Table.Summary.Cell>{totalDays}</Table.Summary.Cell>
+                                            <Table.Summary.Cell>
+                                                {totalDays - totalLate} ({totalDays > 0 ? (100 - (totalLate/totalDays * 100)).toFixed(1) : 0}%)
+                                            </Table.Summary.Cell>
+                                            <Table.Summary.Cell>
+                                                <span style={{ color: '#faad14' }}>{totalLate}</span>
+                                            </Table.Summary.Cell>
+                                            <Table.Summary.Cell>
+                                                <span style={{ color: '#ff4d4f' }}>{totalAbsent}</span>
+                                            </Table.Summary.Cell>
+                                            <Table.Summary.Cell>{totalLeave}</Table.Summary.Cell>
+                                            <Table.Summary.Cell>{totalOvertime}</Table.Summary.Cell>
+                                        </Table.Summary.Row>
+                                    );
+                                }}
+                            />
+                        </Card>
+                    </TabPane>                       
                     <TabPane
                         tab={<span><AuditOutlined /> Báo cáo đánh giá</span>}
                         key="5"
@@ -1044,7 +1164,7 @@ const Reports = () => {
                         key="2"
                     >
                         <Row gutter={[32, 32]} justify="">
-                            <Col xs={24} md={12}>
+                            <Col xs={24} md={6}>
                                 <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                                         <Statistic
                                         title={<span style={{ color: '#222', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}><ClockCircleOutlined style={{ color: '#ff6b6b' }} />Tổng đơn nghỉ phép</span>}
