@@ -7,6 +7,7 @@ import { SalarySlip, SalarySlipDocument } from '../../../schemas/salarySlip.sche
 import { AttendanceRecords, AttendanceRecordsDocument } from '../../../schemas/attendanceRecords.schema';
 import { MonthlyReview, MonthlyReviewDocument } from '../../../schemas/performanceReview.schema';
 import { Model } from 'mongoose';
+import {STATUS} from "../../../enum/status.enum";
 
 @Controller('hr')
 export class UpdateEmployeeController {
@@ -176,10 +177,10 @@ export class UpdateEmployeeController {
                     return d.getFullYear() === m.year && d.getMonth() + 1 === m.month;
                 });
                 const total = recs.length;
-                const onTime = recs.filter(r => r.status === 'PRESENT').length;
-                const late = recs.filter(r => r.status === 'LATE').length;
-                const absent = recs.filter(r => r.status === 'ABSENT').length;
-                const leave = recs.filter(r => r.status === 'LEAVE').length;
+                const onTime = recs.filter(r => r.status === STATUS.PRESENT).length;
+                const late = recs.filter(r => r.status === STATUS.LATE).length;
+                const absent = recs.filter(r => r.status === 'absent').length;
+                const leave = recs.filter(r => r.status === STATUS.LEAVE).length;
                 const overtime = recs.reduce((sum, r) => sum + (r.totalOtHour ? r.totalOtHour : 0), 0);
                 return {
                     month: `T${m.month}/${m.year}`,

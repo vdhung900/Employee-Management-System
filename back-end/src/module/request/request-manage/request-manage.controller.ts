@@ -96,4 +96,14 @@ export class RequestManageController {
             throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @Get('/all-leave-requests')
+    async getAllLeaveRequestsForEmployees() {
+        try {
+            const resData = await this.hrRequestService.getAllLeaveRequestsForEmployees();
+            return BaseResponse.success(resData, 'Lấy tất cả đơn nghỉ phép thành công', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

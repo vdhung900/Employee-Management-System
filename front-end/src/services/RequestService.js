@@ -56,6 +56,13 @@ const RequestService = {
         }catch (e) {
             throw handleApiError(e);
         }
+    },
+    async getAllLeaveRequests() {
+        try {
+            return await fetchWithAuth('/request-manage/all-leave-requests', 'GET');
+        } catch (e) {
+            throw handleApiError(e);
+        }
     }
 }
 

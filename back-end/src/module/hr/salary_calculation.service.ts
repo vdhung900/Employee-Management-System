@@ -101,15 +101,21 @@ export class SalaryCalculationService {
       if (!rank) return;
       const baseSalary = rank.salary_base;
       const salaryCoefficient = coef.salary_coefficient;
-      let totalBaseSalary = baseSalary * salaryCoefficient;
+      let totalBaseSalary = Math.round(baseSalary * salaryCoefficient);
       // Lấy attendance records trong tháng
       const attendances = attMap.get(emp._id.toString()) || [];
       // Tính nghỉ không phép
       const unpaidLeaveCount = attendances.filter(a => a.isPaid === false).length;
-      const unpaidLeave = (totalBaseSalary / 22) * unpaidLeaveCount;
+      const unpaidLeave = Math.round((totalBaseSalary / 22) * unpaidLeaveCount);
 
       // Phạt đi muộn/về sớm
-      let latePenalty = 0;
+      let cntLatePenalty = 0;
+      for (const a of attendances) {
+        if (a.status === STATUS.LATE) {
+          cntLatePenalty++;
+        }
+      }
+      const latePenalty = cntLatePenalty * 20000;
 
       // Hàm tính tổng số giờ OT từ mảng overtimeRange
       function getTotalOtHours(overtimeRange: string[]): number {
@@ -129,63 +135,70 @@ export class SalaryCalculationService {
 
       // Tính OT ngày thường và cuối tuần
       let otWeekday = 0, otWeekend = 0;
-      let totalOtHours = 0;
+      let otWeekdayHour = 0, otWeekendHour = 0;
+      let totalOtHour = 0;
       for (const a of attendances) {
         if (a.status === 'overtime' || a.isOvertime) {
-          const otHours = getTotalOtHours(a.overtimeRange);
-          totalOtHours += otHours;
+          const otHours = Math.round(getTotalOtHours(a.overtimeRange));
+          totalOtHour += otHours;
           const date = new Date(a.date);
           const day = date.getDay();
           if (day === 0 || day === 6) {
-            otWeekend += (totalBaseSalary / 166) * 2 * otHours; // 200%
+            otWeekend += Math.round((totalBaseSalary / 166) * 2 * otHours); // 200%
+            otWeekendHour += otHours;
           } else {
-            otWeekday += (totalBaseSalary / 166) * 1.5 * otHours; // 150%
+            otWeekday += Math.round((totalBaseSalary / 166) * 1.5 * otHours); // 150%
+            otWeekdayHour += otHours;
           }
         }
       }
-      const totalOtAmount = otWeekday + otWeekend;
+      const totalOtAmount = Math.round(otWeekday + otWeekend);
 
       // === LẤY BENEFIT THEO EMPLOYEE HOẶC DEPARTMENT ===
       // Lưu ý: cần khai báo benefitModel ở constructor và import model Benefit
       const benefits = await (this as any).benefitModel.find({
-        $or: [
-          { employees: emp._id },
-          { departments: emp.departmentId }
-        ]
+        departments: emp.departmentId
       });
+      
       // Tổng tiền thưởng benefit (không loại bỏ trùng)
-      const totalBenefit = benefits.reduce((sum, b) => sum + (b.amount || 0), 0);
+      const totalBenefit = Math.round(benefits.reduce((sum, b) => sum + (b.amount || 0), 0));
 
       // Tổng các khoản trước bảo hiểm
-      const totalTaxableIncome = totalBaseSalary - unpaidLeave - latePenalty + totalOtAmount + totalBenefit;
+      const totalTaxableIncome = Math.round(totalBaseSalary - unpaidLeave - latePenalty + totalOtAmount + totalBenefit);
 
+      // Bảo hiểm xã hôij
+      const socialInsurance = Math.round(totalBaseSalary * 0.08);
+      // Bảo hiểm y tế
+      const healthInsurance = Math.round(totalBaseSalary * 0.015);
+      // Bảo hiểm thất nghiệp
+      const unemploymentInsurance = Math.round(totalBaseSalary * 0.01);
       // Tiền bảo hiểm
-      const insurance = totalBaseSalary * 0.105;
+      const totalInsurance = Math.round(socialInsurance + healthInsurance + unemploymentInsurance);
 
       // Lấy số người phụ thuộc
       const numDependents = emp.childDependents ? Number(emp.childDependents) : 0;
       // Giảm trừ gia cảnh và người phụ thuộc
-      const totalFamilyDeduction = 11000000 + numDependents * 4400000;
+      const totalFamilyDeduction = Math.round(11000000 + numDependents * 4400000);
 
       // Thu nhập chịu thuế
-      const taxableIncome = totalBaseSalary - totalFamilyDeduction - insurance;
+      const taxableIncome = Math.round(totalTaxableIncome - totalFamilyDeduction - totalInsurance);
 
       // Thuế TNCN (áp dụng biểu thuế lũy tiến từng phần)
       let personalIncomeTax = 0;
       if (taxableIncome > 0) {
-        if (taxableIncome <= 5000000) personalIncomeTax = taxableIncome * 0.05;
-        else if (taxableIncome <= 10000000) personalIncomeTax = 250000 + (taxableIncome - 5000000) * 0.1;
-        else if (taxableIncome <= 18000000) personalIncomeTax = 750000 + (taxableIncome - 10000000) * 0.15;
-        else if (taxableIncome <= 32000000) personalIncomeTax = 1950000 + (taxableIncome - 18000000) * 0.2;
-        else if (taxableIncome <= 52000000) personalIncomeTax = 4750000 + (taxableIncome - 32000000) * 0.25;
-        else if (taxableIncome <= 80000000) personalIncomeTax = 9750000 + (taxableIncome - 52000000) * 0.3;
-        else personalIncomeTax = 18150000 + (taxableIncome - 80000000) * 0.35;
+        if (taxableIncome <= 5000000) personalIncomeTax = Math.round(taxableIncome * 0.05);
+        else if (taxableIncome <= 10000000) personalIncomeTax = Math.round(250000 + (taxableIncome - 5000000) * 0.1);
+        else if (taxableIncome <= 18000000) personalIncomeTax = Math.round(750000 + (taxableIncome - 10000000) * 0.15);
+        else if (taxableIncome <= 32000000) personalIncomeTax = Math.round(1950000 + (taxableIncome - 18000000) * 0.2);
+        else if (taxableIncome <= 52000000) personalIncomeTax = Math.round(4750000 + (taxableIncome - 32000000) * 0.25);
+        else if (taxableIncome <= 80000000) personalIncomeTax = Math.round(9750000 + (taxableIncome - 52000000) * 0.3);
+        else personalIncomeTax = Math.round(18150000 + (taxableIncome - 80000000) * 0.35);
       }
 
       // Tổng lương thực nhận
-      const netSalary = totalTaxableIncome - insurance - personalIncomeTax;
+      const netSalary = Math.round(totalTaxableIncome - totalInsurance - personalIncomeTax);
 
-      totalBaseSalary = totalBaseSalary - unpaidLeave;
+      totalBaseSalary = Math.round(totalBaseSalary - unpaidLeave);
 
       // Lưu vào salarySlip: update nếu đã có, insert nếu chưa có
       await this.salarySlipModel.updateOne(
@@ -195,23 +208,31 @@ export class SalaryCalculationService {
             employeeId: emp._id,
             month,
             year,
-            baseSalary,
-            salaryCoefficient,
-            totalBaseSalary,
-            unpaidLeave: unpaidLeaveCount,
-            otWeekday,
-            otWeekend,
+            baseSalary,// Lương cơ bản
+            salaryCoefficient,// Hệ số lương
+            totalBaseSalary,// Tổng lương cơ bản
+            otWeekdayHour, //Tổng số giờ OT ngày thường
+            otWeekendHour, //Tổng số giờ OT cuối tuần
+            otWeekday,// Tổng tiền OT ngày thường
+            otWeekend,// Tổng tiền OT cuối tuần
             otHoliday: 0, // Không tính ngày lễ
-            totalOtHour: totalOtHours, // Tổng số giờ OT
+            totalOtHour, // Tổng số giờ OT
             totalOtSalary: totalOtAmount, // Tổng tiền OT
-            insurance,
-            personalIncomeTax,
-            familyDeduction: totalFamilyDeduction,
-            netSalary,
-            status: '00',
-            latePenalty, //Đúng giờ
-            totalTaxableIncome, //Tổng thu nhập chịu thuế
+            socialInsurance, //Tiền bảo hiểm xã hội
+            healthInsurance, //Tiền bảo hiểm y tế
+            unemploymentInsurance, //Tiền bảo hiểm thất nghiệp
+            totalInsurance, // Tổng tiền bảo hiểm
+            unpaidLeaveCount, //Số lần nghỉ không phép
+            unpaidLeave,// Tiền nghỉ không phép
             benefit: totalBenefit, // Tổng benefit cộng vào
+            numDependents, //Số người phụ thuộc
+            familyDeduction: totalFamilyDeduction, //Giảm trừ gia cảnh
+            personalIncomeTax, //Thuế TNCN
+            netSalary, //Lương thực nhận
+            cntLatePenalty, //Số lần đi muộn
+            latePenalty, //Tiền phạt đi muộn
+            totalTaxableIncome, //Tổng thu nhập chịu thuế
+            status: '00',
           },
         },
         { upsert: true }
@@ -314,7 +335,7 @@ export class SalaryCalculationService {
         otWeekday: formatNumber(slip.otWeekday),
         otWeekend: formatNumber(slip.otWeekend),
         otHoliday: formatNumber(slip.otHoliday),
-        insurance: formatNumber(slip.insurance),
+        insurance: formatNumber(slip.totalInsurance),
         personalIncomeTax: formatNumber(slip.personalIncomeTax),
         familyDeduction: formatNumber(slip.familyDeduction),
         netSalary: formatNumber(slip.netSalary),
