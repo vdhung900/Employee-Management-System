@@ -91,6 +91,11 @@ export class SalarySlip extends BaseSchema {
   @Prop()
   unpaidLeaveCount: number;
 
+  @Prop()
+  workingDays: number;
+
+  @Prop()
+  taxableIncome: number;
 }
 
 export const SalarySlipSchema = SchemaFactory.createForClass(SalarySlip);
