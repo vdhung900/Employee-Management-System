@@ -61,6 +61,7 @@ const { Title, Text, Paragraph } = Typography;
 const ApproveRequest = () => {
     const [searchText, setSearchText] = useState('');
     const [requests, setRequests] = useState([]);
+    const [originalRequests, setOriginalRequests] = useState([]);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -107,6 +108,9 @@ const ApproveRequest = () => {
             body.status = status;
             const response = await RequestService.getByFilterCode(body);
             if(response.success){
+                if(status === null){
+                    setOriginalRequests(response.data.content);
+                }
                 setRequests(response.data.content || []);
                 setPagination(prev => ({
                     ...prev,
@@ -527,9 +531,9 @@ const ApproveRequest = () => {
         }
     ];
 
-    const pendingRequests = requests.filter((r) => r.status === 'Pending').length;
-    const approvedRequests = requests.filter((r) => r.status === 'Approved').length;
-    const rejectedRequests = requests.filter((r) => r.status === 'Rejected').length;
+    const pendingRequests = originalRequests.filter((r) => r.status === 'Pending').length;
+    const approvedRequests = originalRequests.filter((r) => r.status === 'Approved').length;
+    const rejectedRequests = originalRequests.filter((r) => r.status === 'Rejected').length;
 
     return (
         <div style={{ padding: 24 }}>
@@ -551,11 +555,11 @@ const ApproveRequest = () => {
                                 HR/Manager phê duyệt các yêu cầu của nhân viên
                             </Text>
                         </Space>
-                        <Space size={12}>
-                            <Button type="primary" icon={<DownloadOutlined />}>
-                                Xuất báo cáo
-                            </Button>
-                        </Space>
+                        {/*<Space size={12}>*/}
+                        {/*    <Button type="primary" icon={<DownloadOutlined />}>*/}
+                        {/*        Xuất báo cáo*/}
+                        {/*    </Button>*/}
+                        {/*</Space>*/}
                     </div>
                 </Col>
 
@@ -573,7 +577,7 @@ const ApproveRequest = () => {
                                 valueStyle={{ color: '#1890ff', fontSize: 28 }}
                             />
                             <Progress
-                                percent={requests.length ? Math.round((pendingRequests / requests.length) * 100) : 0}
+                                percent={requests.length ? Math.round((pendingRequests / originalRequests.length) * 100) : 0}
                                 strokeColor="#1890ff"
                                 size="small"
                                 style={{ marginTop: 16 }}
@@ -596,7 +600,7 @@ const ApproveRequest = () => {
                                 valueStyle={{ color: '#52c41a', fontSize: 28 }}
                             />
                             <Progress
-                                percent={requests.length ? Math.round((approvedRequests / requests.length) * 100) : 0}
+                                percent={requests.length ? Math.round((approvedRequests / originalRequests.length) * 100) : 0}
                                 strokeColor="#52c41a"
                                 size="small"
                                 style={{ marginTop: 16 }}
@@ -619,7 +623,7 @@ const ApproveRequest = () => {
                                 valueStyle={{ color: '#ff4d4f', fontSize: 28 }}
                             />
                             <Progress
-                                percent={requests.length ? Math.round((rejectedRequests / requests.length) * 100) : 0}
+                                percent={requests.length ? Math.round((rejectedRequests / originalRequests.length) * 100) : 0}
                                 strokeColor="#ff4d4f"
                                 size="small"
                                 style={{ marginTop: 16 }}

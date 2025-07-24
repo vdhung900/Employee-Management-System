@@ -6,7 +6,7 @@ function NotificationListener({ employeeId, onNewNotification }) {
   useEffect(() => {
     if (!employeeId) return;
 
-    const socket = io('https://ems-api.api-score.com/notification', {
+    const socket = io('http://127.0.0.1:9123', {
       query: { employeeId },
       transports: ['websocket'],
     });

@@ -138,8 +138,8 @@ const TeamManagement = () => {
     ];
 
     return (
-    <div style={{ padding: 24, minHeight: "100vh", background: "linear-gradient(135deg, #e0e7ff 0%, #f0f7fa 100%)" }}>
-      <Title level={2} style={{ textAlign: "center", color: "#1976d2", marginBottom: 32, letterSpacing: 1 }}>
+    <div style={{ padding: 24, minHeight: "100vh" }}>
+      <Title level={2} style={{ textAlign: "left", color: "#1976d2", marginBottom: 32, letterSpacing: 1 }}>
         <UserAddOutlined style={{ marginRight: 12, color: '#1976d2' }} />
         Quản lý đội nhóm phòng ban {departmentName}
             </Title>
