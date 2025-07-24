@@ -230,12 +230,12 @@ const MainLayout = () => {
             label: "Yêu cầu tài khoản",
             permission: "VIEW_ACCOUNT_REQUEST",
         },
-        {
-            key: "/admin/setting",
-            icon: <BulbOutlined/>,
-            label: "Cài đặt hệ thống",
-            permission: "VIEW_SETTING",
-        },
+        // {
+        //     key: "/admin/setting",
+        //     icon: <BulbOutlined/>,
+        //     label: "Cài đặt hệ thống",
+        //     permission: "VIEW_SETTING",
+        // },
         {
             key: "/admin/category",
             icon: <TeamOutlined/>,
