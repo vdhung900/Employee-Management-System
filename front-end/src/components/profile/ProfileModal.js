@@ -250,7 +250,10 @@ const ProfileModal = ({ visible, onCancel, onSave }) => {
               <Form.Item
                 name="phone"
                 label={<span style={{ color: '#595959' }}><PhoneOutlined style={{ marginRight: 8, color: '#1890ff' }} />Số điện thoại</span>}
-                rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
+                rules={[
+                    { required: true, message: 'Vui lòng nhập số điện thoại!' },
+                  { pattern: /^[0-9]{10}$/, message: 'Số điện thoại không hợp lệ!' }
+                ]}
               >
                 <Input placeholder="Nhập số điện thoại" size="large" />
               </Form.Item>
