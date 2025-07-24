@@ -115,9 +115,9 @@ export class BaseRequestService {
             data.timeResolve = 1;
             await data.save();
         }
-        else if (data.timeResolve > 0){
-            throw new Error('Request is already resolved');
-        }
+        // else if (data.timeResolve > 0){
+        //     throw new Error('Request is already resolved');
+        // }
     }
 
     async sendNotification(data: CreateRequestDto, message: string){
