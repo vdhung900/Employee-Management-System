@@ -705,27 +705,27 @@ const EmployeeDashboard = () => {
         </Col>
 
         {/* Notifications */}
-        <Col xs={24} lg={12}>
-          <ThreeDCard
-            title="Lịch trình hôm nay"
-            extra={<BellOutlined style={{ color: "#1890ff" }} />}
-            className="card-blue-theme"
-          >
-            <Timeline
-              mode="left"
-              items={notifications.map((item) => ({
-                color: item.color,
-                label: item.time,
-                children: item.content,
-              }))}
-            />
-            <div style={{ textAlign: "center", marginTop: "20px" }}>
-              <ThreeDButton type="primary" icon={<TeamOutlined />} className="btn-blue-theme">
-                Xem lịch phòng ban
-              </ThreeDButton>
-            </div>
-          </ThreeDCard>
-        </Col>
+        {/*<Col xs={24} lg={12}>*/}
+        {/*  <ThreeDCard*/}
+        {/*    title="Lịch trình hôm nay"*/}
+        {/*    extra={<BellOutlined style={{ color: "#1890ff" }} />}*/}
+        {/*    className="card-blue-theme"*/}
+        {/*  >*/}
+        {/*    <Timeline*/}
+        {/*      mode="left"*/}
+        {/*      items={notifications.map((item) => ({*/}
+        {/*        color: item.color,*/}
+        {/*        label: item.time,*/}
+        {/*        children: item.content,*/}
+        {/*      }))}*/}
+        {/*    />*/}
+        {/*    <div style={{ textAlign: "center", marginTop: "20px" }}>*/}
+        {/*      <ThreeDButton type="primary" icon={<TeamOutlined />} className="btn-blue-theme">*/}
+        {/*        Xem lịch phòng ban*/}
+        {/*      </ThreeDButton>*/}
+        {/*    </div>*/}
+        {/*  </ThreeDCard>*/}
+        {/*</Col>*/}
       </Row>
 
       {/* Attendance History Modal */}

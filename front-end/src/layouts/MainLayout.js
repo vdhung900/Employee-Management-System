@@ -391,17 +391,46 @@ const MainLayout = () => {
     };
 
     const getPageTitle = () => {
-        if (location.pathname.includes("/dashboard")) return "Dashboard";
-        if (location.pathname.includes("/profile")) return "Thông tin cá nhân";
-        if (location.pathname.includes("/attendance")) return "Chấm công";
-        if (location.pathname.includes("/schedule")) return "My Schedule";
-        if (location.pathname.includes("/overtime")) return "Làm thêm giờ";
-        if (location.pathname.includes("/leave-request")) return "Leave Requests";
-        if (location.pathname.includes("/notifications")) return "Thông báo";
-        if (location.pathname.includes("/chat")) return "Internal Chat";
-        if (location.pathname.includes("/payroll")) return "My Payroll";
-        if (location.pathname.includes("/help")) return "Help Center";
-        if (location.pathname.includes("/admin-account")) return "Thông tin tài khoản";
+        const path = location.pathname;
+
+        // Dashboard
+        if (path.includes("/dashboard")) return "Dashboard";
+
+        // --- Admin ---
+        if (path.includes("/admin/request-manage")) return "Thống kê requests";
+        if (path.includes("/admin/account-request")) return "Yêu cầu tài khoản";
+        if (path.includes("/admin/category")) return "Danh mục";
+        if (path.includes("/admin/admin-account")) return "Quản lý tài khoản";
+        if (path.includes("/admin/roles")) return "Quản lý vai trò";
+        if (path.includes("/admin/permissions")) return "Quản lý quyền hạn";
+        if (path.includes("/admin/setting")) return "Cài đặt hệ thống";
+
+        // --- Employee ---
+        if (path.includes("/employee/approve-request")) return "Phê duyệt yêu cầu";
+        if (path.includes("/employee/requests")) return "Yêu cầu";
+        if (path.includes("/employee/payroll")) return "Bảng lương";
+        if (path.includes("/employee/reports")) return "Báo cáo";
+        if (path.includes("/employee/staff-management")) return "Quản lý nhân viên";
+        if (path.includes("/employee/team-management")) return "Quản lý nhóm";
+        if (path.includes("/employee/team-performance")) return "Hiệu suất nhóm";
+        if (path.includes("/employee/help")) return "Trợ giúp";
+        if (path.includes("/employee/benefits")) return "Benefits";
+        if (path.includes("/employee/review")) return "Đánh giá";
+        if (path.includes("/employee/documents")) return "Quản lý tài liệu";
+        if (path.includes("/employee/salary-coefficient")) return "Hệ số lương";
+        if (path.includes("/employee/manager-statistics")) return "Thống kê nhân viên";
+        if (path.includes("/employee/leave-balance")) return "Quỹ ngày nghỉ";
+
+        // --- Common ---
+        if (path.includes("/profile")) return "Thông tin cá nhân";
+        if (path.includes("/attendance")) return "Chấm công";
+        if (path.includes("/schedule")) return "My Schedule";
+        if (path.includes("/overtime")) return "Làm thêm giờ";
+        if (path.includes("/leave-request")) return "Leave Requests";
+        if (path.includes("/notifications")) return "Thông báo";
+        if (path.includes("/chat")) return "Internal Chat";
+        if (path.includes("/admin-account")) return "Thông tin tài khoản";
+
         return "";
     };
 

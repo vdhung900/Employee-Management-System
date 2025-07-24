@@ -79,7 +79,7 @@ export class AppModule implements NestModule {
         { path: "auth/login", method: RequestMethod.POST },
         { path: "auth/register", method: RequestMethod.POST },
         { path: "api", method: RequestMethod.GET },
-        { path: "auth/reset", method: RequestMethod.GET }
+        // { path: "auth/reset", method: RequestMethod.GET }
         // { path: 'hr-request/create', method: RequestMethod.POST },
         // { path: 'request-manage/all-logs', method: RequestMethod.POST },
         // { path: 'admin-accounts', method: RequestMethod.POST },

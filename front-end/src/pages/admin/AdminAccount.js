@@ -258,7 +258,6 @@ const AdminAccount = () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      // Prepare data for update
       const accountData = {};
       if (values.status !== userToEdit.status) accountData.status = values.status;
       if (values.role !== userToEdit.role.name) accountData.role = values.role;
@@ -266,13 +265,10 @@ const AdminAccount = () => {
       if (values.email !== userToEdit.employeeId.email) accountData.email = values.email;
       if (values.phone !== userToEdit.employeeId.phone) accountData.phone = values.phone;
       if (values.dob && values.dob !== userToEdit.employeeId.dob) {
-        // Nếu là moment object thì chuyển về ISO string
         accountData.dob = values.dob ? moment(values.dob).format('YYYY-MM-DD') : null;
       }
       if (values.gender !== userToEdit.employeeId.gender) accountData.gender = values.gender;
       if (values.address !== userToEdit.employeeId.address) accountData.address = values.address;
-      // if (values.avatar !== userToEdit.employeeId.avatar) accountData.avatar = values.avatar;
-      // Call API to update account
       const response = await Admin_account.updateAccount(userToEdit._id, accountData);
       if (response.success) {
         message.success('Đã cập nhật người dùng thành công!');
@@ -592,6 +588,9 @@ const AdminAccount = () => {
               <Form.Item
                 name="fullName"
                 label="Họ và tên"
+                rules={[
+                    {required: true, message: 'Vui lòng nhập họ và tên!'}
+                ]}
               >
                 <Input prefix={<UserOutlined />} placeholder="Nhập họ và tên" />
               </Form.Item>
