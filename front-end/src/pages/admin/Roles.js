@@ -136,37 +136,12 @@ const Roles = () => {
                 <Space size="small">
                     <Button
                         type="text"
-                        icon={<EditOutlined/>}
-                        onClick={() => handleEdit(record)}
-                        style={{borderRadius: '8px'}}
-                    >
-                        Sửa
-                    </Button>
-                    <Button
-                        type="text"
                         icon={<SafetyOutlined/>}
                         onClick={() => handleOpenPermissionModal(record)}
                         style={{borderRadius: '8px', color: '#52c41a'}}
                     >
                         Phân quyền
                     </Button>
-                    <Popconfirm
-                        title="Bạn có chắc chắn muốn xóa vai trò này?"
-                        onConfirm={() => handleDelete(record.id)}
-                        okText="Xóa"
-                        cancelText="Hủy"
-                        disabled={record.system}
-                    >
-                        <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined/>}
-                            disabled={record.system}
-                            style={{borderRadius: '8px'}}
-                        >
-                            Xóa
-                        </Button>
-                    </Popconfirm>
                 </Space>
             ),
         },

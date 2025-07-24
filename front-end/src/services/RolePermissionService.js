@@ -36,9 +36,9 @@ const RolePermissionService = {
             throw handleApiError(e);
         }
     },
-    async updatePermission(body){
+    async updatePermission(id, body){
         try{
-            return await fetchWithAuth('/role-permission/permission', 'PUT', body);
+            return await fetchWithAuth(`/role-permission/permission/${id}`, 'PUT', body);
         }catch (e) {
             throw handleApiError(e);
         }
