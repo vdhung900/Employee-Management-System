@@ -71,6 +71,13 @@ const SalaryCoefficient = () => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
+      
+      // Validate hệ số lương
+      if (values.salary_coefficient < 2 || values.salary_coefficient > 8) {
+        message.error('Hệ số lương phải nằm trong khoảng từ 2.0 đến 8.0');
+        return;
+      }
+
       if (editData) {
         await SalaryCoefficientService.update(editData._id, values);
         message.success('Cập nhật thành công');
@@ -219,13 +226,18 @@ const SalaryCoefficient = () => {
                 Hệ số lương
               </span>
             }
-            rules={[{ required: true, message: 'Vui lòng nhập hệ số lương' }]}
+            rules={[
+              { required: true, message: 'Vui lòng nhập hệ số lương' },
+              { type: 'number', min: 2, message: 'Hệ số lương không được nhỏ hơn 2.0' },
+              { type: 'number', max: 8, message: 'Hệ số lương không được lớn hơn 8.0' }
+            ]}
           >
             <InputNumber 
-              min={0} 
-              step={0.01} 
+              min={2} 
+              max={8}
+              step={0.1} 
               style={{ width: '100%', height: 36, borderRadius: 6 }} 
-              placeholder="Nhập hệ số lương"
+              placeholder="Nhập hệ số lương (2.0 - 8.0)"
             />
           </Form.Item>
         </Form>
