@@ -652,21 +652,21 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             );
                         }}
                     </Form.Item>
-                    <Row gutter={16}>
-                        <Col span={24}>
-                            <Form.Item
-                                name={['dataReq', 'effectiveDate']}
-                                label="Ngày hiệu lực"
-                            >
-                                <DatePicker
-                                    style={{width: '100%'}}
-                                    format="DD/MM/YYYY"
-                                    placeholder="Chọn ngày hiệu lực"
-                                    disabled
-                                />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                    {/*<Row gutter={16}>*/}
+                    {/*    <Col span={24}>*/}
+                    {/*        <Form.Item*/}
+                    {/*            name={['dataReq', 'effectiveDate']}*/}
+                    {/*            label="Ngày hiệu lực"*/}
+                    {/*        >*/}
+                    {/*            <DatePicker*/}
+                    {/*                style={{width: '100%'}}*/}
+                    {/*                format="DD/MM/YYYY"*/}
+                    {/*                placeholder="Chọn ngày hiệu lực"*/}
+                    {/*                disabled*/}
+                    {/*            />*/}
+                    {/*        </Form.Item>*/}
+                    {/*    </Col>*/}
+                    {/*</Row>*/}
                     <Form.Item
                         name={['dataReq', 'reason']}
                         label="Lý do đề xuất"

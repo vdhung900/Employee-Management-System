@@ -34,6 +34,7 @@ import ThreeDContainer from "../../components/3d/ThreeDContainer";
 import AttendanceHistoryModal from "../../components/attendance/AttendanceHistoryModal";
 import { getCurrentUser } from "../../utils/auth";
 import AttendanceService from "../../services/AttendanceService";
+import AttendanceTable from "../../components/attendance/AttendanceTable";
 
 const { Title, Text } = Typography;
 
@@ -92,15 +93,15 @@ const EmployeeDashboard = () => {
       // endOfWeek.setDate(startOfWeek.getDate() + 6); // Thứ 7
 
       //Not Saturday & Sunday
-      const weeklyAttendance = [];
-      for (let i = 1; i < 6; i++) {
+      const weeklyAttendance_ = [];
+      for (let i = 0; i < 7; i++) {
         const tmpDate = new Date();
         tmpDate.setDate(startOfWeek.getDate() + i);
         const tmpDateString = tmpDate.toISOString();
 
         const record = attendances.find((a) => a.date.slice(0, 10) === tmpDateString.slice(0, 10));
 
-        weeklyAttendance.push(
+        weeklyAttendance_.push(
           record
             ? record
             : {
@@ -109,7 +110,7 @@ const EmployeeDashboard = () => {
         );
       }
 
-      setWeeklyAttendance(weeklyAttendance);
+      setWeeklyAttendance(weeklyAttendance_);
     } catch (error) {
       console.log("Không thể tải dữ liệu tuần hiện tại");
     }
@@ -550,7 +551,13 @@ const EmployeeDashboard = () => {
             className="card-blue-theme"
           >
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <AttendanceTable
+                loading={false}
+                attendanceData={weeklyAttendance}
+                showPagination={false}
+                showNoteColumn={false}
+              />
+              {/* <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr>
                     <th
@@ -692,33 +699,33 @@ const EmployeeDashboard = () => {
                     </tr>
                   )}
                 </tbody>
-              </table>
+              </table> */}
             </div>
           </ThreeDCard>
         </Col>
 
         {/* Notifications */}
-        <Col xs={24} lg={12}>
-          <ThreeDCard
-            title="Lịch trình hôm nay"
-            extra={<BellOutlined style={{ color: "#1890ff" }} />}
-            className="card-blue-theme"
-          >
-            <Timeline
-              mode="left"
-              items={notifications.map((item) => ({
-                color: item.color,
-                label: item.time,
-                children: item.content,
-              }))}
-            />
-            <div style={{ textAlign: "center", marginTop: "20px" }}>
-              <ThreeDButton type="primary" icon={<TeamOutlined />} className="btn-blue-theme">
-                Xem lịch phòng ban
-              </ThreeDButton>
-            </div>
-          </ThreeDCard>
-        </Col>
+        {/*<Col xs={24} lg={12}>*/}
+        {/*  <ThreeDCard*/}
+        {/*    title="Lịch trình hôm nay"*/}
+        {/*    extra={<BellOutlined style={{ color: "#1890ff" }} />}*/}
+        {/*    className="card-blue-theme"*/}
+        {/*  >*/}
+        {/*    <Timeline*/}
+        {/*      mode="left"*/}
+        {/*      items={notifications.map((item) => ({*/}
+        {/*        color: item.color,*/}
+        {/*        label: item.time,*/}
+        {/*        children: item.content,*/}
+        {/*      }))}*/}
+        {/*    />*/}
+        {/*    <div style={{ textAlign: "center", marginTop: "20px" }}>*/}
+        {/*      <ThreeDButton type="primary" icon={<TeamOutlined />} className="btn-blue-theme">*/}
+        {/*        Xem lịch phòng ban*/}
+        {/*      </ThreeDButton>*/}
+        {/*    </div>*/}
+        {/*  </ThreeDCard>*/}
+        {/*</Col>*/}
       </Row>
 
       {/* Attendance History Modal */}

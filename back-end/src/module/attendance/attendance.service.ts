@@ -165,8 +165,8 @@ export class AttendanceRecordService {
       .exec();
   }
 
-  async getWeeklyAttendance(employeeId: string, weekStart?: Date) {
-    const startOfWeek = weekStart || new Date();
+  async getWeeklyAttendance(employeeId: string, weekDate?: Date) {
+    const startOfWeek = weekDate || new Date();
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Chủ nhật
     startOfWeek.setHours(0, 0, 0, 0);
 

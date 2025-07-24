@@ -247,7 +247,7 @@ const Login = () => {
                                 value={formData.username}
                                 onChange={(e) => setFormData({...formData, username: e.target.value})}
                                 prefix={<UserOutlined style={{color: "#1976d2"}}/>}
-                                placeholder="Tên đăng nhập (admin hoặc employee)"
+                                placeholder="Tên đăng nhập"
                                 className="neumorphic-input"
                                 style={{
                                     borderRadius: "8px",
@@ -269,7 +269,7 @@ const Login = () => {
                                 value={formData.password}
                                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                                 prefix={<LockOutlined style={{color: "#1976d2"}}/>}
-                                placeholder="Mật khẩu (1)"
+                                placeholder="Mật khẩu"
                                 className="neumorphic-input"
                                 style={{
                                     borderRadius: "8px",
