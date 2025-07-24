@@ -3,6 +3,7 @@ import { BaseSchema } from "./base.schema";
 import { Types } from "mongoose";
 import { Employees } from "./employees.schema";
 import { typeRequest } from "./typeRequestCategory.schema";
+import { STATUS } from "src/enum/status.enum";
 
 export type AttendanceRecordsDocument = AttendanceRecords & Document;
 
@@ -27,8 +28,20 @@ export class AttendanceRecords extends BaseSchema {
   totalWorkingHours: number;
 
   @Prop({
-    enum: ["Chưa checkout", "Vắng mặt", "Đi muộn", "Về sớm", "Đúng giờ"],
-    default: "Vắng mặt",
+    enum: [
+      STATUS.PRESENT,
+      STATUS.LEAVE,
+      STATUS.NGHI_THAI_SAN,
+      STATUS.NGHI_KHONG_LUONG,
+      STATUS.NGHI_VO_SINH,
+      STATUS.NGHI_CUOI,
+      STATUS.NGHI_LAM_TU_XA,
+      STATUS.NGHI_OM,
+      STATUS.LATE,
+      STATUS.VE_SOM,
+      STATUS.OVERTIME,
+    ],
+    default: STATUS.LEAVE,
   })
   status: string;
 

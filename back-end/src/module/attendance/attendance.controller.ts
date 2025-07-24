@@ -17,6 +17,7 @@ import { SearchAttendanceDto } from "./dto/search-attendance.dto";
 import { BaseResponse } from "src/interfaces/response/base.response";
 import { InjectModel } from "@nestjs/mongoose";
 import { EmployeesDocument } from "src/schemas/employees.schema";
+import { STATUS } from "src/enum/status.enum";
 
 @Controller("attendance")
 export class AttendanceController {
@@ -43,12 +44,6 @@ export class AttendanceController {
       createAttendanceDto.date = now; // Set the current date
       createAttendanceDto.firstCheckIn = now; // Set the check-in time to now
 
-      const time_8h30 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 30, 0);
-      const isLate = createAttendanceDto.firstCheckIn > time_8h30;
-      createAttendanceDto.isLate = isLate;
-      createAttendanceDto.status = isLate ? "Đi muộn" : "Chưa checkout";
-      createAttendanceDto.isPenalty = isLate;
-
       // Create a new attendance record
       const savedRecord = await this.attendanceRecordService.create(createAttendanceDto);
       return BaseResponse.success(savedRecord, "Attendance record created successfully", 201);
@@ -73,16 +68,24 @@ export class AttendanceController {
         throw new BadRequestException("No attendance record found for this person today.");
       }
 
+      //Mặc định khi checkin, tạo Record là LEAVE
+      if (existingRecord.status !== STATUS.LEAVE) {
+        throw new BadRequestException("Không thể checkout");
+      }
+
       //Attach data to the DTO and update the existing record
       const now = new Date();
-      updateDto.lastCheckOut = now; // Set the check-out time to now
+      const time_8h30 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 30, 0);
       const time_17h30 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 30, 0);
-      const goHomeEarly = now < time_17h30;
-      updateDto.isPenalty = goHomeEarly; //Go home early
-
-      if (!existingRecord.isLate) {
-        updateDto.status = goHomeEarly ? "Về sớm" : "Đúng giờ";
+      if (existingRecord.firstCheckIn > time_8h30) {
+        updateDto.status = STATUS.LATE;
+      } else if (now < time_17h30) {
+        updateDto.status = STATUS.VE_SOM;
+      } else {
+        updateDto.status = STATUS.PRESENT;
       }
+
+      updateDto.lastCheckOut = now; // Set the check-out time to now
 
       if (updateDto.lastCheckOut)
         updateDto.totalWorkingHours = Math.abs(
@@ -134,10 +137,10 @@ export class AttendanceController {
   @Get("weekly")
   async getWeeklyAttendance(
     @Req() req: any,
-    @Query("weekStart") weekStart?: string
+    @Query("week_date") weekDate?: string
   ): Promise<BaseResponse> {
     try {
-      const weekStartDate = weekStart ? new Date(weekStart) : undefined;
+      const weekStartDate = weekDate ? new Date(weekDate) : undefined;
       const result = await this.attendanceRecordService.getWeeklyAttendance(
         req?.user?.employeeId,
         weekStartDate

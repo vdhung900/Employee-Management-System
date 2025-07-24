@@ -30,3 +30,4 @@ src/config.js
 front-end/src/config.js
 
 docker-compose.yml
+front-end/src/services/APIConfig.js
