@@ -117,21 +117,21 @@ const Permission = () => {
                     >
                         Sửa
                     </Button>
-                    <Popconfirm
-                        title="Bạn có chắc chắn muốn xóa quyền này?"
-                        onConfirm={() => handleDelete(record.id)}
-                        okText="Xóa"
-                        cancelText="Hủy"
-                    >
-                        <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            style={{ borderRadius: '8px' }}
-                        >
-                            Xóa
-                        </Button>
-                    </Popconfirm>
+                    {/*<Popconfirm*/}
+                    {/*    title="Bạn có chắc chắn muốn xóa quyền này?"*/}
+                    {/*    onConfirm={() => handleDelete(record.id)}*/}
+                    {/*    okText="Xóa"*/}
+                    {/*    cancelText="Hủy"*/}
+                    {/*>*/}
+                    {/*    <Button*/}
+                    {/*        type="text"*/}
+                    {/*        danger*/}
+                    {/*        icon={<DeleteOutlined />}*/}
+                    {/*        style={{ borderRadius: '8px' }}*/}
+                    {/*    >*/}
+                    {/*        Xóa*/}
+                    {/*    </Button>*/}
+                    {/*</Popconfirm>*/}
                 </Space>
             ),
         },
@@ -145,9 +145,11 @@ const Permission = () => {
 
     const handleEdit = (permission) => {
         setEditingPermission(permission);
+        console.log(permission);
         form.setFieldsValue({
             name: permission.name,
             code: permission.code,
+            path: permission.path,
             description: permission.description,
         });
         setVisible(true);
@@ -164,7 +166,18 @@ const Permission = () => {
             const values = await form.validateFields();
             setLoading(true);
             if (editingPermission) {
-                message.success('Cập nhật quyền hạn thành công!');
+                const body = {
+                    name: values.name,
+                    code: values.code,
+                    path: values.path,
+                    description: values.description,
+                };
+                const response = await RolePermissionService.updatePermission(editingPermission._id, body);
+                if(response.success){
+                    message.success('Cập nhật quyền hạn thành công!');
+                }else{
+                    message.error(response.message || 'Thêm quyền hạn thất bại!');
+                }
             } else {
                 const newPermission = {
                     name: values.name,
@@ -184,7 +197,7 @@ const Permission = () => {
             message.error(error.message || 'Thêm quyền hạn thất bại!');
         } finally {
             setLoading(false);
-            loadData();
+            loadData(pagination.current, pagination.pageSize);
         }
     };
 
