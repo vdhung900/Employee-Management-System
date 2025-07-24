@@ -350,7 +350,7 @@ const EmployeeDashboard = () => {
         </Col>
 
         {/* Stats Cards */}
-        {stats.map((stat, index) => (
+        {/* {stats.map((stat, index) => (
           <Col key={index} xs={24} sm={12} lg={6}>
             <ThreeDStatCard
               title={stat.title}
@@ -361,7 +361,7 @@ const EmployeeDashboard = () => {
               style={{ borderTop: `3px solid ${stat.color}` }}
             />
           </Col>
-        ))}
+        ))} */}
 
         {/* Check-in Card */}
         <Col xs={24} lg={8}>

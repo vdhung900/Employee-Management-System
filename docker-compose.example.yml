@@ -19,7 +19,8 @@ services:
       EMAIL_FROM:
       MINIO_ENDPOINT: 
       MINIO_USERNAME: 
-      MINIO_PASSWORD: 
+      MINIO_PASSWORD:
+      ENCRYPTION_KEY: dahwuidh12i*&d(*!&d1huiawd
       NODE_ENV: 
       TZ: Asia/Ho_Chi_Minh
     ports:

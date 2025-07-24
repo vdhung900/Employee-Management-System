@@ -41,7 +41,7 @@ import {
     TagOutlined,
     StarOutlined,
     DollarOutlined,
-    HistoryOutlined,
+    HistoryOutlined, FilePdfOutlined,
 } from '@ant-design/icons';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
@@ -51,6 +51,10 @@ import { STATUS } from '../../constants/Status';
 import Hr_ManageEmployee from "../../services/Hr_ManageEmployee";
 import { renderRequestDetailByType } from '../../utils/render';
 import {useLoading} from "../../contexts/LoadingContext";
+import FileService from "../../services/FileService";
+import SalaryService from "../../services/SalaryService";
+import dayjs from "dayjs";
+import SignatureCanvas from 'react-signature-canvas';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -72,6 +76,14 @@ const ApproveRequest = () => {
     const [employeeStats, setEmployeeStats] = useState(null);
     const [selectedRequestForStats, setSelectedRequestForStats] = useState(null);
     const {showLoading, hideLoading} = useLoading();
+    const [previewVisible, setPreviewVisible] = useState(false);
+    const [previewFile, setPreviewFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState('');
+    const [showSignModal, setShowSignModal] = useState(false);
+    const [signing, setSigning] = useState(false);
+    const [signType, setSignType] = useState('draw'); // 'draw' | 'image'
+    const [signaturePad, setSignaturePad] = useState(null);
+    const [selectedRecord, setSelectedRecord] = useState(null);
 
     useEffect(() => {
         try{
@@ -84,7 +96,7 @@ const ApproveRequest = () => {
         }
     }, []);
 
-    const loadRequests = async (page = 1, size = 10) => {
+    const loadRequests = async (page = 1, size = 10, status = null) => {
         setLoading(true);
         try{
             const employee = JSON.parse(localStorage.getItem('employee'));
@@ -92,6 +104,7 @@ const ApproveRequest = () => {
             body.departmentId = employee?.departmentId?._id;
             body.page = page;
             body.limit = size;
+            body.status = status;
             const response = await RequestService.getByFilterCode(body);
             if(response.success){
                 setRequests(response.data.content || []);
@@ -119,6 +132,32 @@ const ApproveRequest = () => {
             }
         } catch (e) {
             message.error(e.message);
+        }
+    };
+
+    const handleClickStatus = (status) => {
+        loadRequests(pagination.current, pagination.pageSize, status)
+    }
+
+    const handlePreviewDoc = async (doc) => {
+        try {
+            showLoading()
+            console.log(doc)
+            const key = encodeURIComponent(doc.key);
+            const blob = await FileService.getFile(key);
+            if (blob) {
+                const url = window.URL.createObjectURL(blob);
+                setPreviewFile(doc);
+                setPreviewUrl(url);
+                setPreviewVisible(true);
+            } else {
+                message.error('Không thể xem trước file');
+            }
+        } catch (e) {
+            message.error('Không thể xem trước file');
+        }
+        finally {
+            hideLoading()
         }
     };
 
@@ -247,6 +286,57 @@ const ApproveRequest = () => {
         setSelectedRequest(null);
     };
 
+    const handleSignModalOk = async () => {
+        showLoading()
+        if (!signaturePad || signaturePad.isEmpty()) {
+            message.warning("Vui lòng ký vào ô ký số!");
+            return;
+        }
+        setSigning(true);
+        try {
+            const signatureDataUrl = signaturePad.getTrimmedCanvas().toDataURL("image/png");
+            const signatureBase64 = signatureDataUrl.split(",")[1];
+            if(selectedRecord){
+                const payload = {
+                    requestId: selectedRecord._id,
+                    signatureImage: signatureBase64,
+                    status: STATUS.APPROVED
+                }
+                const response = await SalaryService.signSalaryPdfByManage(payload)
+                if(response){
+                    message.success(response.message);
+                }else{
+                    message.error(response.message);
+                }
+            }
+        } catch (e) {
+            message.error(e.message)
+        } finally {
+            loadRequests(pagination.current, pagination.pageSize)
+            setShowSignModal(false);
+            setSignaturePad(signaturePad.clear())
+            setSigning(false);
+            setSelectedRecord(null);
+            hideLoading()
+        }
+    };
+
+    const handleCancel = async () => {
+        setSignaturePad(signaturePad.clear())
+        setSigning(false);
+        setSelectedRecord(null);
+        setShowSignModal(false);
+    }
+
+    const handleSign = async (record) => {
+        try{
+            setSelectedRecord(record);
+            setShowSignModal(true);
+        }catch (e) {
+            message.error(e.message)
+        }
+    }
+
     const handleApprove = async (request, status) => {
         Modal.confirm({
             title: status === 'Approved' ? 'Xác nhận phê duyệt' : 'Xác nhận từ chối',
@@ -349,44 +439,92 @@ const ApproveRequest = () => {
             onFilter: (value, record) => record.status === value,
         },
         {
-            title: 'Thao tác',
-            key: 'action',
-            render: (_, record) => (
-                <Space size="small">
-                    <Tooltip title="Xem chi tiết">
-                        <Button type="text" icon={<EyeOutlined />} onClick={() => showDrawer(record)} />
-                    </Tooltip>
-                    {record.typeRequest?.code === STATUS.SALARY_INCREASE && record.status === STATUS.PENDING ? (
-                        <Tooltip title="Thống kê nhân viên">
+            title: "Thao tác",
+            key: "action",
+            render: (_, record) => {
+                const isSalaryApprovedPending =
+                    record.typeRequest?.code === STATUS.SALARY_APPROVED &&
+                    record.status === STATUS.PENDING;
+                const isSalaryApproved =
+                    record.typeRequest?.code === STATUS.SALARY_APPROVED;
+
+                return (
+                    <Space size="small">
+                        {/* Xem chi tiết */}
+                        <Tooltip title="Xem chi tiết">
                             <Button
-                                type="primary"
-                                icon={<RiseOutlined />}
-                                onClick={() => analyzeEmployee(record.dataReq.employeeId, record)}
+                                type="text"
+                                icon={<EyeOutlined />}
+                                onClick={() => showDrawer(record)}
                             />
                         </Tooltip>
-                    ) : (
-                        record.status === STATUS.PENDING && (
+
+                        {record.typeRequest?.code === STATUS.SALARY_INCREASE &&
+                        record.status === STATUS.PENDING ? (
+                            <Tooltip title="Thống kê nhân viên">
+                                <Button
+                                    type="primary"
+                                    icon={<RiseOutlined />}
+                                    onClick={() =>
+                                        analyzeEmployee(record.dataReq.employeeId, record)
+                                    }
+                                />
+                            </Tooltip>
+                        ) : (
                             <>
-                                <Tooltip title="Phê duyệt">
-                                    <Button
-                                        type="text"
-                                        icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                                        onClick={() => handleApprove(record, STATUS.APPROVED)}
-                                    />
-                                </Tooltip>
-                                <Tooltip title="Từ chối">
-                                    <Button
-                                        type="text"
-                                        icon={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
-                                        onClick={() => handleApprove(record, STATUS.REJECTED)}
-                                    />
-                                </Tooltip>
+                                {isSalaryApproved && (
+                                    <Tooltip title="Xem bảng lương PDF">
+                                        <Button
+                                            type="text"
+                                            icon={<FilePdfOutlined style={{ color: "#fa541c" }} />}
+                                            onClick={() => handlePreviewDoc(record.attachments[0])}
+                                        />
+                                    </Tooltip>
+                                )}
+
+                                {isSalaryApprovedPending ? (
+                                    <>
+                                        <Tooltip title="Duyệt và Ký">
+                                            <Button
+                                                type="text"
+                                                icon={<CheckCircleOutlined style={{ color: "#1890ff" }} />}
+                                                onClick={() => handleSign(record)}
+                                            />
+                                        </Tooltip>
+                                        <Tooltip title="Từ chối">
+                                            <Button
+                                                type="text"
+                                                icon={<CloseCircleOutlined style={{ color: "#ff4d4f" }} />}
+                                                onClick={() => handleApprove(record, STATUS.REJECTED)}
+                                            />
+                                        </Tooltip>
+                                    </>
+                                ) : (
+                                    record.status === STATUS.PENDING && (
+                                        <>
+                                            <Tooltip title="Phê duyệt">
+                                                <Button
+                                                    type="text"
+                                                    icon={<CheckCircleOutlined style={{ color: "#52c41a" }} />}
+                                                    onClick={() => handleApprove(record, STATUS.APPROVED)}
+                                                />
+                                            </Tooltip>
+                                            <Tooltip title="Từ chối">
+                                                <Button
+                                                    type="text"
+                                                    icon={<CloseCircleOutlined style={{ color: "#ff4d4f" }} />}
+                                                    onClick={() => handleApprove(record, STATUS.REJECTED)}
+                                                />
+                                            </Tooltip>
+                                        </>
+                                    )
+                                )}
                             </>
-                        )
-                    )}
-                </Space>
-            ),
-        },
+                        )}
+                    </Space>
+                );
+            },
+        }
     ];
 
     const pendingRequests = requests.filter((r) => r.status === 'Pending').length;
@@ -423,7 +561,7 @@ const ApproveRequest = () => {
 
                 <Col xs={24} sm={12} lg={8}>
                     <ThreeDContainer>
-                        <Card bordered={false} style={{ borderRadius: 8 }}>
+                        <Card bordered={false} style={{ borderRadius: 8 }} onClick={() => handleClickStatus(STATUS.PENDING)}>
                             <Statistic
                                 title={
                                     <Text strong style={{ fontSize: 16 }}>
@@ -446,7 +584,7 @@ const ApproveRequest = () => {
 
                 <Col xs={24} sm={12} lg={8}>
                     <ThreeDContainer>
-                        <Card bordered={false} style={{ borderRadius: 8 }}>
+                        <Card bordered={false} style={{ borderRadius: 8 }}  onClick={() => handleClickStatus(STATUS.APPROVED)}>
                             <Statistic
                                 title={
                                     <Text strong style={{ fontSize: 16 }}>
@@ -469,7 +607,7 @@ const ApproveRequest = () => {
 
                 <Col xs={24} sm={12} lg={8}>
                     <ThreeDContainer>
-                        <Card bordered={false} style={{ borderRadius: 8 }}>
+                        <Card bordered={false} style={{ borderRadius: 8 }}  onClick={() => handleClickStatus(STATUS.REJECTED)}>
                             <Statistic
                                 title={
                                     <Text strong style={{ fontSize: 16 }}>
@@ -742,6 +880,47 @@ const ApproveRequest = () => {
                         </Row>
                     </>
                 )}
+            </Modal>
+            <Modal
+                open={previewVisible}
+                title={`Xem trước: ${previewFile?.originalName}`}
+                footer={null}
+                onCancel={() => {
+                    setPreviewVisible(false);
+                    setPreviewUrl('');
+                    setPreviewFile(null);
+                }}
+                width={1000}
+            >
+                {previewUrl && (
+                    previewFile?.originalName?.toLowerCase().endsWith('.pdf') ? (
+                        <iframe src={previewUrl} width="100%" height="700px" title="preview" />
+                    ) : (
+                        <img src={previewUrl} alt="preview" style={{ maxWidth: '100%', maxHeight: 600 }} />
+                    )
+                )}
+            </Modal>
+            <Modal
+                title="Ký duyệt bảng lương"
+                open={showSignModal}
+                onOk={handleSignModalOk}
+                onCancel={() => handleCancel()}
+                okText="Ký"
+                cancelText="Hủy"
+                confirmLoading={signing}
+            >
+                <div style={{ border: '1px solid #ccc', borderRadius: 4, padding: 8, marginBottom: 8 }}>
+                    <SignatureCanvas
+                        penColor="black"
+                        canvasProps={{ width: 400, height: 120, className: 'sigCanvas' }}
+                        ref={ref => setSignaturePad(ref)}
+                        backgroundColor="#fff"
+                    />
+                    <div style={{ marginTop: 8 }}>
+                        <Button onClick={() => signaturePad && signaturePad.clear()}>Xóa chữ ký</Button>
+                    </div>
+                </div>
+                <p style={{ marginTop: 16 }}>Sau khi ký, chữ ký sẽ được gửi kèm với bảng lương PDF.</p>
             </Modal>
         </div>
     );

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Bảng Thanh Toán Tiền Lương</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 12px;
+            line-height: 1.2;
+            background: white;
+            padding: 20px;
+        }
+        .form-container { max-width: 280mm; margin: 0 auto; background: white; padding: 8mm; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .header-left { text-align: left; }
+        .header-right { text-align: right; font-style: italic; font-size: 11px; }
+        .form-code { font-weight: bold; margin-bottom: 5px; }
+        .regulation-text { font-size: 10px; line-height: 1.3; }
+        .title-section { text-align: center; margin: 30px 0 20px 0; }
+        .main-title { font-size: 16px; font-weight: bold; color: black; letter-spacing: 2px; margin-bottom: 10px; }
+        .subtitle { font-size: 12px; font-style: italic; }
+        .number-section { text-align: right; margin-bottom: 20px; }
+        .payroll-table-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .payroll-table {
+            border-collapse: collapse;
+            border: 2px solid black;
+        }
+        .payroll-table th, .payroll-table td {
+            border: 1px solid black;
+            padding: 4px 2px;
+            text-align: center;
+            font-size: 10px;
+            vertical-align: middle;
+            min-width: 35px;
+            max-width: 55px;
+            width: 40px;
+        }
+        .payroll-table th.col-name, .payroll-table td.col-name {
+            min-width: 80px;
+            max-width: 120px;
+            width: 100px;
+            text-align: left;
+            padding-left: 8px;
+        }
+        .payroll-table th.col-money, .payroll-table td.col-money {
+            min-width: 50px;
+            max-width: 75px;
+            width: 50px;
+        }
+        .payroll-table th.col-total, .payroll-table td.col-total {
+            min-width: 55px;
+            max-width: 75px;
+            width: 60px;
+        }
+        .payroll-table th { background-color: #f5f5f5; font-weight: bold; }
+        .header-row-1 th { height: 25px; }
+        .header-row-2 th { height: 35px; font-size: 9px; }
+        .column-letters { font-weight: bold; font-style: italic; height: 20px; }
+        .data-row td { height: 25px; }
+        .total-row { font-weight: bold; background-color: #f9f9f9; }
+        .col-name { text-align: left; padding-left: 5px; }
+        .total-text { margin: 15px 0; font-weight: bold; }
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 150px;
+            padding: 0 50px;
+        }
+
+        .signature-left, .signature-right {
+            text-align: center; /* hoặc right tùy nhu cầu */
+        }
+        .signature-date {
+            font-style: italic;
+            margin-bottom: 15px;
+            text-align: right;
+        }
+        .signature-title {
+            font-weight: bold;
+            margin-bottom: 80px;
+        }
+        .signature-name {
+            font-weight: normal;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div>Đơn vị: {{unitName}}</div>
+            <div>Bộ phận: {{department}}</div>
+        </div>
+        <div class="header-right">
+            <div class="form-code">Mẫu số: 02- LDTL</div>
+            <div class="regulation-text">
+                (Ban hành theo Thông tư số 200/2014/TT-BTC<br>
+                Ngày 22/12/2014 của Bộ Tài chính)
+            </div>
+        </div>
+    </div>
+
+    <!-- Number Section -->
+    <div class="number-section">
+        Số: ................
+    </div>
+
+    <!-- Title -->
+    <div class="title-section">
+        <div class="main-title">BẢNG THANH TOÁN TIỀN LƯƠNG</div>
+        <div class="subtitle">Tháng {{month}} năm {{year}}</div>
+    </div>
+
+    <!-- Payroll Table -->
+    <div class="payroll-table-wrapper">
+        <table class="payroll-table">
+            <tr class="header-row-1">
+                <th rowspan="3">STT</th>
+                <th rowspan="3">Họ và tên</th>
+                <th rowspan="3">Hệ số</th>
+                <th rowspan="3">Lương cơ bản</th>
+                <th colspan="4">Tổng lương cơ bản</th>
+                <th colspan="2">Khấu trừ gia cảnh</th>
+                <th rowspan="2">Phụ cấp và các khoản khác</th>
+                <th colspan="4">Làm thêm giờ</th>
+                <th colspan="4">Các khoản phải khấu trừ vào lương</th>
+                <th rowspan="2">Thu nhập chịu thuế</th>
+                <th rowspan="2">Thuế TNCN phải nộp</th>
+                <th rowspan="2">Lương thực nhận</th>
+            </tr>
+            <tr class="header-row-2">
+                <th>Số ngày công thực tế trong tháng</th>
+                <th>Số ngày nghỉ không lương</th>
+                <th>Số ngày đi muộn về sớm</th>
+                <th>Tổng số tiền</th>
+                <th>Tổng số thành viên</th>
+                <th>Tổng số tiền</th>
+                <th>Trong tuần</th>
+                <th>Cuối tuần</th>
+                <th>Ngày Lễ</th>
+                <th>Tổng tiền OT</th>
+                <th>BHXH</th>
+                <th>BHYT</th>
+                <th>BHTN</th>
+                <th>Tổng tiền bảo hiểm</th>
+            </tr>
+            <tr class="column-letters">
+                <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td>
+                <td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td>
+            </tr>
+
+            {{#salarys}}
+            <tr class="data-row">
+                <td>{{stt}}</td>
+                <td class="col-name">{{employeeId.fullName}}</td>
+                <td>{{salaryCoefficient}}</td>
+                <td class="col-money">{{baseSalary}}</td>
+                <td>{{workingDays}}</td> <!-- Số ngày công thực tế trong tháng -->
+                <td>{{unpaidLeave}}</td>
+                <td>{{latePenalty}}</td>
+                <td class="col-money">{{totalBaseSalary}}</td>
+                <td>{{numDependents}}</td>
+                <td>{{familyDeduction}}</td>
+                <td>{{benefit}}</td>
+                <td>{{otWeekday}}</td>
+                <td>{{otWeekend}}</td>
+                <td>{{otHoliday}}</td>
+                <td class="col-money">{{totalOtSalary}}</td>
+                <td>{{socialInsurance}}</td>
+                <td>{{healthInsurance}}</td> <!-- BHYT -->
+                <td>{{unemploymentInsurance}}</td> <!-- BHTN -->
+                <td>{{totalInsurance}}</td> <!-- BHTN -->
+                <td>{{totalTaxableIncome}}</td>
+                <td>{{personalIncomeTax}}</td>
+                <td class="col-total">{{netSalary}}</td>
+            </tr>
+            {{/salarys}}
+
+            <!-- Total Row -->
+            <tr class="total-row">
+                <td colspan="2" style="text-align: center;">Cộng</td>
+                <td></td>
+                <td>{{totalBasicSalaryAll}}</td><td></td>
+                <td></td>
+                <td></td>
+                <td>{{totalPositionSalary}}</td>
+                <td></td>
+                <td>{{totalFamilyDeduction}}</td>
+                <td>{{totalAllowance}}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>{{totalOTEnd}}</td>
+                <td>{{totalBhxh}}</td>
+                <td>{{totalBhyt}}</td>
+                <td>{{totalBhtn}}</td>
+                <td>{{totalEndInsurance}}</td>
+                <td>{{totalTaxable}}</td>
+                <td>{{totalTax}}</td>
+                <td>{{totalSalary}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Total in Words -->
+    <div class="total-text">
+        Tổng số tiền (viết bằng chữ): {{totalInWords}}
+    </div>
+
+    <!-- Signature Section -->
+    <div class="signature-date">
+        Ngày {{signDay}} tháng {{signMonth}} năm {{signYear}}
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-left">
+            <div class="signature-title">Người làm đơn</div>
+            <div class="signature-name">{{preparedBy}}</div>
+        </div>
+        <div class="signature-right">
+            <div class="signature-title">Quản lý</div>
+            <div class="signature-name">{{approvedBy}}</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

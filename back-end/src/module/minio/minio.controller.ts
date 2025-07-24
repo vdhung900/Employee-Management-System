@@ -62,10 +62,12 @@ export class UploadController {
     @Get(':key')
     @ApiOperation({ summary: 'Download a file' })
     @ApiParam({ name: 'key', description: 'File key/name to download' })
-    async getFile(@Param('key') key: string, @Res() res: Response) {
+    async getFile(@Param('key') encodedKey: string, @Res() res: Response) {
         try {
-            const { stream, contentType } = await this.uploadService.getFile(key);
+            const key = decodeURIComponent(encodedKey);
+            const { stream, contentType, length } = await this.uploadService.getFile(key);
             res.setHeader('Content-Type', contentType);
+            res.setHeader('Content-Length', length.toString());
             stream.pipe(res);
         } catch (error) {
             throw new HttpException(

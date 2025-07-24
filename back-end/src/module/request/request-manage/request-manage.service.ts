@@ -83,10 +83,29 @@ export class RequestManageService {
             if (!req.departmentId) {
                 throw new Error("Phòng ban không hợp lệ");
             }
-            const data = await this.requestService.findByFilterCode(req.departmentId.toString(), STATUS.ACCOUNT_CREATE_REQUEST);
+
+            let data = await this.requestService.findByFilterCode(
+                req.departmentId.toString(),
+                STATUS.ACCOUNT_CREATE_REQUEST
+            );
+
+            if(req.status !== null){
+                data = data.filter(item => item.status === req.status);
+            }
+
             const resData = data
                 .filter(item => item.typeRequest !== null)
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                .sort((a, b) => {
+                    const aPending = a.status === STATUS.PENDING ? 1 : 0;
+                    const bPending = b.status === STATUS.PENDING ? 1 : 0;
+
+                    if (aPending !== bPending) {
+                        return bPending - aPending;
+                    }
+
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                });
+
             return paginate(resData, req?.page, req?.limit);
         } catch (e) {
             throw new Error(e);
@@ -95,9 +114,14 @@ export class RequestManageService {
 
     async getRequestByAccountId(req: CreateRequestDto) {
         try {
-            const requests = await this.requestService.findByEmployeeId(req.employeeId.toString());
+            let requests;
+            if(req.status){
+                requests = await this.requestService.findByEmployeeIdAndStatus(req.employeeId.toString(), req.status);
+            }else{
+                requests = await this.requestService.findByEmployeeId(req.employeeId.toString());
+            }
             if (!requests || requests.length === 0) {
-                throw new Error("No requests found for this employee");
+                return [];
             }
             const sorted = requests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
             return sorted;
@@ -177,9 +201,9 @@ export class RequestManageService {
                     case STATUS.SALARY_INCREASE:
                         await this.updateCoefficient(req, data, typeRequest);
                         break;
-                    case STATUS.SALARY_APPROVED:
-                        await this.updateAndSendSalaryToEmployee(req);
-                        break;
+                    // case STATUS.SALARY_APPROVED:
+                    //     await this.updateAndSendSalaryToEmployee(req);
+                    //     break;
                     default:
                         throw new Error("Trạng thái đơn không hợp lệ!");
                 }
@@ -336,6 +360,7 @@ export class RequestManageService {
                         checkData.isOvertime = true;
                         checkData.overtimeRange = dataRequest.dataReq.hours;
                         checkData.reason = dataRequest.dataReq.reason;
+                        checkData.status = STATUS.OVERTIME
                         await checkData.save();
                     } else {
                         await this.attendanceRecordModel.insertOne({
@@ -423,6 +448,7 @@ export class RequestManageService {
                 if (!employee) {
                     throw new Error("Không tìm thấy nhân viên");
                 }
+                console.log(employee)
 
                 if (employee.timeUpdateSalary !== null) {
                     const lastUpdateTime = new Date(employee.timeUpdateSalary);
@@ -469,6 +495,15 @@ export class RequestManageService {
         return leaveRequests;
     }
 
+    async getAllLeaveRequestsForEmployees() {
+        // Lấy tất cả typeRequest có code chứa chữ "LEAVE"
+        const leaveTypes = await this.typeRequestModel.find({ code: /LEAVE/ });
+        const leaveTypeIds = leaveTypes.map(t => t._id);
+        // Lấy tất cả đơn nghỉ phép thuộc các loại này
+        const leaveRequests = await this.requestModel.find({ typeRequest: { $in: leaveTypeIds } }).populate('employeeId').populate('typeRequest').populate('attachments').exec();
+        return leaveRequests;
+    }
+
     checkLeavePackage(requestDates: Date[], leaveBalance: number) {
         try {
             const paidDates = requestDates.slice(0, leaveBalance);
@@ -507,5 +542,35 @@ export class RequestManageService {
                 status = '';
         }
         return status;
+    }
+
+    async checkSalaryApprovedByMonth(month: string) {
+        try {
+            const startOfMonth = new Date(month);
+            startOfMonth.setDate(1);
+            startOfMonth.setHours(0, 0, 0, 0);
+
+            const endOfMonth = new Date(startOfMonth);
+            endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+
+            const typeRequest = await this.typeRequestModel.findOne({
+                code: STATUS.SALARY_APPROVED
+            }).exec();
+
+            if (!typeRequest) {
+                throw new Error("Không tìm thấy loại yêu cầu SALARY_APPROVED");
+            }
+
+            const dataReq = await this.requestModel.findOne({
+                month: { $gte: startOfMonth, $lt: endOfMonth },
+                typeRequest: typeRequest._id,
+                status: STATUS.APPROVED
+            }).exec();
+
+            return dataReq;
+        } catch (e) {
+            console.error(e);
+            throw new Error(`Lỗi kiểm tra phê duyệt lương: ${e.message}`);
+        }
     }
 }

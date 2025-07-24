@@ -14,5 +14,6 @@ export class CreateRequestDto extends BaseReq{
     priority: string;
     note: string;
     attachments: any;
+    month: Date;
     approverId: Types.ObjectId;
 }

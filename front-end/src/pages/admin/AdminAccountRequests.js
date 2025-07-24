@@ -44,6 +44,8 @@ import {
 import dayjs from 'dayjs';
 import requestService from "../../services/RequestService";
 import RequestService from "../../services/RequestService";
+import {STATUS} from "../../constants/Status";
+import {useLoading} from "../../contexts/LoadingContext";
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
@@ -70,9 +72,17 @@ const AdminAccountRequests = () => {
     const [rejectModalVisible, setRejectModalVisible] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [currentRejectRecord, setCurrentRejectRecord] = useState(null);
+    const {showLoading, hideLoading} = useLoading();
 
     useEffect(() => {
+      try{
+        showLoading()
         loadDataTable();
+      }catch (e) {
+          console.log(e)
+      }finally{
+        hideLoading()
+      }
     }, []);
 
     const loadDataTable = async () => {
@@ -89,11 +99,11 @@ const AdminAccountRequests = () => {
 
     const handleApprove = (record) => {
         Modal.confirm({
-            title: 'Approve Account Request',
-            content: `Are you sure you want to approve the account request for ${record.employeeId.fullName}?`,
-            okText: 'Yes, Approve',
+            title: 'Phê duyệt yêu cầu tạo tải khoản',
+            content: `Bạn có chắc chắn muốn phê duyệt yêu cầu tạo tài khoản từ nhân viên ${record.employeeId.fullName}?`,
+            okText: 'Đồng ý',
             okType: 'primary',
-            cancelText: 'No',
+            cancelText: 'Từ chối',
             onOk: async () => {
                 try{
                     let body = {
@@ -102,7 +112,7 @@ const AdminAccountRequests = () => {
                     }
                     const response = await RequestService.approveRequest(body);
                     if(response.success){
-                        message.success(`Account request for ${record.employeeId.fullName} has been approved`);
+                        message.success(`Yêu cầu tạo tài khoản của nhân viên ${record.employeeId.fullName} đã được phê duyệt`);
                     }
                 }catch (e) {
                     message.error(e.message);
@@ -145,6 +155,16 @@ const AdminAccountRequests = () => {
         }
     };
 
+    const getTextTrangThai = (status) => {
+      if(status === STATUS.APPROVED){
+        return "Đã phê duyệt"
+      }else if(status === STATUS.REJECTED){
+        return "Từ chối"
+      }else if(status === STATUS.PENDING){
+        return "Đang chờ duyệt"
+      }
+    }
+
     const columns = [
         {
             title: 'Tên nhân viên',
@@ -185,7 +205,7 @@ const AdminAccountRequests = () => {
             sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
         },
         {
-            title: 'Status',
+            title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
             render: (text) => {
@@ -196,14 +216,14 @@ const AdminAccountRequests = () => {
                 };
                 return (
                     <Tag color={colorMap[text]}>
-                        {text.charAt(0).toUpperCase() + text.slice(1)}
+                        {getTextTrangThai(text)}
                     </Tag>
                 );
             },
             filters: [
-                { text: 'Pending', value: 'Pending' },
-                { text: 'Approved', value: 'Approved' },
-                { text: 'Rejected', value: 'Rejected' },
+                { text: 'Đang chờ duyệt', value: 'Pending' },
+                { text: 'Đã phê duyệt', value: 'Approved' },
+                { text: 'Từ chối', value: 'Rejected' },
             ],
             onFilter: (value, record) => record.status === value,
         },
@@ -245,9 +265,9 @@ const AdminAccountRequests = () => {
 
     return (
         <div style={{ padding: '24px', maxWidth: '1800px', margin: '0 auto' }}>
-            <div style={{ 
-                marginBottom: '24px', 
-                display: 'flex', 
+            <div style={{
+                marginBottom: '24px',
+                display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
@@ -262,81 +282,43 @@ const AdminAccountRequests = () => {
                 </div>
             </div>
 
-            {/* Filter Panel */}
-            <Card 
-                style={{ marginBottom: '24px' }}
-                variant="outlined"
-                styles={{
-                    body: { padding: '16px' }
-                }}
-            >
-                <Form layout="inline" style={{ flexWrap: 'wrap', gap: '16px' }}>
-                    <Form.Item label="Date Range" style={{ marginBottom: 0 }}>
-                        <RangePicker
-                            value={dateRange}
-                            onChange={setDateRange}
-                            allowClear={false}
-                            style={{ width: '280px' }}
-                        />
-                    </Form.Item>
-                    <Form.Item label="Department" style={{ marginBottom: 0 }}>
-                        <Select
-                            value={department}
-                            onChange={setDepartment}
-                            style={{ width: '200px' }}
-                        >
-                            {departments.map(dept => (
-                                <Option key={dept} value={dept}>{dept}</Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                    <Form.Item label="Status" style={{ marginBottom: 0 }}>
-                        <Select
-                            value={status}
-                            onChange={setStatus}
-                            style={{ width: '200px' }}
-                        >
-                            <Option value="All">All</Option>
-                            <Option value="pending">Pending</Option>
-                            <Option value="approved">Approved</Option>
-                            <Option value="rejected">Rejected</Option>
-                        </Select>
-                    </Form.Item>
-                    <Form.Item style={{ marginBottom: 0 }}>
-                        <Button type="primary" icon={<FilterOutlined />}>
-                            Apply Filters
-                        </Button>
-                    </Form.Item>
-                </Form>
-            </Card>
-
             {/* Statistics */}
             <Row gutter={[24, 24]} style={{ marginBottom: '24px' }}>
-                <Col xs={24} sm={8}>
+                <Col xs={24} sm={6}>
                     <Card variant="outlined">
                         <Statistic
-                            title="Total Requests"
+                            title="Tất cả yêu cầu"
                             value={dataTable.length}
                             valueStyle={{ color: '#1890ff' }}
                             prefix={<TeamOutlined />}
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={8}>
+                <Col xs={24} sm={6}>
                     <Card variant="outlined">
                         <Statistic
-                            title="Pending Requests"
-                            value={dataTable.filter(item => item.status === 'Pending').length}
+                            title="Đang chờ duyệt"
+                            value={dataTable.filter(item => item.status === STATUS.PENDING).length}
                             valueStyle={{ color: '#faad14' }}
                             prefix={<ClockCircleOutlined />}
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={8}>
+                <Col xs={24} sm={6}>
                     <Card variant="outlined">
                         <Statistic
-                            title="Approved Requests"
-                            value={dataTable.filter(item => item.status === 'Approved').length}
+                            title="Đã phê duyệt"
+                            value={dataTable.filter(item => item.status === STATUS.APPROVED).length}
+                            valueStyle={{ color: '#52c41a' }}
+                            prefix={<CheckCircleOutlined />}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={6}>
+                    <Card variant="outlined">
+                        <Statistic
+                            title="Từ chối"
+                            value={dataTable.filter(item => item.status === STATUS.REJECTED).length}
                             valueStyle={{ color: '#52c41a' }}
                             prefix={<CheckCircleOutlined />}
                         />
@@ -345,7 +327,7 @@ const AdminAccountRequests = () => {
             </Row>
 
             {/* Requests Table */}
-            <Card 
+            <Card
                 variant="outlined"
                 styles={{
                     body: { padding: '16px' }
@@ -355,7 +337,7 @@ const AdminAccountRequests = () => {
                     columns={columns}
                     dataSource={dataTable}
                     rowKey="id"
-                    pagination={{ 
+                    pagination={{
                         pageSize: 10,
                         showSizeChanger: true,
                         showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`

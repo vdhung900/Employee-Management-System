@@ -36,6 +36,16 @@ export class RequestManageController {
         }
     }
 
+    @Get('/filter-by-month/:month')
+    async getReqByMonth(@Param('month') month: string): Promise<BaseResponse> {
+        try {
+            const resData = await this.hrRequestService.checkSalaryApprovedByMonth(month);
+            return BaseResponse.success(resData, 'Check success!', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @Post('/create')
     async createRequest(@Body() req: CreateRequestDto): Promise<BaseResponse>{
         try{
@@ -82,6 +92,16 @@ export class RequestManageController {
         try {
             const resData = await this.hrRequestService.getLeaveRequestsByDepartment(departmentId);
             return BaseResponse.success(resData, 'Lấy danh sách đơn nghỉ phép theo phòng ban thành công', HttpStatus.OK);
+        } catch (e) {
+            throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Get('/all-leave-requests')
+    async getAllLeaveRequestsForEmployees() {
+        try {
+            const resData = await this.hrRequestService.getAllLeaveRequestsForEmployees();
+            return BaseResponse.success(resData, 'Lấy tất cả đơn nghỉ phép thành công', HttpStatus.OK);
         } catch (e) {
             throw new HttpException({message: e.message}, HttpStatus.INTERNAL_SERVER_ERROR);
         }

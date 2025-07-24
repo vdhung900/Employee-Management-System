@@ -41,4 +41,4 @@ export class SalaryCoeficientService {
     if (!updated) throw new NotFoundException('Không tìm thấy hệ số lương');
     return updated;
   }
-} 
+}

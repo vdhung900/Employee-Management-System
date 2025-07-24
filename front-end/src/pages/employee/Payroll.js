@@ -77,10 +77,20 @@ const EmployeePayroll = () => {
                         personalIncomeTax: item.personalIncomeTax,
                         familyDeduction: item.familyDeduction,
                         netSalary: item.netSalary,
-                        status: item.status === '00' ? 'pending' : 'paid',
                         paymentDate: item.updatedAt || '',
                         totalTaxableIncome: item.totalTaxableIncome,
                         benefit: item.benefit,
+                        otWeekdayHour: item.otWeekdayHour,
+                        otWeekendHour: item.otWeekendHour,
+                        unpaidLeaveCount: item.unpaidLeaveCount,
+                        cntLatePenalty: item.cntLatePenalty,
+                        numDependents: item.numDependents,
+                        socialInsurance: item.socialInsurance,
+                        healthInsurance: item.healthInsurance,
+                        unemploymentInsurance: item.unemploymentInsurance,
+                        totalInsurance: item.totalInsurance,
+                        workingDays: item.workingDays,
+                        taxableIncome: item.taxableIncome,
                     };
                 });
                 setPayrollHistoryData(mapped);
@@ -99,6 +109,7 @@ const EmployeePayroll = () => {
         setSelectedPayslip(payrollHistoryData.find(item => item.period === value));
     };
 
+    // Sửa lại các cột trong bảng
     const columns = [
         {
             title: 'Kỳ lương',
@@ -109,52 +120,43 @@ const EmployeePayroll = () => {
             title: 'Tổng thu nhập chịu thuế',
             dataIndex: 'totalTaxableIncome',
             key: 'totalTaxableIncome',
-            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+            render: (val) => `${Math.round(val)?.toLocaleString('vi-VN')} ₫`,
         },
         {
             title: 'Lương cơ bản',
             dataIndex: 'totalBaseSalary',
             key: 'totalBaseSalary',
-            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+            render: (val) => `${Math.round(val)?.toLocaleString('vi-VN')} ₫`,
         },
         {
             title: 'Phúc lợi',
             dataIndex: 'benefit',
             key: 'benefit',
-            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+            render: (val) => `${Math.round(val)?.toLocaleString('vi-VN')} ₫`,
         },
         {
             title: 'Tiền OT',
             dataIndex: 'totalOtSalary',
             key: 'totalOtSalary',
-            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+            render: (val) => `${Math.round(val)?.toLocaleString('vi-VN')} ₫`,
         },
         {
             title: 'Bảo hiểm bắt buộc',
-            dataIndex: 'insurance',
-            key: 'insurance',
-            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+            dataIndex: 'totalInsurance',
+            key: 'totalInsurance',
+            render: (val) => `${Math.round(val)?.toLocaleString('vi-VN')} ₫`,
         },
         {
             title: 'Thuế TNCN',
             dataIndex: 'personalIncomeTax',
             key: 'personalIncomeTax',
-            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
+            render: (val) => `${Math.round(val)?.toLocaleString('vi-VN')} ₫`,
         },
         {
             title: 'Thực nhận',
             dataIndex: 'netSalary',
             key: 'netSalary',
-            render: (val) => `${val?.toLocaleString('vi-VN')} ₫`,
-        },
-        {
-            title: 'Trạng thái',
-            key: 'status',
-            render: (_, record) => (
-                <Tag color={record.status === 'paid' ? 'green' : 'orange'}>
-                    {record.status === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán'}
-                </Tag>
-            ),
+            render: (val) => `${Math.round(val)?.toLocaleString('vi-VN')} ₫`,
         },
         {
             title: 'Ngày tạo phiếu',
@@ -218,25 +220,28 @@ const EmployeePayroll = () => {
                             <Col xs={24} sm={8}>
                                 <Statistic
                                     title="Lương cơ bản"
-                                    value={selectedPayslip.totalBaseSalary}
+                                    value={Math.round(selectedPayslip.totalBaseSalary)}
                                     suffix="₫"
                                     valueStyle={{ color: '#1890ff' }}
+                                    precision={0}
                                 />
                             </Col>
                             <Col xs={24} sm={8}>
                                 <Statistic
                                     title="Tiền OT"
-                                    value={selectedPayslip.totalOtSalary}
+                                    value={Math.round(selectedPayslip.totalOtSalary)}
                                     suffix="₫"
                                     valueStyle={{ color: '#52c41a' }}
+                                    precision={0}
                                 />
                             </Col>
                             <Col xs={24} sm={8}>
                                 <Statistic
                                     title="Phúc lợi"
-                                    value={selectedPayslip.benefit}
+                                    value={Math.round(selectedPayslip.benefit)}
                                     suffix="₫"
                                     valueStyle={{ color: '#52c41a' }}
+                                    precision={0}
                                 />
                             </Col>
 
@@ -247,25 +252,28 @@ const EmployeePayroll = () => {
                             <Col xs={24} sm={8}>
                                 <Statistic
                                     title="Bảo hiểm"
-                                    value={selectedPayslip.insurance}
+                                    value={Math.round(selectedPayslip.totalInsurance)}
                                     suffix="₫"
                                     valueStyle={{ color: '#ff4d4f' }}
+                                    precision={0}
                                 />
                             </Col>
                             <Col xs={24} sm={8}>
                                 <Statistic
                                     title="Thuế TNCN"
-                                    value={selectedPayslip.personalIncomeTax}
+                                    value={Math.round(selectedPayslip.personalIncomeTax)}
                                     suffix="₫"
                                     valueStyle={{ color: '#ff4d4f' }}
+                                    precision={0}
                                 />
                             </Col>
                             <Col xs={24} sm={8}>
                                 <Statistic
                                     title="Thực nhận"
-                                    value={selectedPayslip.netSalary}
+                                    value={Math.round(selectedPayslip.netSalary)}
                                     suffix="₫"
                                     valueStyle={{ color: '#1890ff', fontWeight: 'bold' }}
+                                    precision={0}
                                 />
                             </Col>
                         </Row>
@@ -282,10 +290,10 @@ const EmployeePayroll = () => {
                             <div>
                                 <Text>Tiến độ ngày công</Text>
                                 <Progress
-                                    percent={selectedPayslip ? Math.round(((22 - (selectedPayslip.unpaidLeave || 0)) / 22) * 100) : 0}
+                                    percent={selectedPayslip ? Math.round(((selectedPayslip.workingDays - (selectedPayslip.unpaidLeaveCount || 0)) / selectedPayslip.workingDays) * 100) : 0}
                                     format={() => (
                                         <span style={{ color: '#1890ff' }}>
-                                            {selectedPayslip ? `${22 - (selectedPayslip.unpaidLeave || 0)}/${22}` : `-/-`}
+                                            {selectedPayslip ? `${selectedPayslip.workingDays - (selectedPayslip.unpaidLeaveCount || 0)}/${selectedPayslip.workingDays}` : `-/-`}
                                         </span>
                                     )}
                                     strokeColor="#1890ff"
@@ -303,7 +311,7 @@ const EmployeePayroll = () => {
                                     >
                                         <Statistic
                                             title={<span style={{ color: '#cf1322', fontWeight: 600 }}>Số ngày nghỉ</span>}
-                                            value={selectedPayslip ? selectedPayslip.unpaidLeave || 0 : 0}
+                                            value={selectedPayslip ? selectedPayslip.unpaidLeaveCount || 0 : 0}
                                             prefix={<CoffeeOutlined style={{ color: '#cf1322' }} />}
                                             valueStyle={{ fontSize: '24px', color: '#cf1322', fontWeight: 700 }}
                                         />
@@ -320,7 +328,7 @@ const EmployeePayroll = () => {
                                     >
                                         <Statistic
                                             title={<span style={{ color: '#389e0d', fontWeight: 600 }}>Số ngày làm việc</span>}
-                                            value={selectedPayslip ? 22 - (selectedPayslip.unpaidLeave || 0) : 0}
+                                            value={selectedPayslip ? selectedPayslip.workingDays - (selectedPayslip.unpaidLeaveCount || 0) : 0}
                                             prefix={<TeamOutlined style={{ color: '#389e0d' }} />}
                                             valueStyle={{ fontSize: '24px', color: '#389e0d', fontWeight: 700 }}
                                         />
@@ -352,12 +360,6 @@ const EmployeePayroll = () => {
                                     prefix={<ThunderboltOutlined />}
                                     valueStyle={{ color: selectedPayslip && selectedPayslip.latePenalty === 0 ? '#52c41a' : '#faad14' }}
                                 />
-                                <Progress
-                                    percent={selectedPayslip ? (selectedPayslip.latePenalty === 0 ? 100 : Math.max(100 - (selectedPayslip.latePenalty || 0) * 2, 80)) : 100}
-                                    status={selectedPayslip && selectedPayslip.latePenalty === 0 ? 'success' : 'normal'}
-                                    showInfo={false}
-                                    strokeColor={selectedPayslip && selectedPayslip.latePenalty === 0 ? '#52c41a' : '#faad14'}
-                                />
                             </Card>
                         </Space>
                     </Card>
@@ -379,64 +381,267 @@ const EmployeePayroll = () => {
                 open={detailModalVisible}
                 onCancel={() => setDetailModalVisible(false)}
                 footer={null}
-                width={800}
+                width={1000}
             >
                 {detailPayslip && (
-                    <Descriptions bordered column={2} size="middle">
-                        {/* Nhóm 1: Thông tin chung */}
-                        <Descriptions.Item label={<span><CalendarOutlined /> Kỳ lương</span>} span={2} labelStyle={{fontWeight:'bold', background:'#f0f5ff'}} contentStyle={{background:'#f0f5ff'}}>
-                            {detailPayslip.period}
-                        </Descriptions.Item>
-                        {/* Nhóm 2: Thu nhập */}
-                        <Descriptions.Item label={<span><DollarOutlined /> Thu nhập chịu thuế </span>} labelStyle={{ color:'#096dd9'}}> 
-                            {detailPayslip.totalTaxableIncome?.toLocaleString('vi-VN')} ₫
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<span><DollarOutlined /> Lương cơ bản</span>} labelStyle={{color:'#096dd9'}}>
-                            {detailPayslip.totalBaseSalary?.toLocaleString('vi-VN')} ₫
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<span><DollarOutlined /> Phúc lợi</span>} labelStyle={{color:'#096dd9'}}>
-                            {detailPayslip.benefit?.toLocaleString('vi-VN')} ₫
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<span><DollarOutlined /> Tiền OT</span>} labelStyle={{color:'#096dd9'}}>
-                            {detailPayslip.totalOtSalary?.toLocaleString('vi-VN')} ₫
-                        </Descriptions.Item>
-                        {/* Nhóm 3: Khấu trừ */}
-                        <Descriptions.Item label={<span><TeamOutlined /> Giảm trừ gia cảnh</span>} labelStyle={{color:'#d4380d'}}> 
-                            {detailPayslip.familyDeduction?.toLocaleString('vi-VN')} ₫
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<span><SafetyCertificateOutlined /> Bảo hiểm bắt buộc</span>} labelStyle={{color:'#d4380d'}}> 
-                            {detailPayslip.insurance?.toLocaleString('vi-VN')} ₫
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<span><PercentageOutlined /> Thuế TNCN</span>} labelStyle={{color:'#d4380d'}}> 
-                            {detailPayslip.personalIncomeTax?.toLocaleString('vi-VN')} ₫
-                        </Descriptions.Item>
-                        {/* Nhóm 4: Ngày công */}
-                        <Descriptions.Item label={<span><CoffeeOutlined /> Số ngày nghỉ</span>} labelStyle={{color:'#531dab'}}> 
-                            {detailPayslip.unpaidLeave}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<span><TeamOutlined /> Số ngày làm việc</span>} labelStyle={{color:'#531dab'}}> 
-                            {22 - (detailPayslip.unpaidLeave || 0)}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<span><ThunderboltOutlined /> Chỉ số đúng giờ</span>} labelStyle={{color:'#531dab'}}> 
-                            <Tooltip title="Chỉ số đúng giờ càng cao càng tốt, bị trừ khi có đi muộn/về sớm">
-                                {detailPayslip.latePenalty === 0 ? '100%' : `${Math.max(100 - (detailPayslip.latePenalty || 0) * 2, 80)}%`}
-                            </Tooltip>
-                        </Descriptions.Item>
-                        {/* Divider nhóm */}
-                        <Descriptions.Item span={2} contentStyle={{padding:0, background:'transparent'}} labelStyle={{padding:0, background:'transparent'}}>
-                            <div style={{borderTop:'1px solid #e6f7ff', margin:'3px 0'}}></div>
-                        </Descriptions.Item>
-                        {/* Nhóm 5: Kết quả nhận */}
-                        <Descriptions.Item label={<span>Trạng thái</span>}>
-                            {detailPayslip.status === 'paid' ? <Tag color="green">Đã thanh toán</Tag> : <Tag color="orange">Chờ thanh toán</Tag>}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<span>Ngày tạo </span>}>
-                            {detailPayslip.paymentDate ? new Date(detailPayslip.paymentDate).toLocaleDateString('vi-VN') : ''}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<span style={{fontWeight:'bold', color:'#1890ff'}}><DollarOutlined /> Thực nhận</span>} span={2} labelStyle={{fontWeight:'bold', color:'#1890ff', fontSize:18}} contentStyle={{textAlign:'center', fontSize:24, color:'#1890ff', fontWeight:700, background:'#e6f7ff'}}>
-                            {detailPayslip.netSalary?.toLocaleString('vi-VN')} ₫
-                        </Descriptions.Item>
-                    </Descriptions>
+                    <div>
+                        {/* Header - Thông tin kỳ lương */}
+                        <Card style={{ marginBottom: 16, background: '#fafafa', border: '1px solid #d9d9d9' }}>
+                            <Row gutter={[16, 16]} align="middle" justify="space-between">
+                                <Col>
+                                    <Title level={4} style={{ margin: 0 }}>
+                                        <CalendarOutlined style={{ marginRight: 8 }} />
+                                        {detailPayslip.period}
+                                    </Title>
+                                </Col>
+                            </Row>
+                        </Card>
+
+                        {/* Thông tin lương cơ bản */}
+                        <Card title="Thông tin lương cơ bản" style={{ marginBottom: 16 }}>
+                            <Row gutter={[16, 16]}>
+                                <Col span={8}>
+                                    <Statistic
+                                        title="Lương cơ bản"
+                                        value={Math.round(detailPayslip.baseSalary)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                    />
+                                </Col>
+                                <Col span={8}>
+                                    <Statistic
+                                        title="Hệ số lương"
+                                        value={detailPayslip.salaryCoefficient}
+                                        precision={2}
+                                    />
+                                </Col>
+                                <Col span={8}>
+                                    <Statistic
+                                        title="Tổng lương cơ bản"
+                                        value={Math.round(detailPayslip.baseSalary * detailPayslip.salaryCoefficient)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                        valueStyle={{ fontWeight: 'bold' }}
+                                    />
+                                </Col>
+                            </Row>
+                        </Card>
+                        {/* Nghỉ phép và đi muộn */}
+                        <Card title="Nghỉ phép và đi muộn" style={{ marginBottom: 16 }}>
+                            <Row gutter={[16, 16]}>
+                                <Col span={12}>
+                                    <Card size="small" bordered>
+                                        <Statistic
+                                            title="Nghỉ không phép"
+                                            value={detailPayslip.unpaidLeaveCount || 0}
+                                            suffix="ngày"
+                                        />
+                                        <div style={{marginTop: 8}}>
+                                            <Text type="secondary">Trừ: </Text>
+                                            <Text strong>{Math.round(detailPayslip.unpaidLeave)?.toLocaleString('vi-VN')} ₫</Text>
+                                        </div>
+                                    </Card>
+                                </Col>
+                                <Col span={12}>
+                                    <Card size="small" bordered>
+                                        <Statistic
+                                            title="Đi muộn"
+                                            value={detailPayslip.cntLatePenalty || 0}
+                                            suffix="lần"
+                                        />
+                                        <div style={{marginTop: 8}}>
+                                            <Text type="secondary">Phạt: </Text>
+                                            <Text strong>{Math.round(detailPayslip.latePenalty)?.toLocaleString('vi-VN')} ₫</Text>
+                                        </div>
+                                    </Card>
+                                </Col>
+                            </Row>
+                        </Card>
+
+                        {/* Thông tin tăng ca */}
+                        <Card title="Thông tin tăng ca" style={{ marginBottom: 16 }}>
+                            <Row gutter={[16, 16]}>
+                                <Col span={12}>
+                                    <Card size="small" bordered>
+                                        <Statistic
+                                            title={
+                                                <Tooltip title="Tăng ca ngày thường được tính 150% lương theo giờ">
+                                                    <span>Tăng ca ngày thường (150%)</span>
+                                                </Tooltip>
+                                            }
+                                            value={detailPayslip.otWeekdayHour || 0}
+                                            suffix="giờ"
+                                        />
+                                        <Row style={{marginTop: 16}} justify="space-between">
+                                            <Col>
+                                                <Text type="secondary">Đơn giá/giờ:</Text>
+                                                <br />
+                                                <Text>{Math.round((detailPayslip.totalBaseSalary / 166) * 1.5)?.toLocaleString('vi-VN')} ₫</Text>
+                                            </Col>
+                                            <Col>
+                                                <Text type="secondary">Thành tiền:</Text>
+                                                <br />
+                                                <Text strong>{Math.round(detailPayslip.otWeekday)?.toLocaleString('vi-VN')} ₫</Text>
+                                            </Col>
+                                        </Row>
+                                    </Card>
+                                </Col>
+                                <Col span={12}>
+                                    <Card size="small" bordered>
+                                        <Statistic
+                                            title={
+                                                <Tooltip title="Tăng ca ngày nghỉ/cuối tuần được tính 200% lương theo giờ">
+                                                    <span>Tăng ca ngày nghỉ (200%)</span>
+                                                </Tooltip>
+                                            }
+                                            value={detailPayslip.otWeekendHour || 0}
+                                            suffix="giờ"
+                                        />
+                                        <Row style={{marginTop: 16}} justify="space-between">
+                                            <Col>
+                                                <Text type="secondary">Đơn giá/giờ:</Text>
+                                                <br />
+                                                <Text>{Math.round((detailPayslip.totalBaseSalary / 166) * 2)?.toLocaleString('vi-VN')} ₫</Text>
+                                            </Col>
+                                            <Col>
+                                                <Text type="secondary">Thành tiền:</Text>
+                                                <br />
+                                                <Text strong>{Math.round(detailPayslip.otWeekend)?.toLocaleString('vi-VN')} ₫</Text>
+                                            </Col>
+                                        </Row>
+                                    </Card>
+                                </Col>
+                            </Row>
+                            <Divider style={{ margin: '16px 0' }} />
+                            <Row justify="space-between">
+                                <Col>
+                                    <Text>Tổng số giờ tăng ca: <Text strong>{detailPayslip.totalOtHour || 0} giờ</Text></Text>
+                                </Col>
+                                <Col>
+                                    <Text>Tổng tiền tăng ca: <Text strong>{Math.round(detailPayslip.totalOtSalary)?.toLocaleString('vi-VN')} ₫</Text></Text>
+                                </Col>
+                            </Row>
+                        </Card>
+
+                        {/* Phúc lợi và thu nhập chịu thuế */}
+                        <Card style={{ marginBottom: 16 }}>
+                            <Row>
+                                <Col span={12} style={{ borderRight: '1px solid #f0f0f0', padding: '0 24px' }}>
+                                    <Title level={5}>Phụ cấp và phúc lợi</Title>
+                                    <Statistic
+                                        value={Math.round(detailPayslip.benefit)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                        valueStyle={{ fontSize: 20 }}
+                                    />
+                                </Col>
+                                <Col span={12} style={{ padding: '0 24px' }}>
+                                    <Title level={5}>Thu nhập trước khấu trừ và bảo hiểm</Title>
+                                    <Statistic
+                                        value={Math.round(detailPayslip.totalTaxableIncome)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                        valueStyle={{ fontSize: 20, fontWeight: 'bold' }}
+                                    />
+                                    <Text type="secondary" style={{ fontSize: 12 }}>
+                                        (Lương cơ bản + Phúc lợi + OT - Nghỉ phép - Đi muộn)
+                                    </Text>
+                                </Col>
+                            </Row>
+                        </Card>
+
+
+                        {/* Các khoản khấu trừ */}
+                        <Card title="Các khoản khấu trừ bảo hiểm" style={{ marginBottom: 16 }}>
+                            <Row gutter={[16, 16]}>
+                                <Col span={6}>
+                                    <Statistic
+                                        title="BHXH (8%)"
+                                        value={Math.round(detailPayslip.socialInsurance)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                    />
+                                </Col>
+                                <Col span={6}>
+                                    <Statistic
+                                        title="BHYT (1.5%)"
+                                        value={Math.round(detailPayslip.healthInsurance)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                    />
+                                </Col>
+                                <Col span={6}>
+                                    <Statistic
+                                        title="BHTN (1%)"
+                                        value={Math.round(detailPayslip.unemploymentInsurance)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                    />
+                                </Col>
+                                <Col span={6}>
+                                    <Statistic
+                                        title="Tổng bảo hiểm"
+                                        value={Math.round(detailPayslip.totalInsurance)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                        valueStyle={{ fontWeight: 'bold' }}
+                                    />
+                                </Col>
+                            </Row>
+                        </Card>
+
+                        {/* Thuế và giảm trừ */}
+                        <Card title="Thuế và giảm trừ" style={{ marginBottom: 16 }}>
+                            <Row gutter={[16, 16]}>
+                                <Col span={6}>
+                                    <Statistic
+                                        title="Số người phụ thuộc"
+                                        value={detailPayslip.numDependents || 0}
+                                        suffix="người"
+                                    />
+                                </Col>
+                                <Col span={6}>
+                                    <Statistic
+                                        title="Giảm trừ gia cảnh"
+                                        value={11000000}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                    />
+                                </Col>
+                                <Col span={6}>
+                                    <Statistic
+                                        title="Thu nhập chịu thuế"
+                                        value={detailPayslip.taxableIncome}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                    />
+                                </Col>
+                                <Col span={6}>
+                                    <Statistic
+                                        title="Thuế TNCN"
+                                        value={Math.round(detailPayslip.personalIncomeTax)}
+                                        suffix="₫"
+                                        groupSeparator="."
+                                        valueStyle={{ fontWeight: 'bold' }}
+                                    />
+                                </Col>
+                            </Row>
+                        </Card>
+
+                        {/* Thực nhận */}
+                        <Card>
+                            <Row justify="space-between" align="middle">
+                                <Col>
+                                    <Title level={4} style={{ margin: 0 }}>Thực nhận</Title>
+                                </Col>
+                                <Col>
+                                    <Title level={3} style={{ margin: 0 }}>
+                                        {Math.round(detailPayslip.netSalary)?.toLocaleString('vi-VN')} ₫
+                                    </Title>
+                                </Col>
+                            </Row>
+                        </Card>
+                    </div>
                 )}
             </Modal>
         </div>

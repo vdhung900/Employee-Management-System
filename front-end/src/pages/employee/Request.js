@@ -55,7 +55,7 @@ import {
     TagOutlined,
     RiseOutlined,
     DollarOutlined,
-    StarOutlined
+    StarOutlined, FilePdfOutlined
 } from '@ant-design/icons';
 import ThreeDContainer from '../../components/3d/ThreeDContainer';
 import CategoryService from "../../services/CategoryService";
@@ -74,6 +74,11 @@ import { renderRequestDetailByType } from '../../utils/render';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import dayjs from "dayjs";
+import SignatureCanvas from 'react-signature-canvas';
+import StatisticCard from "../../components/card/StatisticCard";
+import RequestService from "../../services/RequestService";
+import FileService from "../../services/FileService";
 
 const {Title, Text, Paragraph} = Typography;
 const {Option} = Select;
@@ -101,18 +106,44 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             <Form.Item
                                 name={['dataReq', 'startDate']}
                                 label="Ngày bắt đầu nghỉ"
-                                rules={[{required: true, message: 'Vui lòng chọn ngày bắt đầu'}]}
+                                rules={[
+                                    { required: true, message: 'Vui lòng chọn ngày bắt đầu' }
+                                ]}
                             >
-                                <DatePicker style={{width: '100%'}}/>
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    disabledDate={(current) => {
+                                        return current && current < dayjs().startOf('day');
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'endDate']}
                                 label="Ngày kết thúc nghỉ"
-                                rules={[{required: true, message: 'Vui lòng chọn ngày kết thúc'}]}
+                                dependencies={[['dataReq', 'startDate']]}
+                                rules={[
+                                    { required: true, message: 'Vui lòng chọn ngày kết thúc' },
+                                    ({ getFieldValue }) => ({
+                                        validator(_, value) {
+                                            const startDate = getFieldValue(['dataReq', 'startDate']);
+                                            if (!value || !startDate || value.valueOf() >= startDate.valueOf()) {
+                                                return Promise.resolve();
+                                            }
+                                            return Promise.reject(
+                                                new Error('Ngày kết thúc không được nhỏ hơn ngày bắt đầu')
+                                            );
+                                        }
+                                    }),
+                                ]}
                             >
-                                <DatePicker style={{width: '100%'}}/>
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    disabledDate={(current) => {
+                                        return current && current < dayjs().startOf('day');
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                     </Row>
@@ -141,30 +172,55 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             <Form.Item
                                 name={['dataReq', 'startDate']}
                                 label="Ngày tăng ca"
-                                rules={[{required: true, message: 'Vui lòng chọn ngày tăng ca'}]}
+                                rules={[{ required: true, message: 'Vui lòng chọn ngày tăng ca' }]}
                             >
-                                <DatePicker style={{width: '100%'}}/>
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    disabledDate={(current) => current && current < dayjs().startOf('day')}
+                                />
                             </Form.Item>
                         </Col>
+
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'hours']}
                                 label="Thời gian làm thêm"
-                                rules={[{required: true, message: 'Vui lòng chọn thời gian!'}]}
+                                rules={[
+                                    { required: true, message: 'Vui lòng chọn thời gian!' },
+                                    {
+                                        validator: (_, value) => {
+                                            if (!value || value.length !== 2) {
+                                                return Promise.reject(new Error('Vui lòng chọn thời gian!'));
+                                            }
+                                            const [startTime, endTime] = value;
+                                            if (endTime.isAfter(startTime)) {
+                                                return Promise.resolve();
+                                            }
+                                            return Promise.reject(new Error('Giờ kết thúc phải sau giờ bắt đầu!'));
+                                        }
+                                    }
+                                ]}
                             >
                                 <TimePicker.RangePicker
-                                    style={{width: '100%'}}
+                                    style={{ width: '100%' }}
                                     format="HH:mm"
                                 />
                             </Form.Item>
                         </Col>
                     </Row>
+
                     <Form.Item
                         name={['dataReq', 'reason']}
                         label="Lý do tăng ca"
-                        rules={[{required: true, message: 'Vui lòng nhập lý do tăng ca'}]}
+                        rules={[
+                            { required: true, message: 'Vui lòng nhập lý do tăng ca' },
+                            { min: 10, message: 'Lý do phải có ít nhất 10 ký tự' }
+                        ]}
                     >
-                        <Input.TextArea rows={4} placeholder="Nhập lý do tăng ca"/>
+                        <Input.TextArea
+                            rows={4}
+                            placeholder="Nhập lý do tăng ca"
+                        />
                     </Form.Item>
                 </>
             ),
@@ -180,60 +236,79 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
             fields: (
                 <>
                     <Row gutter={16}>
+                        {/* Họ và tên */}
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'fullName']}
                                 label="Họ và tên nhân viên"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập họ và tên'},
-                                    {min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự'}
+                                    { required: true, message: 'Vui lòng nhập họ và tên' },
+                                    { min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự' },
+                                    {
+                                        pattern: /^[A-Za-zÀ-ỹ\s]+$/, // ✅ chỉ chữ & khoảng trắng
+                                        message: 'Họ và tên chỉ được chứa chữ cái'
+                                    }
                                 ]}
                             >
-                                <Input placeholder="Nhập họ và tên nhân viên"/>
+                                <Input placeholder="Nhập họ và tên nhân viên" />
                             </Form.Item>
                         </Col>
+
+                        {/* Ngày bắt đầu làm việc */}
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'startDate']}
                                 label="Ngày bắt đầu làm việc"
-                                rules={[{required: true, message: 'Vui lòng chọn ngày bắt đầu'}]}
+                                rules={[
+                                    { required: true, message: 'Vui lòng chọn ngày bắt đầu' }
+                                ]}
                             >
-                                <DatePicker style={{width: '100%'}}/>
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    disabledDate={(current) =>
+                                        current && current < dayjs().startOf('day') // ✅ Không chọn ngày quá khứ
+                                    }
+                                />
                             </Form.Item>
                         </Col>
                     </Row>
+
                     <Row gutter={16}>
-                        <Col span={12}>
+                        {/* Email */}
+                        <Col span={8}>
                             <Form.Item
                                 name={['dataReq', 'email']}
                                 label="Email"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập email'},
-                                    {type: 'email', message: 'Email không hợp lệ'}
+                                    { required: true, message: 'Vui lòng nhập email' },
+                                    { type: 'email', message: 'Email không hợp lệ' }
                                 ]}
                             >
-                                <Input placeholder="Nhập email"/>
+                                <Input placeholder="Nhập email" />
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
+
+                        {/* Số điện thoại */}
+                        <Col span={8}>
                             <Form.Item
                                 name={['dataReq', 'phone']}
                                 label="Số điện thoại"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập số điện thoại'},
-                                    {pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại không hợp lệ'}
+                                    { required: true, message: 'Vui lòng nhập số điện thoại' },
+                                    {
+                                        pattern: /^[0-9]{10,11}$/,
+                                        message: 'Số điện thoại phải gồm 10-11 chữ số'
+                                    }
                                 ]}
                             >
-                                <Input placeholder="Nhập số điện thoại"/>
+                                <Input placeholder="Nhập số điện thoại" />
                             </Form.Item>
                         </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
+                        <Col span={8}>
                             <Form.Item
                                 name={['dataReq', 'department']}
                                 label="Phòng ban"
-                                rules={[{required: true, message: 'Vui lòng chọn phòng ban'}]}
+                                rules={[{ required: true, message: 'Vui lòng chọn phòng ban' }]}
                             >
                                 <Select
                                     placeholder="Chọn phòng ban"
@@ -243,7 +318,8 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                             pos.name.toLowerCase().includes(department?.name.toLowerCase())
                                         );
                                         form.setFieldValue(['dataReq', 'position'], matched?._id);
-                                    }}>
+                                    }}
+                                >
                                     {departments.map(department => (
                                         <Option key={department._id} value={department._id}>
                                             {department.name}
@@ -252,31 +328,37 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 </Select>
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name={['dataReq', 'position']}
-                                label="Chức vụ"
-                                rules={[{required: true, message: 'Vui lòng chọn chức vụ'}]}
-                            >
-                                <Select placeholder="Chọn chức vụ">
-                                    {positions.map(position => (
-                                        <Option key={position._id} value={position._id}>
-                                            {position.name}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        {/* Phòng ban */}
+
+
+                        {/* Chức vụ */}
+                        {/*<Col span={12}>*/}
+                        {/*    <Form.Item*/}
+                        {/*        name={['dataReq', 'position']}*/}
+                        {/*        label="Chức vụ"*/}
+                        {/*        rules={[{ required: true, message: 'Vui lòng chọn chức vụ' }]}*/}
+                        {/*    >*/}
+                        {/*        <Select placeholder="Chọn chức vụ">*/}
+                        {/*            {positions.map(position => (*/}
+                        {/*                <Option key={position._id} value={position._id}>*/}
+                        {/*                    {position.name}*/}
+                        {/*                </Option>*/}
+                        {/*            ))}*/}
+                        {/*        </Select>*/}
+                        {/*    </Form.Item>*/}
+                        {/*</Col>*/}
+
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'reason']}
                                 label="Chức vụ"
                                 hidden={true}
-                            >
-                            </Form.Item>
+                            />
                         </Col>
                     </Row>
-
                 </>
             ),
             initialValues: {
@@ -404,7 +486,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             <Form.Item
                                 name={['dataReq', 'employeeId']}
                                 label="Nhân viên"
-                                rules={[{required: true, message: 'Vui lòng chọn nhân viên'}]}
+                                rules={[{ required: true, message: 'Vui lòng chọn nhân viên' }]}
                             >
                                 <Select
                                     placeholder="Chọn nhân viên"
@@ -412,27 +494,40 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                     optionFilterProp="children"
                                     onChange={(value) => {
                                         const selectedEmployee = employees.find(emp => emp?._id === value);
+
                                         if (selectedEmployee) {
-                                            const nextCoefficient = coefficients.find(coef => coef.rank === (selectedEmployee.salaryCoefficientId?.rank + 1));
-                                            if (!nextCoefficient) {
-                                                message.error("Nhân viên đã đạt đến mức lương tối đa, vui lòng thử lại với nhân viên khác!")
-                                            }
+                                            const currentCoef = selectedEmployee.salaryCoefficientId;
+                                            const currentSalary =
+                                                currentCoef?.salary_coefficient *
+                                                currentCoef?.salary_rankId?.salary_base;
+
+                                            const availableCoefficients = coefficients.filter(
+                                                coef => coef.rank > (currentCoef?.rank || 0)
+                                            );
+
                                             form.setFieldsValue({
                                                 dataReq: {
                                                     ...form.getFieldValue('dataReq'),
                                                     department: selectedEmployee.departmentId?.name || '',
-                                                    currentCoefficient: selectedEmployee.salaryCoefficientId?.salary_coefficient || 0,
-                                                    currentSalary: formatNumber(selectedEmployee.salaryCoefficientId?.salary_coefficient * selectedEmployee.salaryCoefficientId?.salary_rankId?.salary_base) || 0,
-                                                    proposedCoefficient: nextCoefficient ? nextCoefficient.salary_coefficient : 0,
-                                                    proposedSalary: nextCoefficient ? formatNumber(nextCoefficient.salary_coefficient * nextCoefficient.salary_rankId?.salary_base) : 0,
-                                                    salaryCoefficientsId: nextCoefficient?._id,
-                                                    employeeSalaryIncreaseId: selectedEmployee?._id
-                                                }
+                                                    currentCoefficient: currentCoef?.salary_coefficient || 0,
+                                                    currentSalary: formatNumber(currentSalary || 0),
+                                                    employeeSalaryIncreaseId: selectedEmployee._id,
+                                                    currentRank: currentCoef?.rank || 0, // ✅ Lưu bậc hiện tại
+                                                    proposedCoefficient: undefined,
+                                                    proposedSalary: undefined,
+                                                    salaryCoefficientsId: undefined,
+                                                },
                                             });
+
+                                            if (availableCoefficients.length === 0) {
+                                                message.warning(
+                                                    'Nhân viên này đã đạt mức lương tối đa, không còn bậc để tăng!'
+                                                );
+                                            }
                                         }
                                     }}
                                 >
-                                    {employees.map(employee => (
+                                    {employees.map((employee) => (
                                         <Option key={employee._id} value={employee._id}>
                                             {employee.fullName} - {employee.email}
                                         </Option>
@@ -440,42 +535,42 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 </Select>
                             </Form.Item>
                         </Col>
+
                         <Col span={12}>
-                            <Form.Item
-                                name={['dataReq', 'department']}
-                                label="Bộ phận"
-                            >
-                                <Input disabled/>
+                            <Form.Item name={['dataReq', 'department']} label="Bộ phận">
+                                <Input disabled />
                             </Form.Item>
                         </Col>
                     </Row>
+
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'currentCoefficient']}
                                 label="Hệ số lương hiện tại"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập hệ số lương hiện tại'},
+                                    { required: true, message: 'Vui lòng nhập hệ số lương hiện tại' },
                                 ]}
                             >
                                 <InputNumber
-                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
+                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
                                     disabled
                                     precision={2}
                                     step={0.01}
                                 />
                             </Form.Item>
                         </Col>
+
                         <Col span={12}>
                             <Form.Item
                                 name={['dataReq', 'currentSalary']}
                                 label="Số lương hiện tại"
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập số lương hiện tại'},
+                                    { required: true, message: 'Vui lòng nhập số lương hiện tại' },
                                 ]}
                             >
                                 <InputNumber
-                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
+                                    style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
                                     precision={2}
                                     step={0.01}
                                     disabled
@@ -483,46 +578,80 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             </Form.Item>
                         </Col>
                     </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name={['dataReq', 'proposedCoefficient']}
-                                label="Hệ số lương đề xuất"
-                                rules={[
-                                    {required: true, message: 'Vui lòng nhập hệ số lương hiện tại'},
-                                ]}
-                            >
-                                <InputNumber
-                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
-                                    disabled
-                                    precision={2}
-                                    step={0.01}
-                                />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name={['dataReq', 'proposedSalary']}
-                                label="Số lương đề xuất"
-                                rules={[
-                                    {required: true, message: 'Vui lòng nhập hệ số lương đề xuất'},
-                                ]}
-                            >
-                                <InputNumber
-                                    style={{width: '100%', color: 'blue', fontWeight: 'bold'}}
-                                    precision={2}
-                                    step={0.01}
-                                    disabled
-                                />
-                            </Form.Item>
-                            <Form.Item
-                                name={['dataReq', 'salaryCoefficientsId']}
-                                label="Số lương đề xuất"
-                                hidden={true}
-                            >
-                            </Form.Item>
-                        </Col>
-                    </Row>
+
+                    <Form.Item shouldUpdate={(prev, cur) =>
+                        prev.dataReq?.currentRank !== cur.dataReq?.currentRank
+                    }>
+                        {() => {
+                            const currentRank = form.getFieldValue(['dataReq', 'currentRank']) || 0;
+                            const availableCoefficients = coefficients.filter(coef => coef.rank > currentRank);
+
+                            return (
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name={['dataReq', 'proposedCoefficient']}
+                                            label="Hệ số lương đề xuất"
+                                            rules={[
+                                                { required: true, message: 'Vui lòng chọn hệ số lương đề xuất' },
+                                            ]}
+                                        >
+                                            <Select
+                                                placeholder="Chọn hệ số lương đề xuất"
+                                                onChange={(value) => {
+                                                    const selectedCoefficient = coefficients.find(
+                                                        coef => coef._id === value
+                                                    );
+                                                    if (selectedCoefficient) {
+                                                        const proposedSalary =
+                                                            selectedCoefficient.salary_coefficient *
+                                                            selectedCoefficient.salary_rankId?.salary_base;
+                                                        form.setFieldsValue({
+                                                            dataReq: {
+                                                                ...form.getFieldValue('dataReq'),
+                                                                proposedCoefficient:
+                                                                selectedCoefficient.salary_coefficient,
+                                                                proposedSalary: formatNumber(proposedSalary),
+                                                                salaryCoefficientsId: selectedCoefficient._id,
+                                                            },
+                                                        });
+                                                    }
+                                                }}
+                                            >
+                                                {availableCoefficients.map(coef => (
+                                                    <Option key={coef._id} value={coef._id}>
+                                                        {coef.salary_coefficient} (Bậc {coef.rank})
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                    </Col>
+
+                                    <Col span={12}>
+                                        <Form.Item
+                                            name={['dataReq', 'proposedSalary']}
+                                            label="Số lương đề xuất"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message: 'Vui lòng chọn hệ số lương đề xuất',
+                                                },
+                                            ]}
+                                        >
+                                            <InputNumber
+                                                style={{ width: '100%', color: 'blue', fontWeight: 'bold' }}
+                                                precision={2}
+                                                step={0.01}
+                                                disabled
+                                            />
+                                        </Form.Item>
+                                        {/* Ẩn để lưu ID hệ số lương */}
+                                        <Form.Item name={['dataReq', 'salaryCoefficientsId']} hidden />
+                                    </Col>
+                                </Row>
+                            );
+                        }}
+                    </Form.Item>
                     <Row gutter={16}>
                         <Col span={24}>
                             <Form.Item
@@ -561,6 +690,7 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                     currentSalary: undefined,
                     proposedCoefficient: undefined,
                     proposedSalary: undefined,
+                    currentRank: undefined,
                     salaryCoefficientsId: undefined,
                     effectiveDate: undefined,
                     reason: '',
@@ -582,27 +712,30 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                         <Form.Item
                             name={['dataReq', 'startDate']}
                             label="Ngày bắt đầu nghỉ"
-                            rules={[{required: true, message: 'Vui lòng chọn ngày bắt đầu'}]}
+                            rules={[
+                                { required: true, message: 'Vui lòng chọn ngày bắt đầu' }
+                            ]}
                         >
                             <DatePicker
-                                style={{width: '100%'}}
-                                onChange={date => {
+                                style={{ width: '100%' }}
+                                disabledDate={(current) => current && current < dayjs().startOf('day')}
+                                onChange={(date) => {
                                     if (date) {
                                         const endDate = date.clone().add(180, 'days');
                                         form.setFieldsValue({
                                             dataReq: {
                                                 ...form.getFieldValue('dataReq'),
                                                 startDate: date,
-                                                endDate: endDate
-                                            }
+                                                endDate: endDate,
+                                            },
                                         });
                                     } else {
                                         form.setFieldsValue({
                                             dataReq: {
                                                 ...form.getFieldValue('dataReq'),
                                                 startDate: null,
-                                                endDate: null
-                                            }
+                                                endDate: null,
+                                            },
                                         });
                                     }
                                 }}
@@ -613,18 +746,39 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                         <Form.Item
                             name={['dataReq', 'endDate']}
                             label="Ngày kết thúc nghỉ"
-                            rules={[{required: true, message: 'Vui lòng chọn ngày kết thúc'}]}
+                            dependencies={[['dataReq', 'startDate']]}
+                            rules={[
+                                { required: true, message: 'Vui lòng chọn ngày kết thúc' },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        const startDate = getFieldValue(['dataReq', 'startDate']);
+                                        if (!value || !startDate || value.valueOf() >= startDate.valueOf()) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(
+                                            new Error('Ngày kết thúc không được trước ngày bắt đầu')
+                                        );
+                                    },
+                                }),
+                            ]}
                         >
-                            <DatePicker style={{width: '100%'}}/>
+                            <DatePicker
+                                style={{ width: '100%' }}
+                                disabledDate={(current) => current && current < dayjs().startOf('day')}
+                            />
                         </Form.Item>
                     </Col>
                 </Row>
+
                 <Form.Item
                     name={['dataReq', 'reason']}
                     label="Lý do nghỉ phép"
-                    rules={[{required: true, message: 'Vui lòng nhập lý do nghỉ phép'}]}
+                    rules={[
+                        { required: true, message: 'Vui lòng nhập lý do nghỉ phép' },
+                        { min: 10, message: 'Lý do phải có ít nhất 10 ký tự' },
+                    ]}
                 >
-                    <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép"/>
+                    <Input.TextArea rows={4} placeholder="Nhập lý do nghỉ phép" />
                 </Form.Item>
             </>
         );
@@ -653,7 +807,22 @@ const Requests = () => {
     const [editingRowId, setEditingRowId] = useState(null);
     const [editedRows, setEditedRows] = useState({});
     const {showLoading, hideLoading} = useLoading();
-
+    const [salarySlipPreview, setSalarySlipPreview] = useState(null); // base64 PDF
+    const [showSignModal, setShowSignModal] = useState(false);
+    const [signing, setSigning] = useState(false);
+    const [signType, setSignType] = useState('draw'); // 'draw' | 'image'
+    const [signaturePad, setSignaturePad] = useState(null);
+    const [signatureImage, setSignatureImage] = useState(null); // base64 ảnh upload
+    const [signedPdf, setSignedPdf] = useState(null); // base64 PDF đã ký
+    const [selectedMonth, setSelectedMonth] = useState(null);
+    const [salarySlipHash, setSalarySlipHash] = useState(null);
+    const [disabledFile, setDisabledFile] = useState(false);
+    const [selectedStatus, setSelectedStatus] = useState(null);
+    const [originalData, setOriginalData] = useState([]);
+    const [salaryEmpty, setSalaryEmpty] = useState(false);
+    const [previewVisible, setPreviewVisible] = useState(false);
+    const [previewFile, setPreviewFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState('');
 
     useEffect(() => {
         try {
@@ -691,15 +860,21 @@ const Requests = () => {
         }
     }
 
-    const loadDataReq = async () => {
+    const loadDataReq = async (status?) => {
         try {
             const user = JSON.parse(localStorage.getItem("user"));
             if (!user) throw new Error("Bạn chưa đăng nhập !!!");
             let body = {
                 employeeId: user.employeeId,
+                status: status
             }
             const response = await requestService.getByAccountId(body);
             if (response.success) {
+                if(!status){
+                    console.log('run')
+                    console.log(status)
+                    setOriginalData(response.data)
+                }
                 setRequests(response.data);
             }
         } catch (e) {
@@ -847,6 +1022,7 @@ const Requests = () => {
                 employeeId: request.employeeId,
                 departmentId: request.departmentId,
                 typeCode: request.typeRequest.code,
+                month: request.month ? moment(request.month) : null,
                 priority: request.priority,
                 note: request.note,
                 attachments: request.attachments
@@ -860,7 +1036,7 @@ const Requests = () => {
                         email: request.dataReq.email || '',
                         phone: request.dataReq.phone || '',
                         department: request.dataReq.department || '',
-                        position: request.dataReq.position || '',
+                        // position: request.dataReq.position || '',
                         note: request.dataReq.note || '',
                         reason: request.dataReq.reason || ''
                     }
@@ -925,6 +1101,59 @@ const Requests = () => {
         setSelectedRequestType(null);
         setFileResponse([])
         setIsEdit(false);
+        setSalarySlipPreview(null);
+        setDisabledFile(false);
+        setSalaryEmpty(true);
+    };
+
+    const handleSignModalOk = async () => {
+        if (!signaturePad || signaturePad.isEmpty()) {
+            message.warning("Vui lòng ký vào ô ký số!");
+            return;
+        }
+        const files = form.getFieldValue('attachments');
+        if ((files && files.length > 0) || (fileResponse && fileResponse.length > 0)) {
+            const file = files[0] || fileResponse[0];
+            if (file.originalName?.startsWith('bang-luong-thang-ky')) {
+                form.submit();
+                setSigning(false)
+                return;
+            }
+        }
+        setSigning(true);
+        try {
+            const signatureDataUrl = signaturePad.getTrimmedCanvas().toDataURL("image/png");
+            const signatureBase64 = signatureDataUrl.split(",")[1];
+            const pdfHash = salarySlipHash;
+            const payload = {
+                month: selectedMonth,
+                signatureImage: signatureBase64,
+                originalHash: pdfHash,
+            };
+            const response = await SalaryService.signSalaryPdf(payload);
+            if(response.success){
+                const fileData = response.data.signFile;
+                setFileResponse([fileData]);
+                const currentValues = form.getFieldsValue(true);
+                form.setFieldsValue({
+                    ...currentValues,
+                    attachments: fileData
+                });
+
+                setTimeout(() => {
+                    form.submit();
+                }, 0);
+            }else{
+                message.error(response.message);
+            }
+
+            setShowSignModal(false);
+        } catch (e) {
+            message.error(e.message);
+        } finally {
+            setSignaturePad(null)
+            setSigning(false);
+        }
     };
 
     const handleFormSubmit = async (values) => {
@@ -940,9 +1169,11 @@ const Requests = () => {
             } else {
                 body.attachments = [];
             }
-            // Nếu là SALARY_APPROVED thì chỉ gửi mảng các _id phiếu lương
-            if (body.typeCode === STATUS.SALARY_APPROVED) {
-                body.dataReq = salarySlips.map(slip => slip._id);
+            if(body.typeCode === STATUS.SALARY_APPROVED) {
+                if(!body.attachments && !body.attachments.length > 0) {
+                    message.error("Không thể gửi và ký khi không có bảng lương!")
+                    return;
+                }
             }
             if (body.requestId) {
                 const response = await requestService.updateRequest(body);
@@ -956,7 +1187,11 @@ const Requests = () => {
                 body.departmentId = employee.departmentId._id;
                 const response = await requestService.createRequest(body);
                 if (response.success) {
-                    message.success(response.message);
+                    if(body.typeCode === STATUS.SALARY_APPROVED){
+                        message.success("Ký và gửi duyệt thành công!");
+                    }else{
+                        message.success("Gửi duyệt thành công!");
+                    }
                 }
             }
         } catch (e) {
@@ -967,6 +1202,9 @@ const Requests = () => {
             setFileResponse([])
             form.resetFields();
             setSelectedDataType(null);
+            setSalarySlipPreview(null);
+            setSelectedMonth(null)
+            setDisabledFile(false);
         }
     };
 
@@ -978,9 +1216,8 @@ const Requests = () => {
         } else if (value === STATUS.SALARY_INCREASE) {
             loadEmployees();
             loadCoefficient();
-        }
-        if (value === STATUS.SALARY_APPROVED) {
-            loadSalarySlip();
+        }else if(value === STATUS.SALARY_APPROVED){
+            setDisabledFile(true)
         }
         const formFields = {
             LEAVE_REQUEST: {
@@ -1043,6 +1280,80 @@ const Requests = () => {
         setDrawerVisible(false);
     };
 
+    const checkFileValid = () => {
+        const files = form.getFieldValue('attachments');
+        if ((files && files.length > 0) || (fileResponse && fileResponse.length > 0)) {
+            const file = files[0] || fileResponse[0];
+            if (file.originalName?.startsWith('bang-luong-thang-ky')) {
+                form.submit();
+                setSigning(false)
+                return;
+            }
+        }else if(salaryEmpty) {
+            message.error("Không thể gửi và ký khi không có bảng lương!")
+            return;
+        } else {
+            setShowSignModal(true);
+        }
+    }
+
+    const checkByMonth = async (month) => {
+        try{
+            const response = await RequestService.checkByMonth(month);
+            if(response.success){
+                if(response.data !== null || response.data){
+                    return false;
+                }else{
+                    return true;
+                }
+            }else {
+                return false;
+            }
+        }catch (e) {
+            message.error(e.message);
+        }
+    }
+
+    const handleChangeMonth = async (date) => {
+        try{
+            showLoading()
+            setSalaryEmpty(false);
+            if (date) {
+                const selectedMonth = date.format("YYYY-MM");
+                const checkDataValid = await checkByMonth(selectedMonth);
+                if(!checkDataValid){
+                    message.error("Bảng lương của tháng này đã được phê duyệt, vui lòng thử lại với tháng khác!");
+                    return;
+                }
+                setSelectedMonth(selectedMonth)
+                const response = await SalaryService.getSalaryPreviewByMonth(selectedMonth)
+                if(response.success){
+                    const base64 = response.data?.pdfPreview;
+                    setSalarySlipPreview(base64 || null);
+                    setSalarySlipHash(response.data?.pdfHash)
+                }else{
+                    setSalarySlipPreview(null);
+                    setDisabledFile(false);
+                    setSalaryEmpty(true);
+                    message.error(response.message);
+                }
+            } else {
+                setSalarySlipPreview(null);
+            }
+        }catch (e) {
+            setSalaryEmpty(true)
+            setSalarySlipPreview(null);
+            message.error(e.message);
+        }finally {
+            hideLoading()
+        }
+    };
+
+    const handleStatusChange = (status) => {
+        loadDataReq(status);
+    };
+
+
     const confirmDelete = (request) => {
         Modal.confirm({
             title: 'Xác nhận hủy yêu cầu',
@@ -1073,65 +1384,26 @@ const Requests = () => {
         });
     };
 
-    const salarySlipColumns = [
-        {title: 'STT', dataIndex: 'index', key: 'index', render: (text, record, index) => index + 1},
-        {
-            title: 'Nhân viên',
-            dataIndex: ['employeeId', 'fullName'],
-            key: 'employee',
-            align: 'center',
-            render: (text, record) => <span>{record.employeeId?.fullName}</span>
-        },
-        {
-            title: 'Lương cơ bản',
-            dataIndex: 'baseSalary',
-            key: 'baseSalary',
-            align: 'right',
-            render: text => <span>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Hệ số lương',
-            dataIndex: 'salaryCoefficient',
-            key: 'salaryCoefficient',
-            align: 'right',
-            render: text => <span>{text}</span>
-        },
-        {
-            title: 'Tổng lương cơ bản',
-            dataIndex: 'totalBaseSalary',
-            key: 'totalBaseSalary',
-            align: 'right',
-            render: text => <span style={{fontWeight: 'bold', color: '#1677ff'}}>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Bảo hiểm',
-            dataIndex: 'insurance',
-            key: 'insurance',
-            align: 'right',
-            render: text => <span>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Khấu trừ gia cảnh',
-            dataIndex: 'familyDeduction',
-            key: 'familyDeduction',
-            align: 'right',
-            render: text => <span>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Thuế TNCN',
-            dataIndex: 'personalIncomeTax',
-            key: 'personalIncomeTax',
-            align: 'right',
-            render: text => <span>{formatNumber(text)}</span>
-        },
-        {
-            title: 'Lương thực nhận',
-            dataIndex: 'totalSalary',
-            key: 'totalSalary',
-            align: 'right',
-            render: text => <span style={{fontWeight: 'bold', color: '#1677ff'}}>{formatNumber(text)}</span>
-        },
-    ];
+    const handlePreviewDoc = async (doc) => {
+        try {
+            showLoading()
+            console.log(doc)
+            const key = encodeURIComponent(doc.key);
+            const blob = await FileService.getFile(key);
+            if (blob) {
+                const url = window.URL.createObjectURL(blob);
+                setPreviewFile(doc);
+                setPreviewUrl(url);
+                setPreviewVisible(true);
+            } else {
+                message.error('Không thể xem trước file');
+            }
+        } catch (e) {
+            message.error('Không thể xem trước file');
+        }finally {
+            hideLoading()
+        }
+    };
 
     const columns = [
         {
@@ -1171,11 +1443,11 @@ const Requests = () => {
             ),
             sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
         },
-        {
-            title: 'Thời gian giải quyết',
-            dataIndex: 'timeResolve',
-            key: 'timeResolve',
-        },
+        // {
+        //     title: 'Thời gian giải quyết',
+        //     dataIndex: 'timeResolve',
+        //     key: 'timeResolve',
+        // },
         {
             title: 'Ghi chú',
             dataIndex: 'note',
@@ -1219,13 +1491,23 @@ const Requests = () => {
             key: 'action',
             render: (_, record) => (
                 <Space size="small">
-                    <Tooltip title="Xem chi tiết">
-                        <Button
-                            type="text"
-                            icon={<EyeOutlined/>}
-                            onClick={() => showDrawer(record)}
-                        />
-                    </Tooltip>
+                    {record?.typeRequest?.code === STATUS.SALARY_APPROVED ? (
+                        <Tooltip title="Xem bảng lương PDF">
+                            <Button
+                                type="text"
+                                icon={<FilePdfOutlined style={{ color: "#fa541c" }} />}
+                                onClick={() => handlePreviewDoc(record.attachments[0])}
+                            />
+                        </Tooltip>
+                        ) : (
+                        <Tooltip title="Xem chi tiết">
+                            <Button
+                                type="text"
+                                icon={<EyeOutlined/>}
+                                onClick={() => showDrawer(record)}
+                            />
+                        </Tooltip>
+                    )}
                     {record.status === 'Pending' && (
                         <>
                             <Tooltip title="Chỉnh sửa">
@@ -1249,12 +1531,11 @@ const Requests = () => {
         },
     ];
 
-    const pendingRequests = requests.filter(r => r.status === 'Pending').length;
-    const approvedRequests = requests.filter(r => r.status === 'Approved').length;
-    const rejectedRequests = requests.filter(r => r.status === 'Rejected').length;
-    const cancelledRequests = requests.filter(r => r.status === 'Cancelled').length;
+    const pendingRequests = originalData.filter(r => r.status === 'Pending').length;
+    const approvedRequests = originalData.filter(r => r.status === 'Approved').length;
+    const rejectedRequests = originalData.filter(r => r.status === 'Rejected').length;
+    const cancelledRequests = originalData.filter(r => r.status === 'Cancelled').length;
 
-    // Thêm hàm xuất Excel
     const exportExcel = (data) => {
         const exportData = data.map((item, idx) => ({
             'STT': idx + 1,
@@ -1272,9 +1553,6 @@ const Requests = () => {
         XLSX.utils.book_append_sheet(wb, ws, 'Requests');
         XLSX.writeFile(wb, 'requests.xlsx');
     };
-
-    // XÓA HÀM exportPDF
-    // Chỉ giữ lại exportExcel
 
     return (
         <div style={{padding: '24px'}}>
@@ -1313,69 +1591,53 @@ const Requests = () => {
             <Row gutter={[16, 16]} style={{marginBottom: '16px'}}>
                 <Col xs={24} sm={12} lg={6}>
                     <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Đang chờ duyệt"
-                                value={pendingRequests}
-                                valueStyle={{color: '#1890ff'}}
-                                prefix={<ClockCircleOutlined/>}
-                            />
-                            <div style={{marginTop: 8}}>
-                                <Progress percent={Math.round((pendingRequests / requests.length) * 100)} size="small"
-                                          strokeColor="#1890ff"/>
-                            </div>
-                        </Card>
+                        <StatisticCard
+                            title="Đang chờ duyệt"
+                            value={pendingRequests}
+                            total={originalData.length}
+                            color="#1890ff"
+                            prefix={<ClockCircleOutlined />}
+                            onClick={() => handleStatusChange(STATUS.PENDING)}
+                        />
                     </ThreeDContainer>
                 </Col>
 
                 <Col xs={24} sm={12} lg={6}>
                     <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Đã phê duyệt"
-                                value={approvedRequests}
-                                valueStyle={{color: '#52c41a'}}
-                                prefix={<CheckCircleOutlined/>}
-                            />
-                            <div style={{marginTop: 8}}>
-                                <Progress percent={Math.round((approvedRequests / requests.length) * 100)} size="small"
-                                          strokeColor="#52c41a"/>
-                            </div>
-                        </Card>
+                        <StatisticCard
+                            title="Đã phê duyệt"
+                            value={approvedRequests}
+                            total={originalData.length}
+                            color="#52c41a"
+                            prefix={<CheckCircleOutlined />}
+                            onClick={() => handleStatusChange(STATUS.APPROVED)}
+                        />
                     </ThreeDContainer>
                 </Col>
 
                 <Col xs={24} sm={12} lg={6}>
                     <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Từ chối"
-                                value={rejectedRequests}
-                                valueStyle={{color: '#ff4d4f'}}
-                                prefix={<CloseCircleOutlined/>}
-                            />
-                            <div style={{marginTop: 8}}>
-                                <Progress percent={Math.round((rejectedRequests / requests.length) * 100)} size="small"
-                                          strokeColor="#ff4d4f"/>
-                            </div>
-                        </Card>
+                        <StatisticCard
+                            title="Từ chối"
+                            value={rejectedRequests}
+                            total={originalData.length}
+                            color="#ff4d4f"
+                            prefix={<CloseCircleOutlined />}
+                            onClick={() => handleStatusChange(STATUS.REJECTED)}
+                        />
                     </ThreeDContainer>
                 </Col>
 
                 <Col xs={24} sm={12} lg={6}>
                     <ThreeDContainer>
-                        <Card>
-                            <Statistic
-                                title="Đã hủy"
-                                value={cancelledRequests}
-                                valueStyle={{color: '#d9d9d9'}}
-                                prefix={<CloseOutlined/>}
-                            />
-                            <div style={{marginTop: 8}}>
-                                <Progress percent={Math.round((cancelledRequests / requests.length) * 100)} size="small"
-                                          strokeColor="#d9d9d9"/>
-                            </div>
-                        </Card>
+                        <StatisticCard
+                            title="Đã hủy"
+                            value={cancelledRequests}
+                            total={originalData.length}
+                            color="#d9d9d9"
+                            prefix={<CloseOutlined />}
+                            onClick={() => handleStatusChange(STATUS.CANCELLED)}
+                        />
                     </ThreeDContainer>
                 </Col>
             </Row>
@@ -1411,82 +1673,6 @@ const Requests = () => {
                             />
                         </Card>
                     </TabPane>
-                    <TabPane
-                        tab={<span><ClockCircleOutlined/> Đang chờ duyệt</span>}
-                        key="2"
-                    >
-                        <Card>
-                            <div style={{marginBottom: 16, display: 'flex', justifyContent: 'space-between'}}>
-                                <Input
-                                    placeholder="Tìm kiếm theo tên, ID, số yêu cầu..."
-                                    prefix={<SearchOutlined/>}
-                                    style={{width: 300}}
-                                    value={searchText}
-                                    onChange={e => setSearchText(e.target.value)}
-                                    allowClear
-                                />
-                                <Space>
-                                    <RangePicker placeholder={['Từ ngày', 'Đến ngày']} style={{marginRight: 8}}/>
-                                    <Button icon={<FilterOutlined/>} style={{marginRight: 8}}>
-                                        Lọc
-                                    </Button>
-                                    <Button icon={<ExportOutlined/>}>
-                                        Export
-                                    </Button>
-                                </Space>
-                            </div>
-
-                            <Table
-                                dataSource={requests.filter(item => item.status === "Pending")}
-                                columns={columns}
-                                rowKey="id"
-                                pagination={{
-                                    defaultPageSize: 10,
-                                    showSizeChanger: true,
-                                    pageSizeOptions: ['10', '20', '50', '100'],
-                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} yêu cầu`,
-                                }}
-                            />
-                        </Card>
-                    </TabPane>
-                    <TabPane
-                        tab={<span><CheckCircleOutlined/> Đã phê duyệt</span>}
-                        key="3"
-                    >
-                        <Card>
-                            <div style={{marginBottom: 16, display: 'flex', justifyContent: 'space-between'}}>
-                                <Input
-                                    placeholder="Tìm kiếm theo tên, ID, số yêu cầu..."
-                                    prefix={<SearchOutlined/>}
-                                    style={{width: 300}}
-                                    value={searchText}
-                                    onChange={e => setSearchText(e.target.value)}
-                                    allowClear
-                                />
-                                <Space>
-                                    <RangePicker placeholder={['Từ ngày', 'Đến ngày']} style={{marginRight: 8}}/>
-                                    <Button icon={<FilterOutlined/>} style={{marginRight: 8}}>
-                                        Lọc
-                                    </Button>
-                                    <Button icon={<ExportOutlined/>}>
-                                        Export
-                                    </Button>
-                                </Space>
-                            </div>
-
-                            <Table
-                                dataSource={requests.filter(item => item.status === "Approved")}
-                                columns={columns}
-                                rowKey="id"
-                                pagination={{
-                                    defaultPageSize: 10,
-                                    showSizeChanger: true,
-                                    pageSizeOptions: ['10', '20', '50', '100'],
-                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} yêu cầu`,
-                                }}
-                            />
-                        </Card>
-                    </TabPane>
                 </Tabs>
             </ThreeDContainer>
 
@@ -1498,13 +1684,23 @@ const Requests = () => {
                     <Button key="back" onClick={handleCancel}>
                         Hủy
                     </Button>,
-                    <Button
-                        key="submit"
-                        type="primary"
-                        onClick={() => form.submit()}
-                    >
-                        {selectedRequest ? 'Lưu thay đổi' : 'Gửi yêu cầu'}
-                    </Button>,
+                    (selectedRequestType === STATUS.SALARY_APPROVED && !isEdit ? (
+                        <Button
+                            key="signsubmit"
+                            type="primary"
+                            onClick={() => checkFileValid()}
+                        >
+                            Gửi yêu cầu và ký
+                        </Button>
+                    ) : (
+                        <Button
+                            key="submit"
+                            type="primary"
+                            onClick={() => form.submit()}
+                        >
+                            {selectedRequest ? 'Lưu thay đổi' : 'Gửi yêu cầu'}
+                        </Button>
+                    ))
                 ]}
                 width={1100}
             >
@@ -1543,6 +1739,21 @@ const Requests = () => {
                             ))}
                         </Select>
                     </Form.Item>
+                    {selectedRequestType === STATUS.SALARY_APPROVED && (
+                        <Form.Item
+                            name="month"
+                            label="Chọn tháng"
+                            rules={[{ required: true, message: "Vui lòng chọn tháng" }]}
+                        >
+                            <DatePicker
+                                picker="month"
+                                placeholder="Chọn tháng"
+                                onChange={handleChangeMonth}
+                                format={(value) => `Tháng ${value.format("M/YYYY")}`}
+                                disabled={isEdit}
+                            />
+                        </Form.Item>
+                    )}
                     <Form.Item
                         name="priority"
                         label="Mức độ ưu tiên"
@@ -1564,29 +1775,47 @@ const Requests = () => {
                     <Form.Item
                         name="attachments"
                     >
-                        <UploadFileComponent uploadFileSuccess={setFileResponse} isSingle={true} files={fileResponse}/>
+                        <UploadFileComponent uploadFileSuccess={setFileResponse} isSingle={true} files={fileResponse} disableFile={disabledFile}/>
                     </Form.Item>
+                    {selectedRequestType === STATUS.SALARY_APPROVED && salarySlipPreview && (
+                        <div style={{ marginBottom: 24 }}>
+                            <label style={{ fontWeight: 'bold' }}>Preview bảng lương tháng đã chọn</label>
+                            <iframe
+                                src={`data:application/pdf;base64,${salarySlipPreview}`}
+                                width="100%"
+                                height="600px"
+                                style={{ border: 'none' }}
+                            />
+                        </div>
+                    )}
                     {selectedRequestType && (
                         <>
                             {renderRequestTypeFields()}
                         </>
                     )}
-                    {selectedRequestType === STATUS.SALARY_APPROVED && salarySlips.length > 0 && (
-                        <div style={{overflowX: 'auto', width: '100%'}}>
-                            <Table
-                                dataSource={salarySlips}
-                                columns={getDynamicSalarySlipColumns(salarySlips)}
-                                rowKey="_id"
-                                pagination={false}
-                                bordered
-                                size="small"
-                                className="salary-slip-table"
-                                style={{borderRadius: 12, background: '#fff', minWidth: 600, maxWidth: 1000, margin: '0 auto'}}
-                                scroll={{ x: 'max-content' }}
-                            />
-                        </div>
-                    )}
                 </Form>
+                <Modal
+                    title="Ký bảng lương"
+                    open={showSignModal}
+                    onOk={handleSignModalOk}
+                    onCancel={() => setShowSignModal(false)}
+                    okText="Ký"
+                    cancelText="Hủy"
+                    confirmLoading={signing}
+                >
+                    <div style={{ border: '1px solid #ccc', borderRadius: 4, padding: 8, marginBottom: 8 }}>
+                        <SignatureCanvas
+                            penColor="black"
+                            canvasProps={{ width: 400, height: 120, className: 'sigCanvas' }}
+                            ref={ref => setSignaturePad(ref)}
+                            backgroundColor="#fff"
+                        />
+                        <div style={{ marginTop: 8 }}>
+                            <Button onClick={() => signaturePad && signaturePad.clear()}>Xóa chữ ký</Button>
+                        </div>
+                    </div>
+                    <p style={{ marginTop: 16 }}>Sau khi ký, chữ ký sẽ được gửi kèm với bảng lương PDF.</p>
+                </Modal>
             </Modal>
 
             <Drawer
@@ -1616,7 +1845,7 @@ const Requests = () => {
                         }}>
                             <div>
                                 <Title level={4} style={{marginBottom: 4}}>
-                                    Yêu cầu {selectedRequest.typeRequest.name}
+                                    {selectedRequest.typeRequest.name}
                                 </Title>
                                 <Tag color={getStatusColor(selectedRequest.status)}>
                                     {getStatusLabel(selectedRequest.status)}
@@ -1626,10 +1855,10 @@ const Requests = () => {
                                 </Tag>
                             </div>
                             <div>
-                                <Space>
-                                    <Button icon={<PrinterOutlined/>}>In yêu cầu</Button>
-                                    <Button icon={<MailOutlined/>}>Gửi email</Button>
-                                </Space>
+                                {/*<Space>*/}
+                                {/*    <Button icon={<PrinterOutlined/>}>In yêu cầu</Button>*/}
+                                {/*    <Button icon={<MailOutlined/>}>Gửi email</Button>*/}
+                                {/*</Space>*/}
                             </div>
                         </div>
 
@@ -1681,7 +1910,6 @@ const Requests = () => {
                         {/* Hiển thị chi tiết dataReq theo loại yêu cầu */}
                         <Divider orientation="left">Chi tiết yêu cầu</Divider>
                         {renderRequestDetailByType(selectedRequest)}
-
                         <Divider orientation="left">Ghi chú</Divider>
                         <Paragraph>{selectedRequest.note}</Paragraph>
 
@@ -1711,6 +1939,25 @@ const Requests = () => {
                     </>
                 )}
             </Drawer>
+            <Modal
+                open={previewVisible}
+                title={`Xem trước: ${previewFile?.originalName}`}
+                footer={null}
+                onCancel={() => {
+                    setPreviewVisible(false);
+                    setPreviewUrl('');
+                    setPreviewFile(null);
+                }}
+                width={1000}
+            >
+                {previewUrl && (
+                    previewFile?.originalName?.toLowerCase().endsWith('.pdf') ? (
+                        <iframe src={previewUrl} width="100%" height="700px" title="preview" />
+                    ) : (
+                        <img src={previewUrl} alt="preview" style={{ maxWidth: '100%', maxHeight: 600 }} />
+                    )
+                )}
+            </Modal>
         </div>
     );
 };

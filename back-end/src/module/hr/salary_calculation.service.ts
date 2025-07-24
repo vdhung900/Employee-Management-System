@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {BadRequestException, Injectable, Logger} from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -8,6 +8,20 @@ import { AttendanceRecords } from '../../schemas/attendanceRecords.schema';
 import { SalaryCoefficient } from '../../schemas/salaryCoefficents.schema';
 import { SalaryRank } from '../../schemas/salaryRank.schema';
 import { Benefits } from '../../schemas/benefits.schema';
+import puppeteer from "puppeteer";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import * as Mustache from "mustache";
+import {SalaryPreviewDto} from "./dto/salaryPreview.dto";
+import {formatNumber, numberToVietnameseCurrency} from "../../utils/format";
+import * as crypto from 'crypto';
+import {PDFDocument} from 'pdf-lib';
+import * as pdfjsLib from 'pdfjs-dist/build/pdf.js';
+import {base64ToMulterFile} from "../../utils/transfer";
+import {UploadService} from "../minio/minio.service";
+import {Documents, DocumentsDocument} from "../../schemas/documents.schema";
+import {Requests, RequestsDocument} from "../../schemas/requests.schema";
+import {STATUS} from "../../enum/status.enum";
 
 @Injectable()
 export class SalaryCalculationService {
@@ -21,6 +35,9 @@ export class SalaryCalculationService {
     @InjectModel(SalaryCoefficient.name) private coefModel: Model<SalaryCoefficient>,
     @InjectModel(SalaryRank.name) private rankModel: Model<SalaryRank>,
     @InjectModel(Benefits.name) private benefitModel: Model<Benefits>,
+    @InjectModel(Documents.name) private documentModel: Model<DocumentsDocument>,
+    @InjectModel(Requests.name) private requestModel: Model<RequestsDocument>,
+    private readonly uploadService: UploadService
   ) {}
 
   @Cron('0 59 23 L * *') // 23:59 ngày cuối cùng mỗi tháng
@@ -68,6 +85,28 @@ export class SalaryCalculationService {
     this.logger.log('Tính lương tự động hoàn tất!');
   }
 
+  // Thêm hàm tính số ngày thường trong tháng
+  private getWorkingDaysInMonth(month: number, year: number): number {
+    // Lấy ngày đầu tiên và cuối cùng của tháng
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    
+    let workingDays = 0;
+    const currentDate = new Date(firstDay);
+    
+    // Lặp qua từng ngày trong tháng
+    while (currentDate <= lastDay) {
+        // Nếu không phải thứ 7 (6) hoặc chủ nhật (0)
+        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+            workingDays++;
+        }
+        // Tăng lên ngày tiếp theo
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return workingDays;
+  }
+
   // Hàm tính lương cho 1 nhân viên
   private async calculateSalaryForEmployee(
     emp: any,
@@ -84,16 +123,26 @@ export class SalaryCalculationService {
       if (!rank) return;
       const baseSalary = rank.salary_base;
       const salaryCoefficient = coef.salary_coefficient;
-      let totalBaseSalary = baseSalary * salaryCoefficient;
+      let totalBaseSalary = Math.round(baseSalary * salaryCoefficient);
+
+      // Lấy số ngày làm việc trong tháng
+      const workingDays = this.getWorkingDaysInMonth(month, year);
+
       // Lấy attendance records trong tháng
       const attendances = attMap.get(emp._id.toString()) || [];
       // Tính nghỉ không phép
       const unpaidLeaveCount = attendances.filter(a => a.isPaid === false).length;
-      const unpaidLeave = (totalBaseSalary / 22) * unpaidLeaveCount;
+      const unpaidLeave = Math.round((totalBaseSalary / workingDays) * unpaidLeaveCount);
 
       // Phạt đi muộn/về sớm
-      let latePenalty = 0;
-      
+      let cntLatePenalty = 0;
+      for (const a of attendances) {
+        if (a.status === STATUS.LATE) {
+          cntLatePenalty++;
+        }
+      }
+      const latePenalty = cntLatePenalty * 20000;
+
       // Hàm tính tổng số giờ OT từ mảng overtimeRange
       function getTotalOtHours(overtimeRange: string[]): number {
         let total = 0;
@@ -112,63 +161,70 @@ export class SalaryCalculationService {
 
       // Tính OT ngày thường và cuối tuần
       let otWeekday = 0, otWeekend = 0;
-      let totalOtHours = 0;
+      let otWeekdayHour = 0, otWeekendHour = 0;
+      let totalOtHour = 0;
       for (const a of attendances) {
         if (a.status === 'overtime' || a.isOvertime) {
-          const otHours = getTotalOtHours(a.overtimeRange);
-          totalOtHours += otHours;
+          const otHours = Math.round(getTotalOtHours(a.overtimeRange));
+          totalOtHour += otHours;
           const date = new Date(a.date);
           const day = date.getDay();
           if (day === 0 || day === 6) {
-            otWeekend += (totalBaseSalary / 166) * 2 * otHours; // 200%
+            otWeekend += Math.round((totalBaseSalary / 166) * 2 * otHours); // 200%
+            otWeekendHour += otHours;
           } else {
-            otWeekday += (totalBaseSalary / 166) * 1.5 * otHours; // 150%
+            otWeekday += Math.round((totalBaseSalary / 166) * 1.5 * otHours); // 150%
+            otWeekdayHour += otHours;
           }
         }
       }
-      const totalOtAmount = otWeekday + otWeekend;
+      const totalOtAmount = Math.round(otWeekday + otWeekend);
 
       // === LẤY BENEFIT THEO EMPLOYEE HOẶC DEPARTMENT ===
       // Lưu ý: cần khai báo benefitModel ở constructor và import model Benefit
       const benefits = await (this as any).benefitModel.find({
-        $or: [
-          { employees: emp._id },
-          { departments: emp.departmentId }
-        ]
+        departments: emp.departmentId
       });
+      
       // Tổng tiền thưởng benefit (không loại bỏ trùng)
-      const totalBenefit = benefits.reduce((sum, b) => sum + (b.amount || 0), 0);
+      const totalBenefit = Math.round(benefits.reduce((sum, b) => sum + (b.amount || 0), 0));
 
       // Tổng các khoản trước bảo hiểm
-      const totalTaxableIncome = totalBaseSalary - unpaidLeave - latePenalty + totalOtAmount + totalBenefit;
+      const totalTaxableIncome = Math.round(totalBaseSalary - unpaidLeave - latePenalty + totalOtAmount + totalBenefit);
 
+      // Bảo hiểm xã hôij
+      const socialInsurance = Math.round(totalBaseSalary * 0.08);
+      // Bảo hiểm y tế
+      const healthInsurance = Math.round(totalBaseSalary * 0.015);
+      // Bảo hiểm thất nghiệp
+      const unemploymentInsurance = Math.round(totalBaseSalary * 0.01);
       // Tiền bảo hiểm
-      const insurance = totalBaseSalary * 0.105;
+      const totalInsurance = Math.round(socialInsurance + healthInsurance + unemploymentInsurance);
 
       // Lấy số người phụ thuộc
       const numDependents = emp.childDependents ? Number(emp.childDependents) : 0;
       // Giảm trừ gia cảnh và người phụ thuộc
-      const totalFamilyDeduction = 11000000 + numDependents * 4400000;
+      const totalFamilyDeduction = Math.round(11000000 + numDependents * 4400000);
 
       // Thu nhập chịu thuế
-      const taxableIncome = totalBaseSalary - totalFamilyDeduction - insurance;
+      const taxableIncome = Math.round(totalTaxableIncome - totalFamilyDeduction - totalInsurance);
 
       // Thuế TNCN (áp dụng biểu thuế lũy tiến từng phần)
       let personalIncomeTax = 0;
       if (taxableIncome > 0) {
-        if (taxableIncome <= 5000000) personalIncomeTax = taxableIncome * 0.05;
-        else if (taxableIncome <= 10000000) personalIncomeTax = 250000 + (taxableIncome - 5000000) * 0.1;
-        else if (taxableIncome <= 18000000) personalIncomeTax = 750000 + (taxableIncome - 10000000) * 0.15;
-        else if (taxableIncome <= 32000000) personalIncomeTax = 1950000 + (taxableIncome - 18000000) * 0.2;
-        else if (taxableIncome <= 52000000) personalIncomeTax = 4750000 + (taxableIncome - 32000000) * 0.25;
-        else if (taxableIncome <= 80000000) personalIncomeTax = 9750000 + (taxableIncome - 52000000) * 0.3;
-        else personalIncomeTax = 18150000 + (taxableIncome - 80000000) * 0.35;
+        if (taxableIncome <= 5000000) personalIncomeTax = Math.round(taxableIncome * 0.05);
+        else if (taxableIncome <= 10000000) personalIncomeTax = Math.round(250000 + (taxableIncome - 5000000) * 0.1);
+        else if (taxableIncome <= 18000000) personalIncomeTax = Math.round(750000 + (taxableIncome - 10000000) * 0.15);
+        else if (taxableIncome <= 32000000) personalIncomeTax = Math.round(1950000 + (taxableIncome - 18000000) * 0.2);
+        else if (taxableIncome <= 52000000) personalIncomeTax = Math.round(4750000 + (taxableIncome - 32000000) * 0.25);
+        else if (taxableIncome <= 80000000) personalIncomeTax = Math.round(9750000 + (taxableIncome - 52000000) * 0.3);
+        else personalIncomeTax = Math.round(18150000 + (taxableIncome - 80000000) * 0.35);
       }
 
       // Tổng lương thực nhận
-      const netSalary = totalTaxableIncome - insurance - personalIncomeTax;
+      const netSalary = Math.round(totalTaxableIncome - totalInsurance - personalIncomeTax);
 
-      totalBaseSalary = totalBaseSalary - unpaidLeave;
+      totalBaseSalary = Math.round(totalBaseSalary - unpaidLeave);
 
       // Lưu vào salarySlip: update nếu đã có, insert nếu chưa có
       await this.salarySlipModel.updateOne(
@@ -178,23 +234,32 @@ export class SalaryCalculationService {
             employeeId: emp._id,
             month,
             year,
-            baseSalary,
-            salaryCoefficient,
-            totalBaseSalary,
-            unpaidLeave: unpaidLeaveCount,
-            otWeekday,
-            otWeekend,
+            baseSalary,// Lương cơ bản
+            salaryCoefficient,// Hệ số lương
+            totalBaseSalary,// Tổng lương cơ bản
+            otWeekdayHour, //Tổng số giờ OT ngày thường
+            otWeekendHour, //Tổng số giờ OT cuối tuần
+            otWeekday,// Tổng tiền OT ngày thường
+            otWeekend,// Tổng tiền OT cuối tuần
             otHoliday: 0, // Không tính ngày lễ
-            totalOtHour: totalOtHours, // Tổng số giờ OT
+            totalOtHour, // Tổng số giờ OT
             totalOtSalary: totalOtAmount, // Tổng tiền OT
-            insurance,
-            personalIncomeTax,
-            familyDeduction: totalFamilyDeduction,
-            netSalary,
-            status: '00',
-            latePenalty, //Đúng giờ
-            totalTaxableIncome, //Tổng thu nhập chịu thuế
+            socialInsurance, //Tiền bảo hiểm xã hội
+            healthInsurance, //Tiền bảo hiểm y tế
+            unemploymentInsurance, //Tiền bảo hiểm thất nghiệp
+            totalInsurance, // Tổng tiền bảo hiểm
+            unpaidLeaveCount, //Số lần nghỉ không phép
+            unpaidLeave,// Tiền nghỉ không phép
             benefit: totalBenefit, // Tổng benefit cộng vào
+            numDependents, //Số người phụ thuộc
+            familyDeduction: totalFamilyDeduction, //Giảm trừ gia cảnh
+            personalIncomeTax, //Thuế TNCN
+            netSalary, //Lương thực nhận
+            cntLatePenalty, //Số lần đi muộn
+            latePenalty, //Tiền phạt đi muộn
+            totalTaxableIncome, //Tổng thu nhập trước khấu trừ và bảo hiểm
+            workingDays, // Số ngày làm việc
+            taxableIncome, //Thu nhập chịu thuế
           },
         },
         { upsert: true }
@@ -268,5 +333,263 @@ export class SalaryCalculationService {
         }
       }
     ]).exec();
+  }
+
+  async generatePdfBase64(month: string){
+    try{
+      let checkDataTable = false;
+      let dataPreview = {} as SalaryPreviewDto;
+      dataPreview.unitName = "Công ty TNHH MTV F";
+      dataPreview.department= "Phòng hành chính - nhân sự";
+      const monthDate = new Date(month);
+      dataPreview.month = monthDate.getMonth() + 1;
+      dataPreview.year = monthDate.getFullYear();
+      const dataSal = await this.getSalarySlipByMonth(month);
+      if(dataSal.length > 0){
+        checkDataTable = true;
+      }
+      const formattedSalarys = dataSal.map((slip, index) => ({
+        stt: index + 1,
+        employeeId: slip.employeeId,
+        month: slip.month,
+        year: slip.year,
+        status: slip.status,
+        baseSalary: formatNumber(slip.baseSalary),
+        totalBaseSalary: formatNumber(slip.totalBaseSalary),
+        salaryCoefficient: formatNumber(slip.salaryCoefficient),
+        unpaidLeave: formatNumber(slip.unpaidLeave),
+        latePenalty: formatNumber(slip.latePenalty),
+        otWeekday: slip.otWeekday,
+        numDependents: slip.numDependents,
+        otWeekend: slip.otWeekend,
+        otHoliday: slip.otHoliday,
+        workingDays: slip.workingDays,
+        totalOtSalary: formatNumber(slip.totalOtSalary),
+        totalInsurance: formatNumber(slip.totalInsurance),
+        socialInsurance: formatNumber(slip.socialInsurance),
+        healthInsurance: formatNumber(slip.healthInsurance),
+        unemploymentInsurance: formatNumber(slip.unemploymentInsurance),
+        personalIncomeTax: formatNumber(slip.personalIncomeTax),
+        familyDeduction: formatNumber(slip.familyDeduction),
+        netSalary: formatNumber(slip.netSalary),
+        totalOtHour: formatNumber(slip.totalOtHour),
+        totalTaxableIncome: formatNumber(slip.totalTaxableIncome),
+        benefit: formatNumber(slip.benefit),
+      })) as any;
+      dataPreview.salarys = formattedSalarys;
+      let totalSalary = 0;
+      let totalBasicSalaryAll = 0;
+      let totalPositionSalary = 0;
+      let totalFamilyDeduction = 0;
+      let totalAllowance = 0;
+      let totalOTDaily = 0;
+      let totalOTWeekend = 0;
+      let totalOTHoliday = 0;
+      let totalBhxh = 0;
+      let totalBhyt = 0;
+      let totalBhtn = 0;
+      let totalTax = 0;
+      let totalOTEnd = 0;
+      let totalTaxable = 0;
+      let totalEndInsurance = 0;
+      dataSal.forEach((salary) => {
+        totalSalary += salary.netSalary || 0;
+        totalBasicSalaryAll += salary.baseSalary || 0;
+        totalPositionSalary += salary.totalBaseSalary || 0;
+        totalFamilyDeduction += salary.familyDeduction || 0;
+        totalAllowance += salary.benefit || 0;
+        totalTax += salary.personalIncomeTax || 0;
+        totalOTEnd += salary.totalOtSalary || 0;
+        totalTaxable += salary.totalTaxableIncome || 0;
+        totalBhxh += salary.socialInsurance || 0;
+        totalBhyt += salary.healthInsurance || 0;
+        totalBhtn += salary.unemploymentInsurance || 0;
+        totalEndInsurance += salary.totalInsurance || 0;
+      })
+      dataPreview.totalInWords = numberToVietnameseCurrency(totalSalary);
+      dataPreview.totalSalary = formatNumber(totalSalary);
+      dataPreview.totalPositionSalary = formatNumber(totalPositionSalary);
+      dataPreview.totalFamilyDeduction = formatNumber(totalFamilyDeduction);
+      dataPreview.totalAllowance = formatNumber(totalAllowance);
+      dataPreview.totalOTDaily = formatNumber(totalOTDaily);
+      dataPreview.totalOTWeekend = formatNumber(totalOTWeekend);
+      dataPreview.totalOTHoliday = formatNumber(totalOTHoliday);
+      dataPreview.totalBhxh = formatNumber(totalBhxh);
+      dataPreview.totalBhyt = formatNumber(totalBhyt);
+      dataPreview.totalBhtn = formatNumber(totalBhtn);
+      dataPreview.totalTax = formatNumber(totalTax);
+      dataPreview.totalBasicSalaryAll = formatNumber(totalBasicSalaryAll);
+      dataPreview.totalOTEnd = formatNumber(totalOTEnd);
+      dataPreview.totalTaxable = formatNumber(totalTaxable);
+      dataPreview.totalEndInsurance = formatNumber(totalEndInsurance);
+      const dateSign = new Date();
+      dataPreview.signDay = dateSign.getDay();
+      dataPreview.signMonth = dateSign.getMonth() + 1;
+      dataPreview.signYear = dateSign.getFullYear();
+      const rawData = JSON.stringify(dataPreview);
+      const hash = crypto.createHash('sha256').update(rawData).digest('hex');
+      const templatePath = path.join(process.cwd(), "templates", "bang_luong.html");
+      const templateHtml = fs.readFileSync(templatePath, "utf8");
+      const html = Mustache.render(templateHtml, dataPreview);
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: "networkidle0" });
+
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        landscape: true,
+        margin: { top: "10mm", right: "10mm", bottom: "10mm", left: "10mm" }
+      });
+
+      await browser.close();
+
+      return {
+        pdfPreview: Buffer.from(pdfBuffer).toString("base64"),
+        dataTable: checkDataTable,
+        pdfHash: hash
+      }
+    }catch (e) {
+      throw e;
+    }
+  }
+
+  async findTextPosition(pdfBuffer, searchText) {
+    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(pdfBuffer) });
+    const pdf = await loadingTask.promise;
+    const totalPages = pdf.numPages;
+
+    for (let i = 1; i <= totalPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+
+      for (const item of textContent.items) {
+        if (item.str && item.str.includes(searchText)) {
+          return {
+            pageIndex: i - 1, // pdf-lib dùng index từ 0
+            x: item.transform[4],
+            y: item.transform[5]
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  async signSalarySlip(month: string, signatureImage: string, originalHash: string) {
+    try {
+      const { pdfPreview, pdfHash } = await this.generatePdfBase64(month);
+      const pdfBuffer = Buffer.from(pdfPreview, 'base64');
+      const hash = crypto.createHash('sha256').update(pdfBuffer).digest('hex');
+      if (pdfHash !== originalHash) {
+        throw new BadRequestException('PDF đã bị sửa trước khi ký');
+      }
+      const pdfDoc = await PDFDocument.load(new Uint8Array(pdfBuffer));
+      const firstPage = pdfDoc.getPages()[0];
+      const sigBytes = Uint8Array.from(Buffer.from(signatureImage, 'base64'));
+      const pngImage = await pdfDoc.embedPng(sigBytes);
+      const pngDims = pngImage.scale(0.4);
+      const { width, height } = firstPage.getSize();
+      const pos = await this.findTextPosition(pdfBuffer, 'Người làm đơn');
+      let targetPage = firstPage;
+      const offsetY = 10;
+      const offsetX = 30;
+      if (pos) {
+        const allPages = pdfDoc.getPages();
+        const targetPage = allPages[pos.pageIndex];
+        targetPage.drawImage(pngImage, {
+          x: pos.x - offsetX,
+          y: pos.y - pngDims.height - offsetY,
+          width: pngDims.width,
+          height: pngDims.height,
+        });
+      } else {
+        const firstPage = pdfDoc.getPages()[0];
+        const { width } = firstPage.getSize();
+        firstPage.drawImage(pngImage, {
+          x: width - pngDims.width - 40,
+          y: 40,
+          width: pngDims.width,
+          height: pngDims.height,
+        });
+      }
+      const signedPdfBytes = await pdfDoc.save();
+      const signedPdfBase64 = Buffer.from(signedPdfBytes).toString('base64');
+
+      const signedFile = base64ToMulterFile(
+          signedPdfBase64,
+          `bang-luong-thang-ky-${month}.pdf`
+      );
+      const uploadedFileInfo = await this.uploadService.uploadFile(signedFile, true);
+      return {
+        signFile: uploadedFileInfo
+      };
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  }
+
+  async signSalarySlipByManage(requestId: string, signatureImage: string, status: string){
+    try{
+      const dataRequest = await this.requestModel.findById(new Types.ObjectId(requestId)).exec();
+      if (!dataRequest || !dataRequest.attachments?.length) {
+        throw new Error("No attachment found");
+      }
+      const dataDocument = await this.documentModel.findById(dataRequest?.attachments[0]).exec();
+      if (!dataDocument) {
+        throw new Error("Document not found");
+      }
+      const key = dataDocument.key;
+      const pdfBuffer = await this.uploadService.getFileBuffer(key);
+      const pdfDoc = await PDFDocument.load(new Uint8Array(pdfBuffer));
+      const firstPage = pdfDoc.getPages()[0];
+      const sigBytes = Uint8Array.from(Buffer.from(signatureImage, 'base64'));
+      const pngImage = await pdfDoc.embedPng(sigBytes);
+      const pngDims = pngImage.scale(0.4);
+      const { width, height } = firstPage.getSize();
+      const pos = await this.findTextPosition(pdfBuffer, 'Quản lý');
+      let targetPage = firstPage;
+      const offsetY = 10;
+      const offsetX = 30;
+      if (pos) {
+        const allPages = pdfDoc.getPages();
+        const targetPage = allPages[pos.pageIndex];
+        targetPage.drawImage(pngImage, {
+          x: pos.x - offsetX,
+          y: pos.y - pngDims.height - offsetY,
+          width: pngDims.width,
+          height: pngDims.height,
+        });
+      } else {
+        const firstPage = pdfDoc.getPages()[0];
+        const { width } = firstPage.getSize();
+        firstPage.drawImage(pngImage, {
+          x: width - pngDims.width - 40,
+          y: 40,
+          width: pngDims.width,
+          height: pngDims.height,
+        });
+      }
+      const signedPdfBytes = await pdfDoc.save();
+      const signedPdfBase64 = Buffer.from(signedPdfBytes).toString('base64');
+
+      const success = await this.uploadService.uploadSignedPdf(key, signedPdfBytes);
+
+      if(success){
+        dataRequest.status = status;
+        await dataRequest.save();
+        return dataRequest;
+      }else{
+        dataRequest.status = STATUS.REJECTED;
+        await dataRequest.save();
+        throw new Error("Duyệt và ký số thất bại")
+      }
+    }catch (e) {
+      console.error(e);
+      throw e;
+    }
   }
 }
