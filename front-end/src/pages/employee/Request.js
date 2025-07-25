@@ -1122,6 +1122,7 @@ const Requests = () => {
         }
         setSigning(true);
         try {
+            showLoading()
             const signatureDataUrl = signaturePad.getTrimmedCanvas().toDataURL("image/png");
             const signatureBase64 = signatureDataUrl.split(",")[1];
             const pdfHash = salarySlipHash;
@@ -1153,6 +1154,7 @@ const Requests = () => {
         } finally {
             setSignaturePad(null)
             setSigning(false);
+            hideLoading()
         }
     };
 
