@@ -78,7 +78,7 @@ If running in development mode, create an additional `.env.development` file.
 
 Example:
 ```env
-VITE_API_URL=http://localhost:3000
+GENERATE_SOURCEMAP=false
 ```
 
 ### 3. Run the frontend app
