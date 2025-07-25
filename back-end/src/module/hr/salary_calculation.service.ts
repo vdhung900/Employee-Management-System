@@ -484,7 +484,7 @@ export class SalaryCalculationService {
       const pdfBuffer = Buffer.from(pdfPreview, 'base64');
       const hash = crypto.createHash('sha256').update(pdfBuffer).digest('hex');
       if (pdfHash !== originalHash) {
-        throw new BadRequestException('PDF đã bị sửa trước khi ký');
+        throw new BadRequestException('Dữ liệu bảng lương đã bị thay đổi !!!');
       }
       const pdfDoc = await PDFDocument.load(new Uint8Array(pdfBuffer));
       const firstPage = pdfDoc.getPages()[0];
