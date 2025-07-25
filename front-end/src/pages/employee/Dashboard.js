@@ -268,8 +268,8 @@ const EmployeeDashboard = () => {
     { day: "Thứ 3", hours: "08:00 - 17:00", type: "Ca hành chính" },
     { day: "Thứ 4", hours: "08:00 - 17:00", type: "Ca hành chính" },
     { day: "Thứ 5", hours: "08:00 - 17:00", type: "Ca hành chính" },
-    { day: "Thứ 6", hours: "08:00 - 17:00", type: "Ca hành chính" },
-    { day: "Thứ 7", hours: "-", type: "Nghỉ" },
+    { day: "Thứ 6", hours: "08:00 - 17:00", type: 'Ca hành chính' },
+    { day: "Thứ 7", hours: "08:00 - 17:00", type: "Ca hành chính" },
     { day: "Chủ nhật", hours: "-", type: "Nghỉ" },
   ];
 

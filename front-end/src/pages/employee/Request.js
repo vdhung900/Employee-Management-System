@@ -383,14 +383,18 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                                 name={['dataReq', 'month']}
                                 label="Tháng"
                                 rules={[
-                                    {required: true, message: 'Vui lòng chọn tháng'},
-                                    {type: 'number', min: 1, max: 12, message: 'Tháng phải từ 1-12'}
+                                    { required: true, message: 'Vui lòng chọn tháng' }
                                 ]}
                             >
                                 <Select placeholder="Chọn tháng">
-                                    {Array.from({length: 12}, (_, i) => (
-                                        <Option key={i + 1} value={i + 1}>Tháng {i + 1}</Option>
-                                    ))}
+                                    {Array.from({ length: 12 - (dayjs().month() + 1) + 1 }, (_, i) => {
+                                        const month = (dayjs().month() + 1) + i;
+                                        return (
+                                            <Select.Option key={month} value={month}>
+                                                Tháng {month}
+                                            </Select.Option>
+                                        );
+                                    })}
                                 </Select>
                             </Form.Item>
                         </Col>
@@ -398,12 +402,12 @@ const RequestTypeForm = ({form, requestType, departments = [], positions = [], e
                             <Form.Item
                                 name={['dataReq', 'year']}
                                 label="Năm"
+                                initialValue={dayjs().year()}
                                 rules={[
-                                    {required: true, message: 'Vui lòng nhập năm'},
-                                    {type: 'number', min: 2000, message: 'Năm không hợp lệ'}
+                                    { required: true, message: 'Vui lòng nhập năm' }
                                 ]}
                             >
-                                <InputNumber style={{width: '100%'}} placeholder="Nhập năm"/>
+                                <InputNumber style={{ width: '100%' }} disabled />
                             </Form.Item>
                         </Col>
                         <Col span={16}>

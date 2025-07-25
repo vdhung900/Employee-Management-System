@@ -475,19 +475,19 @@ const AdminAccount = () => {
           </Col>
           <Col xs={24} md={16}>
             <Space style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
-                icon={<FilterOutlined />}
-                style={{ borderRadius: '8px' }}
-              >
-                Lọc
-              </Button>
-              <Button
-                icon={<ImportOutlined />}
-                style={{ borderRadius: '8px' }}
-                onClick={() => fileInputRef.current && fileInputRef.current.click()}
-              >
-                Nhập từ Excel
-              </Button>
+              {/*<Button*/}
+              {/*  icon={<FilterOutlined />}*/}
+              {/*  style={{ borderRadius: '8px' }}*/}
+              {/*>*/}
+              {/*  Lọc*/}
+              {/*</Button>*/}
+              {/*<Button*/}
+              {/*  icon={<ImportOutlined />}*/}
+              {/*  style={{ borderRadius: '8px' }}*/}
+              {/*  onClick={() => fileInputRef.current && fileInputRef.current.click()}*/}
+              {/*>*/}
+              {/*  Nhập từ Excel*/}
+              {/*</Button>*/}
               <Button
                 icon={<ExportOutlined />}
                 style={{ borderRadius: '8px' }}
