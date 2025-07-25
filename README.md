@@ -1,5 +1,17 @@
 # Employee Management System
 
+## 🛠 System Requirements
+
+Before running the project, make sure your system meets these requirements:
+
+- **Node.js >= 18.x**  
+- **npm >= 9.x**  
+- **Docker** (optional, if you want to run MinIO via Docker)  
+- **MongoDB >= 5.x** (can be local or remote server)  
+- **MinIO** (for file storage, can be hosted locally or on a server)  
+- **Git** (if cloning from repository)  
+---
+
 ## 🚀 Backend Setup
 
 ### 1. Install dependencies
